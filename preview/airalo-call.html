@@ -1,0 +1,381 @@
+<title>Airalo Call Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500&display=swap">
+
+<style>
+/* Built to be read under pressure, on a second screen, mid call. Everything is
+   sized so a glance lands on the right line: the three questions that decide
+   the business are the only large type on the page. */
+:root{
+  --c0:#07080B; --c1:#0F1216; --c2:#171B21; --c3:#20252C;
+  --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.06);
+  --text:#F5F7FA; --text2:rgba(245,247,250,.66); --text3:rgba(245,247,250,.42);
+  --accent:#2BE8C8; --warn:#FFB454; --danger:#FF5C6E;
+  --display:"Archivo",-apple-system,sans-serif;
+  --body:"Public Sans",-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--c0); color:var(--text); font-family:var(--body);
+  font-size:15.5px; line-height:1.6; -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display); margin:0; letter-spacing:-.025em; text-wrap:balance}
+p,ul{margin:0}
+.wrap{max-width:860px; margin:0 auto; padding:40px 22px 72px}
+
+.top{border-bottom:1px solid var(--line); padding-bottom:26px; margin-bottom:34px}
+.kicker{font-family:var(--mono); font-size:11px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--text3); margin-bottom:12px}
+h1{font-size:31px; font-weight:700; line-height:1.1; margin-bottom:14px}
+.frame{font-size:16px; color:var(--text2); max-width:64ch}
+
+section{margin-bottom:38px}
+h2{font-size:13px; font-family:var(--mono); font-weight:500; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--text3); margin-bottom:16px;
+  padding-bottom:10px; border-bottom:1px solid var(--line2)}
+
+/* The three that decide it */
+.q{background:var(--c1); border:1px solid var(--line); border-radius:18px;
+  padding:22px 24px; margin-bottom:12px; display:grid;
+  grid-template-columns:38px 1fr; gap:18px; align-items:start}
+.q .n{font-family:var(--mono); font-size:22px; font-weight:500; color:var(--accent);
+  line-height:1.2; font-variant-numeric:tabular-nums}
+.q h3{font-size:19px; font-weight:600; line-height:1.28; margin-bottom:9px}
+.q p{font-size:14.5px; color:var(--text2)}
+.dodge{margin-top:12px; padding-top:11px; border-top:1px dashed var(--line);
+  font-size:13.5px; color:var(--warn)}
+.dodge b{font-family:var(--mono); font-size:11px; letter-spacing:.1em;
+  text-transform:uppercase; display:block; margin-bottom:5px; font-weight:500}
+
+/* Compact lists */
+.list{display:grid; gap:9px}
+.item{background:var(--c1); border:1px solid var(--line2); border-radius:13px;
+  padding:14px 17px; font-size:14.5px; color:var(--text2)}
+.item b{color:var(--text); font-weight:500}
+
+.warnbox{border:1px solid rgba(255,92,110,.34); background:rgba(255,92,110,.06);
+  border-radius:18px; padding:22px 24px}
+.warnbox h3{font-size:17px; color:var(--danger); margin-bottom:12px}
+.warnbox ul{list-style:none; padding:0; display:grid; gap:9px}
+.warnbox li{font-size:14.5px; color:var(--text2); padding-left:19px; position:relative}
+.warnbox li::before{content:""; position:absolute; left:0; top:9px; width:6px; height:6px;
+  border-radius:50%; background:var(--danger)}
+
+.facts{background:var(--c2); border:1px solid var(--line2); border-radius:18px;
+  padding:6px 20px}
+.fact{display:grid; grid-template-columns:1fr auto; gap:18px; padding:12px 0;
+  border-bottom:1px solid var(--line2); font-size:14px; align-items:baseline}
+.fact:last-child{border-bottom:0}
+.fact span{color:var(--text2)}
+.fact b{font-family:var(--mono); font-weight:500; color:var(--text);
+  font-variant-numeric:tabular-nums; white-space:nowrap}
+
+.offer{background:var(--c1); border-left:2px solid var(--accent);
+  border-radius:0 16px 16px 0; padding:20px 24px}
+.offer p{font-size:15px; color:var(--text2)}
+.offer p + p{margin-top:11px}
+
+.after{display:grid; gap:8px; counter-reset:a}
+.after div{background:var(--c1); border:1px solid var(--line2); border-radius:13px;
+  padding:13px 17px 13px 46px; position:relative; font-size:14.5px; color:var(--text2)}
+.after div::before{counter-increment:a; content:counter(a);
+  position:absolute; left:17px; top:13px; font-family:var(--mono);
+  font-size:13px; color:var(--accent)}
+
+.note{font-size:13.5px; color:var(--text3); font-family:var(--mono); line-height:1.65}
+
+@media (max-width:620px){
+  .wrap{padding:28px 16px 56px}
+  h1{font-size:26px}
+  .q{grid-template-columns:1fr; gap:10px}
+  .fact{grid-template-columns:1fr; gap:3px}
+}
+
+/* Comparison table, sized to be read at a glance mid call */
+.cmp{width:100%; border-collapse:collapse; font-size:13.5px}
+.cmp th{font-family:var(--mono); font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--text3); text-align:left; font-weight:500;
+  padding:0 14px 10px 0; border-bottom:1px solid var(--line)}
+.cmp td{padding:11px 14px 11px 0; border-bottom:1px solid var(--line2); color:var(--text2)}
+.cmp td:first-child{color:var(--text)}
+.cmp .num{font-family:var(--mono); font-variant-numeric:tabular-nums; white-space:nowrap}
+.cmp .ok{color:var(--accent)}
+.cmp .bad{color:var(--danger)}
+.cmp .mid{color:var(--warn)}
+.cmp tr.target td{background:rgba(43,232,200,.07)}
+.scroll{overflow-x:auto; border:1px solid var(--line2); border-radius:18px;
+  padding:18px 20px 6px; background:var(--c1)}
+.verdict{margin-top:16px; padding:18px 22px; border-radius:16px;
+  background:var(--c2); border:1px solid var(--line); font-size:15px; color:var(--text2)}
+.verdict b{color:var(--text); font-weight:500}
+:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+</style>
+
+<div class="wrap">
+
+<div class="top">
+  <p class="kicker">Meeting card · Hang Tran, Head of Strategic Partnerships, Airalo</p>
+  <h1>You are there for three numbers. Everything else is conversation.</h1>
+  <p class="frame">
+    Three support tickets could not produce them, which is exactly why this call
+    exists. A partnerships lead can authorise things a catalogue cannot, so ask
+    for the non standard arrangement openly rather than asking again about the
+    standard one.
+  </p>
+  <div class="offer" style="margin-top:22px">
+    <p><b style="color:var(--text)">Your opening ninety seconds.</b> "I run a travel
+       eSIM app in Australia. The free tier is funded by advertising rather than by
+       the user, which makes it an acquisition channel that costs me ad revenue
+       instead of cash, and those users convert into exactly the paid plans you
+       already sell well. The integration against your API is already written. What
+       I need from this call is whether the commercial shape fits, because my
+       redemption unit is 50&nbsp;MB and your smallest catalogue top up is 3&nbsp;GB."</p>
+    <p>That opening does three things: names the value to them, proves you are not
+       a tyre kicker, and puts the hard number on the table in the first two minutes
+       rather than the last five.</p>
+  </div>
+</div>
+
+<section>
+  <h2>The three that decide it</h2>
+
+  <div class="q">
+    <div class="n">01</div>
+    <div>
+      <h3>Can you sell me a pooled balance I draw down in arbitrary megabytes across many ICCIDs?</h3>
+      <p>If yes, nothing else on this page matters and you should spend the rest of
+         the call on price. Pooled capacity is normal in wholesale and never appears
+         on a partner page, because partner pages are written for people selling
+         1&nbsp;GB bundles to tourists.</p>
+      <div class="dodge"><b>If they dodge</b>
+        "Is that a no for the standard platform, or a no for Airalo? I am asking
+         partnerships because I know it is not in the catalogue."</div>
+    </div>
+  </div>
+
+  <div class="q">
+    <div class="n">02</div>
+    <div>
+      <h3>What is the smallest top up you can create for a partner, as opposed to the smallest in the public catalogue?</h3>
+      <p>Their own developer docs show the smallest documented top up as
+         <b>3&nbsp;GB at $8 net</b>. You already know the catalogue answer, so do not
+         ask for it. Ask whether a custom SKU can be cut, and at what size.</p>
+      <div class="dodge"><b>If they dodge</b>
+        "My redemption is 50&nbsp;MB. At 3&nbsp;GB I buy sixty times what I hand out.
+         Is there any size below 500&nbsp;MB available under any commercial arrangement?"</div>
+    </div>
+  </div>
+
+  <div class="q">
+    <div class="n">03</div>
+    <div>
+      <h3>Do you sell a speed capped SKU, or expose per profile throughput control?</h3>
+      <p>The whole free tier problem disappears at 256 or 512&nbsp;kbps, because a slow
+         lane is cheap and a slow user consumes slowly. This is how the closest
+         comparable operator solved it, and no reseller publishes such a SKU anywhere.</p>
+      <div class="dodge"><b>If they dodge</b>
+        "Not an FUP that kicks in after a gigabyte. A bundle that is slow from the
+         first byte, sold at a slow bundle price."</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Commercial, once the three are answered</h2>
+  <div class="list">
+    <div class="item"><b>Oceania rate at volume.</b> Australia switches on below
+      $2.157 per GB and is dead above it. Do not ask for a discount, ask what
+      volume reaches that number.</div>
+    <div class="item"><b>Minimum commitment, platform fee, setup fee.</b> eSIM Go
+      wants $1,000 a month. Find out where Airalo sits before you fall in love.</div>
+    <div class="item"><b>Rate card</b> for Indonesia, Thailand, Japan, Vietnam,
+      Pakistan and China, at your volumes.</div>
+    <div class="item"><b>Failed activation.</b> Support said case by case. Ask who
+      absorbs the cost in practice, because it decides whether support is an
+      annoyance or a line item.</div>
+    <div class="item"><b>Is anyone else on the platform doing ad funded?</b> They
+      have thousands of partners. Somebody has tried it, and what happened is
+      worth more than any rate.</div>
+  </div>
+</section>
+
+<section>
+  <h2>Test in sandbox before you sign anything</h2>
+  <div class="list">
+    <div class="item"><b>Top up ceiling.</b> A competing platform caps an eSIM at
+      ten top ups, ever. A drip fed free tier is nothing but top ups. Ask whether
+      Airalo has an equivalent limit, then verify it.</div>
+    <div class="item"><b>Recycle window.</b> Support said 90 days to activate and
+      90 days grace from package expiry, restartable by a top up. Confirm it in
+      writing and test that a top up genuinely restarts the clock.</div>
+    <div class="item"><b>Provisioning latency.</b> Order to installable profile.
+      A user standing at an airport gate will not wait ninety seconds.</div>
+    <div class="item"><b>Usage reporting granularity and lag.</b> You cannot run a
+      metered free tier if consumption data arrives hours late.</div>
+  </div>
+</section>
+
+<section>
+  <h2>The numbers to hold in your head</h2>
+  <div class="facts" style="margin-bottom:14px">
+    <div class="fact"><span>Data budget one ad view generates</span><b>$0.0108</b></div>
+    <div class="fact"><span>Ads needed for one redemption</span><b>about 6</b></div>
+    <div class="fact"><span>What one 50 MB redemption may cost</span><b>$0.11 or less</b></div>
+    <div class="fact"><span>Above that, every redemption loses money</span><b>&mdash;</b></div>
+  </div>
+  <p class="frame" style="margin-bottom:18px">
+    That last figure is the only one that matters in the room. Whatever Airalo
+    offers, convert it to <b style="color:var(--text)">cost per 50&nbsp;MB
+    redemption</b> and compare it to eleven cents. Everything below is the same
+    sum done for every supplier researched.
+  </p>
+
+  <div class="scroll">
+    <table class="cmp">
+      <thead><tr>
+        <th>Supplier</th><th>Smallest unit</th><th>Effective $/GB</th><th>Cost of one 50 MB redemption</th>
+      </tr></thead>
+      <tbody>
+        <tr class="target"><td>What Bilby can afford</td><td class="num">50 MB</td>
+          <td class="num">$2.157</td><td class="num ok">$0.11</td></tr>
+        <tr><td>Airalo</td><td class="num">3 GB top up</td>
+          <td class="num">$2.67</td><td class="num bad">$8.00 &nbsp;<span style="color:var(--text3)">60&times; overbuy</span></td></tr>
+        <tr><td>Keepgo</td><td class="num">100 MB</td>
+          <td class="num">$30.00</td><td class="num bad">$3.00</td></tr>
+        <tr><td>Simbase, Oceania</td><td class="num">per KB</td>
+          <td class="num">$20.00</td><td class="num bad">$1.00</td></tr>
+        <tr><td>Simbase, Europe</td><td class="num">per KB</td>
+          <td class="num">$5.00</td><td class="num mid">$0.25 &nbsp;<span style="color:var(--text3)">closest published</span></td></tr>
+        <tr><td>Soracom</td><td class="num">per SIM</td>
+          <td class="num">&mdash;</td><td class="num bad">$1.80 / user / month, used or not</td></tr>
+        <tr><td>eSIM Access</td><td class="num">tied to original plan</td>
+          <td class="num">not published</td><td class="num bad">capped at 10 top ups, ever</td></tr>
+        <tr><td>eSIM Go</td><td class="num">bundle</td>
+          <td class="num">not published</td><td class="num bad">$1,000 / month floor</td></tr>
+        <tr><td>emnify · Maya</td><td class="num">pooled · per MB</td>
+          <td class="num">not published</td><td class="num">unknown, and worth finding out</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="verdict">
+    <b>Read the table honestly.</b> The best published rate anywhere on earth is
+    Simbase in Europe at twenty five cents, and that is still more than double what
+    a redemption can bear. Outside Europe nothing comes within a factor of nine.
+    <b>No supplier's published price makes the metered model work</b>, so the
+    number to listen for from Airalo is not a rate at all. It is a yes to pooled
+    supply or to a speed capped SKU.
+  </div>
+
+  <div class="verdict" style="border-color:rgba(43,232,200,.3)">
+    <b>Now do the same sum for the throttled model.</b> A thirty minute session at
+    0.21&nbsp;Mbps has a ceiling of 47&nbsp;MB, and real messaging use lands nearer
+    5&nbsp;MB. At an ordinary bulk rate of $2.20 per GB that session costs
+    <b>$0.011</b>, against the $0.0108 one ad view generates. It breaks even on the
+    first ad and improves with every bulk discount. That is the whole argument, in
+    two lines, and it is why the third question on this page matters more than the
+    second.
+  </div>
+</section>
+
+<section>
+  <h2>Precedent, and the lack of it</h2>
+  <div class="list">
+    <div class="item"><b>No visible precedent on their platform.</b> Airalo's
+      partner content is entirely about selling packages through new channels, not
+      about fragmenting them. Their one named loyalty partner is United Airlines
+      MileagePlus, and what United gets is <b>discounted standard data plans</b> as
+      a frequent flyer perk. That is placement, not granularity.</div>
+    <div class="item"><b>So you are asking for a first.</b> Not impossible, and a
+      partnerships lead is the right person to ask, but go in knowing there is no
+      case study they can point at. Expect "let me check internally" and make the
+      follow up date explicit before you hang up.</div>
+    <div class="item"><b>They do court redemption partners.</b> Airalo publishes a
+      steady stream on loyalty and rewards programmes, so the framing is one they
+      already sell into. Use their language: yours is a rewards redemption model
+      where the currency happens to be earned by watching a video.</div>
+    <div class="item"><b>Somebody is already doing your model.</b> Airvoy, from
+      Routed Labs in Delaware, runs a free travel eSIM tier earned by completing
+      short tasks across 190 countries. Worth knowing they exist, and worth noting
+      what they chose: a <b>capped speed tier renewable indefinitely</b>, not
+      metered megabytes. That is the third independent operator to reach the same
+      conclusion.</div>
+  </div>
+</section>
+
+<section>
+  <h2>Do not reveal</h2>
+  <div class="warnbox">
+    <h3>The pricing engine is the only thing you own</h3>
+    <ul>
+      <li>Describe the product, that ads fund small data grants. Do not describe
+          the three country model, how home, current location and destination are
+          blended, or the retention constant.</li>
+      <li>No margin structure, no contribution figures, no cost per MB assumptions.
+          You just locked those behind a password for good reason.</li>
+      <li>Volume: give the budget bounded numbers below and nothing more. A
+          forecast offered casually becomes a minimum commitment in a contract.</li>
+      <li>If they ask for the app or a demo, show the app. Do not send code, and do
+          not walk them through the pricing logic.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Numbers to have in front of you</h2>
+  <div class="facts">
+    <div class="fact"><span>Grant per ad view</span><b>5 to 13 MB</b></div>
+    <div class="fact"><span>Redemption threshold</span><b>50 MB</b></div>
+    <div class="fact"><span>Daily ad cap per user</span><b>10</b></div>
+    <div class="fact"><span>Australia break even</span><b>$2.157 / GB</b></div>
+    <div class="fact"><span>Going rate</span><b>$2.20 / GB</b></div>
+    <div class="fact"><span>Volume, launch setting</span><b>75 GB / mo</b></div>
+    <div class="fact"><span>Volume, once ads are proven</span><b>375 GB / mo</b></div>
+    <div class="fact"><span>Volume, 12 month target</span><b>1,500 GB / mo</b></div>
+    <div class="fact"><span>Their smallest documented top up</span><b>3 GB, $8 net</b></div>
+  </div>
+</section>
+
+<section>
+  <h2>Lead with what they get</h2>
+  <div class="offer">
+    <p>Airalo has supply and no consumer growth engine in Australia. You are
+       building an acquisition channel whose free tier costs you advertising
+       revenue rather than cash, and whose users convert into exactly the paid
+       plans Airalo already sells well.</p>
+    <p>That is the trade, and it is worth saying in the first two minutes. A
+       partnerships lead is measured on partners who bring volume, not on partners
+       who need favours.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Before the call</h2>
+  <div class="after">
+    <div><b style="color:var(--text)">Finish the partner signup and get catalogue
+      access.</b> This is the single highest value hour of prep. With the catalogue
+      open you stop asking what the smallest top up is and start saying "I can see
+      3&nbsp;GB is my floor, can you cut smaller", which is a different conversation
+      with a different power balance.</div>
+    <div>Have the app installed on your phone, ready to show. Not the code.</div>
+    <div>Have this page open on a second screen.</div>
+  </div>
+</section>
+
+<section>
+  <h2>After the call, same day</h2>
+  <div class="after">
+    <div>Send a written summary of what was agreed. Verbal rate commitments evaporate.</div>
+    <div>Ask for sandbox credentials in that same email, while goodwill is fresh.</div>
+    <div>Book the equivalent call with eSIM Access and eSIM Go this week. One quote is not a negotiation.</div>
+    <div>If pooled or sub 500 MB is a firm no, say so plainly in the notes. It closes the metered model and the timed model becomes the plan.</div>
+  </div>
+</section>
+
+<p class="note">
+  On recording: most Australian states require the consent of every party before a
+  private conversation is recorded. If you want a recording, say so at the start
+  and get a yes on the call. Otherwise take notes.
+</p>
+
+</div>

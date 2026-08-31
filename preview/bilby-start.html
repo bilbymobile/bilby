@@ -1,0 +1,350 @@
+<title>How Bilby Starts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500&display=swap">
+
+<style>
+:root{
+  --c0:#07080B; --c1:#0F1216; --c2:#171B21; --c3:#20252C;
+  --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.06);
+  --text:#F5F7FA; --text2:rgba(245,247,250,.66); --text3:rgba(245,247,250,.42);
+  --accent:#2BE8C8; --warn:#FFB454; --danger:#FF5C6E;
+  --display:"Archivo",-apple-system,sans-serif;
+  --body:"Public Sans",-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--c0); color:var(--text); font-family:var(--body);
+  font-size:16px; line-height:1.66; -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display); margin:0; letter-spacing:-.03em; text-wrap:balance}
+p,ul,ol{margin:0}
+.wrap{max-width:820px; margin:0 auto; padding:52px 22px 90px}
+
+.kicker{font-family:var(--mono); font-size:11px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--text3); margin-bottom:14px}
+h1{font-size:clamp(30px,4.6vw,43px); font-weight:700; line-height:1.06; margin-bottom:20px}
+.stand{font-size:18px; color:var(--text2); max-width:64ch}
+
+.verdict{margin:34px 0 52px; padding:26px 28px; border-radius:22px;
+  background:var(--c1); border:1px solid rgba(43,232,200,.32); border-left-width:3px}
+.verdict p{font-size:17px; color:var(--text2)}
+.verdict p + p{margin-top:13px}
+.verdict b{color:var(--text); font-weight:500}
+
+section{margin-bottom:52px}
+h2{font-size:13px; font-family:var(--mono); font-weight:500; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--text3); margin-bottom:20px;
+  padding-bottom:11px; border-bottom:1px solid var(--line2)}
+h3{font-size:21px; font-weight:600; margin-bottom:11px}
+.body{color:var(--text2); max-width:66ch}
+.body + .body{margin-top:14px}
+.body b{color:var(--text); font-weight:500}
+
+/* Findings */
+.find{display:grid; grid-template-columns:26px 1fr; gap:16px; padding:19px 0;
+  border-bottom:1px solid var(--line2); align-items:start}
+.find:last-child{border-bottom:0}
+.find .n{font-family:var(--mono); font-size:12px; color:var(--accent); padding-top:5px}
+.find h3{font-size:17px; margin-bottom:6px}
+.find p{font-size:14.5px; color:var(--text2)}
+
+/* Phases */
+.phase{background:var(--c1); border:1px solid var(--line); border-radius:22px;
+  padding:26px 28px; margin-bottom:14px}
+.phase.now{border-color:rgba(43,232,200,.34)}
+.phase-top{display:flex; justify-content:space-between; align-items:baseline;
+  gap:16px; flex-wrap:wrap; margin-bottom:14px}
+.phase-top h3{margin:0; font-size:20px}
+.tag{font-family:var(--mono); font-size:10.5px; letter-spacing:.13em;
+  text-transform:uppercase; padding:5px 11px; border-radius:9px;
+  background:var(--c3); color:var(--text3); white-space:nowrap}
+.tag.go{background:rgba(43,232,200,.14); color:var(--accent)}
+.phase ul{list-style:none; padding:0; margin:16px 0 0; display:grid; gap:9px}
+.phase li{font-size:14.5px; color:var(--text2); padding-left:20px; position:relative}
+.phase li::before{content:""; position:absolute; left:0; top:9px; width:6px; height:6px;
+  border-radius:50%; background:var(--accent)}
+.cost{margin-top:16px; padding-top:14px; border-top:1px solid var(--line2);
+  font-family:var(--mono); font-size:12.5px; color:var(--text3);
+  font-variant-numeric:tabular-nums; display:flex; gap:22px; flex-wrap:wrap}
+.cost b{color:var(--text2); font-weight:400}
+
+/* Who */
+.who{display:grid; gap:10px}
+.wrow{display:grid; grid-template-columns:150px 1fr; gap:20px; background:var(--c1);
+  border:1px solid var(--line2); border-radius:15px; padding:16px 19px}
+.wrow.no{opacity:.62}
+.wrow dt{font-family:var(--display); font-weight:600; font-size:15.5px; margin:0}
+.wrow dd{margin:0; font-size:14.5px; color:var(--text2)}
+.wrow .when{font-family:var(--mono); font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; display:block; margin-top:4px; color:var(--accent)}
+.wrow.no .when{color:var(--danger)}
+
+.stop{border:1px solid rgba(255,92,110,.32); background:rgba(255,92,110,.05);
+  border-radius:20px; padding:24px 26px}
+.stop h3{color:var(--danger); font-size:18px; margin-bottom:13px}
+.stop ul{list-style:none; padding:0; display:grid; gap:10px}
+.stop li{font-size:14.5px; color:var(--text2); padding-left:20px; position:relative}
+.stop li::before{content:""; position:absolute; left:0; top:9px; width:6px; height:6px;
+  border-radius:50%; background:var(--danger)}
+
+.gate{border:1px solid rgba(255,180,84,.34); background:rgba(255,180,84,.05);
+  border-radius:20px; padding:24px 26px}
+.gate h3{color:var(--warn); font-size:18px; margin-bottom:13px}
+.gate p{font-size:15px; color:var(--text2)} .gate p + p{margin-top:11px}
+.gate b{color:var(--text); font-weight:500}
+
+.week{display:grid; gap:8px; counter-reset:w}
+.week div{background:var(--c2); border:1px solid var(--line2); border-radius:14px;
+  padding:14px 18px 14px 48px; position:relative; font-size:15px; color:var(--text2)}
+.week div::before{counter-increment:w; content:counter(w);
+  position:absolute; left:18px; top:14px; font-family:var(--mono);
+  font-size:13px; color:var(--accent)}
+.week b{color:var(--text); font-weight:500}
+
+@media (max-width:640px){
+  .wrap{padding:34px 16px 64px}
+  .wrow{grid-template-columns:1fr; gap:6px}
+  .find{grid-template-columns:1fr; gap:6px}
+}
+:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+</style>
+
+<div class="wrap">
+
+<p class="kicker">Decision · after the supplier research</p>
+<h1>Start by selling, not by giving away.</h1>
+<p class="stand">
+  Everything learned in the last week points at one conclusion, and it inverts
+  the plan. The free tier is the hardest thing in this business and it is
+  currently scheduled first.
+</p>
+
+<div class="verdict">
+  <p><b>Launch Bilby as an honest paid travel eSIM, with no free tier at all.</b>
+     Sign with Airalo for supply, because they are courting you, there is no
+     minimum commitment, and their 3&nbsp;GB packages are exactly right for
+     someone buying a plan.</p>
+  <p>Then turn advertising on afterwards, capped at five dollars a day, and let
+     it tell you what an ad view is really worth. That single measurement
+     re-prices the entire model, and you cannot obtain it any other way.</p>
+</div>
+
+<section>
+  <h2>Why, in four findings</h2>
+
+  <div class="find">
+    <div class="n">01</div>
+    <div>
+      <h3>The metered model cannot be bought at any price</h3>
+      <p>A 50&nbsp;MB redemption can cost eleven cents. The cheapest published
+         rate on earth is Simbase in Europe at twenty five, and outside Europe
+         nothing comes within a factor of nine. Airalo's floor forces an eight
+         dollar purchase to hand over fifty megabytes. This is not a negotiation
+         problem, it is what the market charges for granularity.</p>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="n">02</div>
+    <div>
+      <h3>Everyone who solved this sells time, not megabytes</h3>
+      <p>Firsty sells thirty minute sessions at 0.21&nbsp;Mbps. Airvoy sells a
+         512&nbsp;kbps tier. Both bound their cost with a throttle rather than
+         with procurement. At an ordinary bulk rate a five megabyte session costs
+         $0.011 against the $0.0108 an ad generates, so the throttled model closes
+         at prices anyone will sell you today.</p>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="n">03</div>
+    <div>
+      <h3>Your free tier is roughly ten times too generous</h3>
+      <p>Airvoy, live today, gives about 0.7&nbsp;MB per ad view and throttles it.
+         Bilby's model grants 5 to 13&nbsp;MB at full speed. They are shipping and
+         you are not, so the burden of proof sits with your numbers, not theirs.</p>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="n">04</div>
+    <div>
+      <h3>Publishing is what unlocks the measurement</h3>
+      <p>AdMob will not issue a live ad unit for an unpublished app, so the real
+         eCPM, the real fill rate and the real redemption behaviour are all
+         invisible until Bilby is on the store. <b>You cannot validate the free
+         tier before launching, which means you must launch something that works
+         without it.</b> That is not a compromise, it is the only order the
+         dependencies allow.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The sequence</h2>
+
+  <div class="phase now">
+    <div class="phase-top"><h3>Phase 0 · Unblock, and buy the insurance</h3><span class="tag go">This week</span></div>
+    <p class="body">Two of these can end the business rather than delay it, and
+       both are cheap. The third is simply in the way.</p>
+    <ul>
+      <li>One hour with an Australian telecommunications lawyer on whether reselling
+          foreign network data makes you a Carriage Service Provider. Under the 2025
+          Bill, wholesale suppliers will be barred from supplying an unregistered
+          CSP, so this now blocks supply and not just launch.</li>
+      <li>Join the TIO if the answer is yes. Minimum fee is $400 excluding GST.</li>
+      <li>Fix the APK crash. Run the release build with <span style="font-family:var(--mono);font-size:13px">BILBY_SHRINK=false</span>
+          to establish in one command whether it is R8 or your code.</li>
+    </ul>
+    <div class="cost"><span><b>Cost</b> ~$400 plus a lawyer hour</span><span><b>Risk</b> none</span><span><b>Blocks</b> everything</span></div>
+  </div>
+
+  <div class="phase now">
+    <div class="phase-top"><h3>Phase 1 · Ship a paid eSIM, no free tier</h3><span class="tag go">2 to 4 weeks</span></div>
+    <p class="body">The app is built, the site is live, the bundle is signed and
+       your organisation account skips the closed test. What has been missing is a
+       supplier who can actually issue a profile, and for paid plans Airalo can do
+       that today.</p>
+    <ul>
+      <li>Sign with Airalo for paid supply. Set <span style="font-family:var(--mono);font-size:13px">PAID_SUPPLIER</span>,
+          delete the mock, and the Preview banner disappears by itself.</li>
+      <li>Fix the checkout handoff so a purchase lands on the right account.</li>
+      <li>Ship to Play with the free tier absent rather than promised. Say plainly
+          that it is coming.</li>
+      <li>Post it on OzBargain. That audience is exactly your market and it costs
+          nothing.</li>
+    </ul>
+    <div class="cost"><span><b>Fixed cost</b> $0</span><span><b>Variable</b> supplier price, only on a sale</span><span><b>Downside exposure</b> none</span></div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-top"><h3>Phase 2 · Turn ads on, capped hard</h3><span class="tag">Once published</span></div>
+    <p class="body">Now AdMob will serve, and the one number nobody can give you
+       becomes measurable. Keep the free tier deliberately small and honest, and
+       let the daily budget be the safety rail it was built to be.</p>
+    <ul>
+      <li>Set the daily budget to $5. Maximum exposure is $150 a month, and the app
+          already tells users plainly when the pool is spent.</li>
+      <li>Open the free tier in one or two cheap destinations only, not everywhere.</li>
+      <li>Measure the real eCPM, fill rate, ads per user per day and redemption rate
+          in week one. The 0.4 retention constant in the pricing engine is a guess
+          until this runs.</li>
+      <li>Accept the overbuy on every redemption. You are paying for information,
+          and $150 is cheap for it.</li>
+    </ul>
+    <div class="cost"><span><b>Worst case</b> $150 / month</span><span><b>Buys</b> the number that re-prices everything</span></div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-top"><h3>Phase 3 · Choose the architecture on evidence</h3><span class="tag">Month 3 onward</span></div>
+    <p class="body">With real revenue per view and real usage, throttled against
+       metered stops being a debate and becomes arithmetic. By then you also have
+       a trading history, which is the thing every rate desk actually wants.</p>
+    <ul>
+      <li>Take the measured eCPM to Sparks and emnify, who both sell the throttle.</li>
+      <li>Finish whichever branch of the entitlement abstraction the data selects,
+          and delete the other.</li>
+      <li>Revisit Australia. It needs $2.157 per GB and the going rate is $2.20,
+          and volume is what closes two percent.</li>
+    </ul>
+    <div class="cost"><span><b>Precondition</b> paying customers and a month of ad data</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Who, specifically</h2>
+  <dl class="who">
+    <div class="wrow">
+      <dt>Airalo<span class="when">Sign now, for paid</span></dt>
+      <dd>Courting you already, no minimum commitment, largest catalogue, and a
+          name that reassures a Play reviewer. Their 3&nbsp;GB floor is useless for
+          a free tier and perfect for a paid plan. Take the partnerships meeting
+          and scope it to paid supply.</dd>
+    </div>
+    <div class="wrow">
+      <dt>Sparks<span class="when">Contact now, for later</span></dt>
+      <dd>White label eSIM platform that sells <b>dynamic bandwidth throttling</b>
+          as a published feature, and almost certainly the backend behind Airvoy.
+          This is the supplier category that makes the free tier possible. Contact
+          form only, no published rates, so start the conversation early.</dd>
+    </div>
+    <div class="wrow">
+      <dt>emnify<span class="when">Contact now, for later</span></dt>
+      <dd>The only provider documenting pooled plans and configurable throttling
+          together. Ask first whether their terms permit consumer handsets, because
+          that one answer opens or closes the entire IoT tier.</dd>
+    </div>
+    <div class="wrow">
+      <dt>eSIM Access<span class="when">Keep warm</span></dt>
+      <dd>Adapter already written, so integration is nearly free. The ten top up
+          ceiling rules them out for a drip fed free tier but not for paid.</dd>
+    </div>
+    <div class="wrow no">
+      <dt>eSIM Go<span class="when">Not yet</span></dt>
+      <dd>$1,000 a month before you have sold anything.</dd>
+    </div>
+    <div class="wrow no">
+      <dt>Soracom<span class="when">Not yet</span></dt>
+      <dd>$1.80 per user per month whether they use it or not. Only sensible if
+          profiles can be held inactive, which is the question to ask if you
+          ever return.</dd>
+    </div>
+    <div class="wrow no">
+      <dt>Keepgo<span class="when">Not yet</span></dt>
+      <dd>The 100&nbsp;MB unit is the smallest in the market and the no expiry line
+          solves dormancy, but $30 per GB retail is far too dear. Worth revisiting
+          if wholesale is dramatically better.</dd>
+    </div>
+  </dl>
+</section>
+
+<section>
+  <h2>Stop doing</h2>
+  <div class="stop">
+    <h3>Three things that are costing time and returning nothing</h3>
+    <ul>
+      <li><b>Stop asking anyone for a 50&nbsp;MB SKU.</b> Four requests, four
+          deflections, and the answer was in Airalo's public developer docs the
+          whole time. It does not exist at a price that works, anywhere.</li>
+      <li><b>Stop treating the free tier as the launch.</b> It is the second
+          product, it depends on a supplier you have not found and a measurement
+          you cannot take yet, and holding the launch for it delays the paid
+          business that already works.</li>
+      <li><b>Stop competing on price per gigabyte.</b> Firsty retails at about
+          $1.60 per GB, below the wholesale you are modelling. That fight is
+          unwinnable with reseller economics and it is not where your advantage is.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>The one that can still end it</h2>
+  <div class="gate">
+    <h3>Regulation, and it is now urgent rather than eventual</h3>
+    <p>Reselling mobile connectivity under your own brand appears to make you a
+       <b>Carriage Service Provider</b> in Australia. TIO membership becomes
+       mandatory, the TCP Code applies and is enforceable by ACMA, and the
+       Telecommunications Amendment (Enhancing Consumer Safeguards) Bill 2025
+       introduces a registration scheme under which <b>wholesale providers are
+       prohibited from supplying an unregistered CSP</b>.</p>
+    <p>Read that last part again. A supplier may be legally unable to sell to you
+       until you are registered, which puts the lawyer ahead of the contract rather
+       than after it. Maximum penalties reach roughly ten million dollars.</p>
+    <p>This is not legal advice and I am not a lawyer. It is worth one paid hour
+       with an Australian telecommunications lawyer before you sign anything, and
+       that hour is the cheapest risk reduction available to you.</p>
+  </div>
+</section>
+
+<section>
+  <h2>This week, in order</h2>
+  <div class="week">
+    <div>Book the telecommunications lawyer. <b>Nothing else matters if this goes badly.</b></div>
+    <div>Run the R8 bisect and get the APK running on your phone.</div>
+    <div>Take the Airalo meeting. Scope it to paid supply, and ask the three questions anyway because the answers are free.</div>
+    <div>Send the consumer handset question to Sparks and emnify. One paragraph each.</div>
+    <div>Finish the Airalo partner signup so you can read the catalogue yourself.</div>
+  </div>
+</section>
+
+</div>

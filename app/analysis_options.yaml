@@ -1,0 +1,32 @@
+include: package:flutter_lints/flutter.yaml
+
+# Lints tuned for this codebase specifically. The defaults are good; these are
+# the additions that catch the bugs that actually cost money here.
+linter:
+  rules:
+    # An unawaited Future in the reward or redemption path means the ledger
+    # call and the UI update race each other. This is the single most likely
+    # source of "my balance didn't update" reports.
+    unawaited_futures: true
+
+    # Using a BuildContext after an await is the classic Flutter crash, and
+    # every screen here awaits the network before calling setState.
+    use_build_context_synchronously: true
+
+    avoid_print: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    require_trailing_commas: false
+    sort_child_properties_last: true
+
+analyzer:
+  errors:
+    # Escalated from warning: a missing return in an async handler silently
+    # produces a null the caller then treats as success.
+    body_might_complete_normally: error
+    # Dead null-aware expressions usually mean a model field changed nullability
+    # and something downstream is now unreachable.
+    dead_null_aware_expression: error
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"

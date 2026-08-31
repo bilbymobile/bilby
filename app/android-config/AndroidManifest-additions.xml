@@ -1,0 +1,40 @@
+<!--
+  Merge these into android/app/src/main/AndroidManifest.xml after
+  `flutter create .` generates it. They are not optional:
+
+  * INTERNET      — the app is a pure API client; without it, nothing loads.
+  * AD_ID         — required from Android 13 (API 33) to read the advertising
+                    ID. Omit it and every ad request looks non-personalised,
+                    which collapses eCPM. Since ad revenue funds the entire free
+                    tier, this one line is worth real money.
+  * APPLICATION_ID— the Google Mobile Ads SDK crashes on start without it. The
+                    error message is clear but easy to miss in a Flutter log.
+  * networkSecurityConfig — see network_security_config.xml.
+-->
+
+<!-- Inside <manifest>, above <application> -->
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="com.google.android.gms.permission.AD_ID" />
+
+<!-- On the <application> tag itself -->
+<!--   android:networkSecurityConfig="@xml/network_security_config"  -->
+
+<!-- Inside <application> -->
+<meta-data
+    android:name="com.google.android.gms.ads.APPLICATION_ID"
+    android:value="ca-app-pub-3940256099942544~3347511713" />
+<!--
+  ^ That is Google's TEST app id. Safe for development, and it MUST be swapped
+  for your real AdMob app id before a release build or ads will not serve.
+  Never point a debug build at a real ad unit — that is how AdMob accounts get
+  suspended for invalid traffic, and suspension is not easily reversed.
+-->
+
+<!-- Delays ad SDK init until after first frame. Measurably improves cold start
+     on the low-end devices that make up most of an emerging-market install base. -->
+<meta-data
+    android:name="com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION"
+    android:value="true" />
+<meta-data
+    android:name="com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING"
+    android:value="true" />

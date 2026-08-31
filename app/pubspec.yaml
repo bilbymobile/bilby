@@ -1,0 +1,53 @@
+name: bilby
+description: Free mobile data. Watch an ad, get online.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Official Google plugin. Chosen over every community AdMob package for one
+  # reason: it supports ServerSideVerificationOptions, and SSV is the only thing
+  # standing between the free tier and anyone with a packet editor.
+  # Was pinned at ^5.2.0 as a deliberate "not before launch" deferral. That
+  # stopped being viable: 5.x calls configurations.all in its own build.gradle,
+  # which Gradle 9 and AGP 9 no longer accept, so the old pin does not build at
+  # all on this toolchain. 9.1.0 wraps Google Mobile Ads SDK 25.4.0, needs
+  # minSdk 23 and compileSdk 35 or higher, both of which this app already meets.
+  #
+  # The Dart surface used in ads_service.dart is unchanged across the jump:
+  # RewardedAd.load, setServerSideOptions, show(onUserEarnedReward:) and the two
+  # callback classes all have the same signatures in 9.1.0 as in 5.x. The
+  # breaking changes in 6 through 9 are in banner adaptive sizing and the iOS
+  # scene delegate, neither of which this app touches.
+  google_mobile_ads: ^9.1.0
+
+  http: ^1.2.2
+
+  # Hands the LPA activation string to the system eSIM installer via a
+  # universal link. Deliberately not a native eSIM plugin — see esim_service.dart.
+  url_launcher: ^6.3.1
+
+  # Persists the anonymous session cookie across launches. The whole product
+  # depends on a user keeping their identity without ever making an account.
+  shared_preferences: ^2.3.3
+
+# Haptics come from package:flutter/services.dart, which ships with the SDK —
+# no dependency needed. They matter more than they sound: physical feedback on
+# the reward moment lifts perceived quality more than any visual polish.
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  # No assets/ block: there are no bundled assets, and declaring a directory
+  # that does not exist is a hard build failure rather than a warning.
+  # Launcher icons live in android/app/src/main/res, not here.

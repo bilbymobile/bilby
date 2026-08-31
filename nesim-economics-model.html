@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nesim — free-tier economics model</title>
+<style>
+  :root{
+    --bg:#07090d; --surface:#0e1319; --surface2:#151c25; --border:#1e2833;
+    --text:#e8eef5; --muted:#8b9aab; --accent:#2ee6a8; --accent2:#10a97a;
+    --warn:#ffb347; --danger:#ff6b6b; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  .wrap{max-width:1060px;margin:0 auto;padding:28px 20px 80px}
+  h1{font-size:clamp(24px,4vw,34px);letter-spacing:-.03em;margin:0 0 8px}
+  .lede{color:var(--muted);max-width:66ch;margin:0 0 28px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px}
+  .card h2{margin:0 0 4px;font-size:16px;letter-spacing:-.01em}
+  .card p.sub{margin:0 0 18px;color:var(--muted);font-size:13.5px}
+  .ctrls{display:grid;gap:20px}
+  @media(min-width:700px){.ctrls{grid-template-columns:1fr 1fr}}
+  .ctrl label{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:7px}
+  .ctrl label b{font-variant-numeric:tabular-nums;color:var(--accent);font-size:14px}
+  .ctrl .hint{display:block;color:var(--muted);font-size:12px;margin-top:6px;line-height:1.45}
+  input[type=range]{width:100%;accent-color:var(--accent);height:4px}
+  select{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);
+    border-radius:8px;padding:9px 10px;font:inherit;font-size:14px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--border);text-align:left}
+  th{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+  tbody tr:last-child td{border-bottom:0}
+  .pill{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+    padding:3px 8px;border-radius:99px;background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+  .pill.on{background:rgba(46,230,168,.13);color:var(--accent);border-color:transparent}
+  .pill.off{background:rgba(255,107,107,.1);color:var(--danger);border-color:transparent}
+  .pos{color:var(--accent)} .neg{color:var(--danger)}
+  .bars{margin-top:6px}
+  .bar{display:grid;grid-template-columns:150px 1fr 74px;gap:12px;align-items:center;margin-bottom:9px;font-size:13px}
+  .bar .track{background:var(--surface2);border-radius:99px;height:16px;position:relative;overflow:hidden}
+  .bar .fill{position:absolute;top:0;bottom:0;border-radius:99px}
+  .bar .zero{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--border)}
+  .bar .val{text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px}
+  .kpis{display:flex;gap:26px;flex-wrap:wrap;margin-top:4px}
+  .kpi .k{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px}
+  .kpi .v{font-size:23px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .note{border-left:2px solid var(--warn);background:rgba(255,179,71,.06);padding:11px 13px;
+    border-radius:0 8px 8px 0;font-size:13px;color:#f0dcc0;margin-top:16px}
+  .note.ok{border-color:var(--accent);background:rgba(46,230,168,.06);color:#c9f5e5}
+  .note.bad{border-color:var(--danger);background:rgba(255,107,107,.07);color:#f5cfcf}
+  footer{color:var(--muted);font-size:12.5px;margin-top:34px;padding-top:18px;border-top:1px solid var(--border)}
+  code{font-family:ui-monospace,Menlo,monospace;background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Free-tier economics model</h1>
+<p class="lede">
+  The same engine that runs in <code>src/lib/pricing.ts</code>. Move the
+  assumptions and watch which markets can actually support ad-funded free data.
+  Nothing is hard-coded — every number below is computed.
+</p>
+
+<div class="card">
+  <h2>Assumptions</h2>
+  <p class="sub">Seeded from published 2026 benchmarks. Replace with your own AdMob reporting and signed rate card as soon as you have 30 days of real data.</p>
+  <div class="ctrls">
+    <div class="ctrl">
+      <label>Supplier volume tier <b id="vtL">starter</b></label>
+      <select id="vt">
+        <option value="starter">starter — under 500 activations/mo</option>
+        <option value="growth">growth — 500 to 2,000</option>
+        <option value="scale">scale — 2,000 to 10,000</option>
+        <option value="enterprise">enterprise — 10,000+</option>
+      </select>
+      <span class="hint">Drives wholesale cost per GB. You start at starter and cannot negotiate your way out of it without volume.</span>
+    </div>
+    <div class="ctrl">
+      <label>Home market <b id="homeL">AU</b></label>
+      <select id="home">
+        <option value="AU">Australia</option><option value="NZ">New Zealand</option>
+        <option value="US">United States</option><option value="GB">United Kingdom</option>
+        <option value="ID">Indonesia (local, not a traveller)</option>
+      </select>
+      <span class="hint">Where the user signed up. Proxy for the audience an advertiser thinks it is buying.</span>
+    </div>
+    <div class="ctrl">
+      <label>Contribution margin retained <b id="cmL">35%</b></label>
+      <input type="range" id="cm" min="0" max="70" step="5" value="35">
+      <span class="hint">Share of ad revenue kept rather than spent on data. Pays for payment fees, refunds, support, and the ~30-day gap before AdMob pays out. Do not go below 25% pre-revenue.</span>
+    </div>
+    <div class="ctrl">
+      <label>Home-market eCPM retention abroad <b id="hrL">40%</b></label>
+      <input type="range" id="hr" min="0" max="100" step="10" value="40">
+      <span class="hint">The traveller arbitrage. How much of an Australian's ad value survives being served on an Indonesian IP. <strong>Measure this in week one</strong> — it is the biggest assumption in the plan.</span>
+    </div>
+    <div class="ctrl">
+      <label>eCPM shift vs benchmark <b id="esL">0%</b></label>
+      <input type="range" id="es" min="-50" max="50" step="5" value="0">
+      <span class="hint">Stress test. Expect a 20–30% decline as you scale past your warmest seed users.</span>
+    </div>
+    <div class="ctrl">
+      <label>Wholesale cost shift <b id="wsL">0%</b></label>
+      <input type="range" id="ws" min="-40" max="60" step="5" value="0">
+      <span class="hint">Your quoted rate card versus the published benchmark.</span>
+    </div>
+    <div class="ctrl">
+      <label>Daily ad cap per user <b id="acL">10</b></label>
+      <input type="range" id="ac" min="3" max="30" step="1" value="10">
+    </div>
+    <div class="ctrl">
+      <label>Credit breakage <b id="bkL">50%</b></label>
+      <input type="range" id="bk" min="0" max="90" step="5" value="50">
+      <span class="hint">Credits earned but never redeemed. At low volume this is most of your free-tier margin, not a rounding error.</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Where the free tier survives</h2>
+  <p class="sub" id="destSub"></p>
+  <table>
+    <thead><tr>
+      <th>Destination</th><th class="n">Rev / view</th><th class="n">Cost / MB</th>
+      <th class="n">Grant</th><th class="n">Contribution</th><th class="n">Max / day</th><th>Free tier</th>
+    </tr></thead>
+    <tbody id="destBody"></tbody>
+  </table>
+  <div id="destNote"></div>
+</div>
+
+<div class="card">
+  <h2>Contribution per ad view</h2>
+  <p class="sub">Green clears the bar. Red means every ad you serve there costs you money.</p>
+  <div class="bars" id="bars"></div>
+</div>
+
+<div class="card">
+  <h2>What it costs to run</h2>
+  <p class="sub">A cohort of daily-active free users, all maxing their ad allowance, at the settings above.</p>
+  <div class="ctrl" style="max-width:420px;margin-bottom:18px">
+    <label>Daily active free users <b id="dauL">1,000</b></label>
+    <input type="range" id="dau" min="100" max="50000" step="100" value="1000">
+  </div>
+  <div class="kpis">
+    <div class="kpi"><span class="k">Ad revenue / day</span><span class="v pos" id="kRev">—</span></div>
+    <div class="kpi"><span class="k">Data bought / day</span><span class="v" id="kCost">—</span></div>
+    <div class="kpi"><span class="k">Net / day</span><span class="v" id="kNet">—</span></div>
+    <div class="kpi"><span class="k">Net / month</span><span class="v" id="kMonth">—</span></div>
+    <div class="kpi"><span class="k">Data served / day</span><span class="v" id="kData">—</span></div>
+    <div class="kpi"><span class="k">Budget guard needs</span><span class="v" id="kGuard">—</span></div>
+  </div>
+  <div id="runNote"></div>
+</div>
+
+<footer>
+  Model mirrors <code>quoteGrant</code> / <code>quoteTravellerGrant</code>.
+  Regional wholesale and eCPM seeds are published 2026 benchmarks; the pessimistic
+  end of each range is used deliberately — modelling on the optimistic end makes
+  every grant you have already issued retroactively loss-making.
+  Blended traveller revenue is never allowed below the destination's own rate.
+</footer>
+</div>
+
+<script>
+const WHOLESALE={southeast_asia:.8,western_europe:1.1,latin_america:1.3,north_america:1.4,
+  east_asia:1.5,south_asia:1.0,mena:1.8,oceania:2.2,sub_saharan_africa:2.8};
+const TIER={starter:1,growth:.78,scale:.58,enterprise:.4};
+const AD={oceania:{e:18,f:.90},north_america:{e:22,f:.92},western_europe:{e:16,f:.88},
+  east_asia:{e:14,f:.85},mena:{e:7,f:.70},latin_america:{e:4.5,f:.65},
+  southeast_asia:{e:4,f:.62},south_asia:{e:2.5,f:.58},sub_saharan_africa:{e:2,f:.55}};
+const C2R={AU:'oceania',NZ:'oceania',FJ:'oceania',US:'north_america',CA:'north_america',
+  GB:'western_europe',IT:'western_europe',FR:'western_europe',ES:'western_europe',
+  JP:'east_asia',KR:'east_asia',ID:'southeast_asia',TH:'southeast_asia',VN:'southeast_asia',
+  SG:'southeast_asia',MY:'southeast_asia',PH:'southeast_asia',IN:'south_asia',
+  AE:'mena',TR:'mena',BR:'latin_america',ZA:'sub_saharan_africa'};
+const DESTS=[['ID','Indonesia'],['TH','Thailand'],['VN','Vietnam'],['SG','Singapore'],
+  ['JP','Japan'],['GB','United Kingdom'],['IT','Italy'],['US','United States'],
+  ['AE','UAE'],['NZ','New Zealand'],['IN','India'],['ZA','South Africa']];
+const MIN_MB=5, MAX_MB=60;
+
+const $=id=>document.getElementById(id);
+const nf=(n,d=4)=>n.toLocaleString('en-AU',{minimumFractionDigits:d,maximumFractionDigits:d});
+const money=n=>(n<0?'-$':'$')+Math.abs(n).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+function S(){return{
+  tier:$('vt').value, home:$('home').value,
+  cm:+$('cm').value/100, hr:+$('hr').value/100,
+  es:1+ +$('es').value/100, ws:1+ +$('ws').value/100,
+  ac:+$('ac').value, bk:+$('bk').value/100, dau:+$('dau').value};}
+
+const region=c=>C2R[c]||'sub_saharan_africa';
+const costMb=(r,s)=>WHOLESALE[r]*TIER[s.tier]*s.ws/1024;
+const revView=(r,s)=>AD[r].e*s.es/1000*AD[r].f;
+
+function quote(homeIso,destIso,s){
+  const hr=region(homeIso), dr=region(destIso);
+  const hRev=revView(hr,s), dRev=revView(dr,s);
+  const blended=Math.max(dRev, dRev+(hRev-dRev)*s.hr);
+  const perMb=costMb(dr,s);
+  const raw=blended*(1-s.cm)/perMb;
+  const grant=Math.max(MIN_MB,Math.min(MAX_MB,Math.floor(raw)));
+  const clamped=grant!==Math.floor(raw);
+  const cost=grant*perMb;
+  return{dr,perMb,blended,grant,clamped,cost,contrib:blended-cost,
+    on:(blended-cost)>0 && !clamped};
+}
+
+function render(){
+  const s=S();
+  $('vtL').textContent=s.tier; $('homeL').textContent=s.home;
+  $('cmL').textContent=Math.round(s.cm*100)+'%';
+  $('hrL').textContent=Math.round(s.hr*100)+'%';
+  $('esL').textContent=(($('es').value>0?'+':'')+$('es').value)+'%';
+  $('wsL').textContent=(($('ws').value>0?'+':'')+$('ws').value)+'%';
+  $('acL').textContent=s.ac;
+  $('bkL').textContent=Math.round(s.bk*100)+'%';
+  $('dauL').textContent=s.dau.toLocaleString('en-AU');
+
+  const rows=DESTS.map(([iso,name])=>({iso,name,...quote(s.home,iso,s)}));
+  const live=rows.filter(r=>r.on);
+
+  $('destSub').innerHTML=`A user who signed up in <strong>${s.home}</strong>, now standing in each destination. `+
+    `<strong>${live.length} of ${rows.length}</strong> destinations can support free data at these assumptions.`;
+
+  $('destBody').innerHTML=rows.map(r=>`<tr>
+    <td>${r.name}</td>
+    <td class="n">$${nf(r.blended,4)}</td>
+    <td class="n">$${nf(r.perMb,5)}</td>
+    <td class="n"><strong>${r.grant} MB</strong></td>
+    <td class="n ${r.contrib>0?'pos':'neg'}">$${nf(r.contrib,4)}</td>
+    <td class="n">${r.on?(r.grant*s.ac)+' MB':'—'}</td>
+    <td><span class="pill ${r.on?'on':'off'}">${r.on?'on':'paid only'}</span></td>
+  </tr>`).join('');
+
+  $('destNote').innerHTML = live.length===0
+    ? `<div class="note bad">No destination clears the bar. At these assumptions an ad-funded free tier cannot work — lower the retained margin, improve the rate card, or wait for volume.</div>`
+    : live.length<4
+      ? `<div class="note">Only ${live.length} viable destinations. Workable, but narrow — a single supplier price rise closes most of them.</div>`
+      : `<div class="note ok">${live.length} viable destinations. Broad enough that no single supplier or market shift kills the free tier.</div>`;
+
+  const max=Math.max(...rows.map(r=>Math.abs(r.contrib)))||1;
+  $('bars').innerHTML=rows.map(r=>{
+    const w=Math.abs(r.contrib)/max*50;
+    const pos=r.contrib>=0;
+    return `<div class="bar">
+      <span>${r.name}</span>
+      <span class="track"><span class="zero" style="left:50%"></span>
+        <span class="fill" style="${pos?`left:50%;width:${w}%;background:linear-gradient(90deg,var(--accent2),var(--accent))`
+          :`right:50%;width:${w}%;background:var(--danger)`}"></span></span>
+      <span class="val ${pos?'pos':'neg'}">$${nf(r.contrib,4)}</span>
+    </div>`;}).join('');
+
+  // Cohort economics: weight by viable destinations only — nobody is served
+  // free data where the engine has switched it off.
+  const pool = live.length? live : rows;
+  const avgRev = pool.reduce((a,r)=>a+r.blended,0)/pool.length;
+  const avgGrant = pool.reduce((a,r)=>a+r.grant,0)/pool.length;
+  const avgPerMb = pool.reduce((a,r)=>a+r.perMb,0)/pool.length;
+
+  const views = s.dau*s.ac;
+  const rev = views*avgRev;
+  const grantedMb = views*avgGrant;
+  const boughtMb = grantedMb*(1-s.bk);
+  const cost = boughtMb*avgPerMb;
+  const net = rev-cost;
+
+  $('kRev').textContent=money(rev);
+  $('kCost').textContent=money(cost);
+  $('kNet').textContent=money(net);
+  $('kNet').className='v '+(net>=0?'pos':'neg');
+  $('kMonth').textContent=money(net*30);
+  $('kMonth').className='v '+(net>=0?'pos':'neg');
+  $('kData').textContent=(boughtMb/1024).toFixed(1)+' GB';
+  $('kGuard').textContent=money(cost*1.3)+'/day';
+
+  $('runNote').innerHTML = live.length===0
+    ? `<div class="note bad">Free tier disabled everywhere — these figures assume you served it anyway, which you should not.</div>`
+    : net>=0
+      ? `<div class="note ok">Contribution-positive at ${s.dau.toLocaleString('en-AU')} DAU. Set <code>DAILY_BUDGET_USD</code> near ${money(cost*1.3)} — enough headroom for a spike, small enough to lose. Note this excludes AdMob's ~30-day payment lag: you fund roughly ${money(cost*30)} of data before the first payout lands.</div>`
+      : `<div class="note bad">Losing ${money(-net)} per day at ${s.dau.toLocaleString('en-AU')} DAU — ${money(-net*30)} per month. Every new user makes it worse. Raise the retained margin or fix the rate card before spending anything on growth.</div>`;
+}
+
+document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',render));
+render();
+</script>
+</body>
+</html>

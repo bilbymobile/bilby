@@ -1,0 +1,21 @@
+<component name="ProjectRunConfigurationManager">
+  <!--
+    Android Studio / IntelliJ picks this up automatically from the .run/
+    folder, so "bilby (dev)" appears in the run-configuration dropdown the
+    moment you open the project. No manual setup.
+
+    The additionalArgs are the whole point. This app reads its backend URL and
+    ad unit from compile-time --dart-define values, so pressing the plain green
+    Run button without them builds against https://bilbymobile.com — a domain
+    that does not exist yet — and every screen shows the offline error.
+
+    10.0.2.2 is the host machine as seen from an Android emulator.
+    On a PHYSICAL device, change it to your machine's LAN IP (192.168.x.x) and
+    add that IP to android/app/src/main/res/xml/network_security_config.xml.
+  -->
+  <configuration default="false" name="bilby (dev)" type="FlutterRunConfigurationType" factoryName="Flutter">
+    <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
+    <option name="additionalArgs" value="--dart-define=API_BASE=http://10.0.2.2:3000 --dart-define=ADMOB_REWARDED_ID=ca-app-pub-3940256099942544/5224354917" />
+    <method v="2" />
+  </configuration>
+</component>

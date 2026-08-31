@@ -1,0 +1,401 @@
+<title>Bilby Launch Runbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F7EFE4; --surface:#FDF9F3; --raised:#F1E6D7; --sunk:#EADCC9;
+  --line:#E1D2BD; --line2:#EFE4D4;
+  --ink:#0B2038; --ink2:#3A4C60; --ink3:#7C8B99;
+  --sand:#EEBF8B; --clay:#B36F3A; --teal:#2F7A6F; --danger:#A93A28;
+  --display:"Outfit",-apple-system,"Segoe UI",sans-serif;
+  --body:"Plus Jakarta Sans",-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#08131F; --surface:#0E1E2E; --raised:#152A3D; --sunk:#0B1826;
+    --line:#22394E; --line2:#182C3E;
+    --ink:#EAF1F6; --ink2:#9FB3C4; --ink3:#6D8296;
+    --sand:#E6BE8F; --clay:#D89257; --teal:#57BCA9; --danger:#E8806C;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#08131F; --surface:#0E1E2E; --raised:#152A3D; --sunk:#0B1826;
+  --line:#22394E; --line2:#182C3E;
+  --ink:#EAF1F6; --ink2:#9FB3C4; --ink3:#6D8296;
+  --sand:#E6BE8F; --clay:#D89257; --teal:#57BCA9; --danger:#E8806C;
+}
+
+*{box-sizing:border-box}
+body{margin:0; background:var(--ground); color:var(--ink); font-family:var(--body);
+  font-size:15.5px; line-height:1.68; -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display); margin:0; letter-spacing:-.028em; text-wrap:balance}
+p{margin:0}
+code,.m{font-family:var(--mono); font-size:.86em}
+code{background:var(--raised); padding:2px 6px; border-radius:6px; color:var(--ink)}
+.wrap{max-width:1000px; margin:0 auto; padding:56px 24px 96px}
+
+.kicker{font-family:var(--mono); font-size:.68rem; letter-spacing:.17em;
+  text-transform:uppercase; color:var(--ink3); margin-bottom:14px}
+h1{font-size:clamp(32px,4.4vw,46px); line-height:1.05; font-weight:600; margin-bottom:16px}
+.stand{font-size:1.1rem; color:var(--ink2); max-width:62ch}
+
+h2{font-size:.76rem; font-family:var(--mono); font-weight:500; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink3); margin:60px 0 20px;
+  padding-bottom:10px; border-bottom:1px solid var(--line)}
+h3{font-size:1.16rem; font-weight:600; margin:30px 0 10px}
+.body{max-width:70ch; display:grid; gap:14px; color:var(--ink2)}
+.body strong{color:var(--ink); font-weight:600}
+
+.scroll{overflow-x:auto; margin:22px 0; border:1px solid var(--line); border-radius:18px;
+  background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:.9rem; min-width:560px}
+th,td{text-align:left; padding:13px 16px; border-bottom:1px solid var(--line2); vertical-align:top}
+thead th{font-family:var(--mono); font-size:.66rem; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--ink3); font-weight:500; background:var(--raised)}
+tbody tr:last-child td{border-bottom:0}
+td.c{text-align:center}
+.yes{color:var(--teal); font-weight:700}
+.cap{color:var(--clay); font-family:var(--mono); font-size:.72rem}
+
+figure{margin:26px 0 0}
+figure svg{width:100%; height:auto; display:block; color:var(--ink)}
+figcaption{font-size:.88rem; color:var(--ink3); margin-top:14px; max-width:70ch}
+
+.callout{border-radius:20px; padding:24px 26px; margin:24px 0; background:var(--raised)}
+.callout h3{margin:0 0 9px; font-size:1.05rem}
+.callout p{font-size:.95rem; color:var(--ink2)}
+.callout.warn{background:color-mix(in srgb, var(--clay) 13%, var(--surface))}
+
+ol.risks{list-style:none; counter-reset:r; padding:0; margin:20px 0 0; display:grid; gap:12px}
+ol.risks li{counter-increment:r; background:var(--surface); border:1px solid var(--line);
+  border-radius:18px; padding:20px 22px 20px 62px; position:relative}
+ol.risks li::before{content:counter(r); position:absolute; left:20px; top:20px;
+  width:28px; height:28px; border-radius:9px; background:var(--ink); color:var(--ground);
+  display:grid; place-items:center; font-family:var(--display); font-weight:600; font-size:.86rem}
+ol.risks b{display:block; font-family:var(--display); font-size:1rem; margin-bottom:5px; color:var(--ink)}
+ol.risks span{font-size:.93rem; color:var(--ink2)}
+
+pre{background:var(--surface); border:1px solid var(--line); border-radius:18px;
+  padding:20px 22px; overflow-x:auto; font-family:var(--mono); font-size:.82rem;
+  line-height:1.7; color:var(--ink2); margin:20px 0}
+</style><style>
+/* Runbook additions on top of the shared document system */
+.prog{position:sticky; top:0; z-index:10; background:var(--ground);
+  border-bottom:1px solid var(--line); margin:0 -24px 0; padding:14px 24px;
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap}
+.prog .bar{flex:1; min-width:160px; height:7px; border-radius:99px; background:var(--sunk); overflow:hidden}
+.prog .bar i{display:block; height:100%; width:0; background:var(--teal);
+  border-radius:99px; transition:width .45s cubic-bezier(.22,1,.36,1)}
+.prog .n{font-family:var(--mono); font-size:.76rem; color:var(--ink3);
+  font-variant-numeric:tabular-nums; white-space:nowrap}
+
+.checks{display:grid; gap:10px; margin:20px 0}
+.chk{display:grid; grid-template-columns:auto 1fr; gap:14px; align-items:start;
+  background:var(--surface); border:1px solid var(--line); border-radius:18px;
+  padding:18px 20px; cursor:pointer; transition:border-color .3s ease, background .3s ease}
+.chk:hover{border-color:var(--teal)}
+.chk input{appearance:none; width:20px; height:20px; margin:2px 0 0; border-radius:7px;
+  border:1.8px solid var(--line); background:var(--ground); cursor:pointer; flex:none;
+  transition:background .2s, border-color .2s; position:relative}
+.chk input:checked{background:var(--teal); border-color:var(--teal)}
+.chk input:checked::after{content:""; position:absolute; left:6px; top:2.5px; width:5px; height:10px;
+  border-right:2.2px solid var(--ground); border-bottom:2.2px solid var(--ground); transform:rotate(42deg)}
+.chk b{display:block; font-family:var(--display); font-size:1rem; font-weight:600; margin-bottom:4px}
+.chk p{font-size:.9rem; color:var(--ink2)}
+.chk .tag{display:inline-block; font-family:var(--mono); font-size:.6rem; letter-spacing:.12em;
+  text-transform:uppercase; padding:3px 9px; border-radius:7px; margin-left:9px; vertical-align:2px;
+  background:var(--sunk); color:var(--ink3)}
+.chk .tag.block{background:color-mix(in srgb, var(--danger) 16%, transparent); color:var(--danger)}
+.chk:has(input:checked){background:color-mix(in srgb, var(--teal) 7%, var(--surface))}
+.chk:has(input:checked) b{text-decoration:line-through; text-decoration-color:var(--ink3)}
+
+.phases{display:grid; gap:0; margin-top:22px; position:relative}
+.ph{display:grid; grid-template-columns:120px 1fr; gap:24px; padding:24px 0;
+  border-top:1px solid var(--line)}
+.ph:first-child{border-top:0}
+.ph .when{font-family:var(--mono); font-size:.68rem; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--ink3); padding-top:3px}
+.ph h3{margin:0 0 8px; font-size:1.1rem}
+.ph p{font-size:.94rem; color:var(--ink2)}
+.ph .gate{display:inline-block; margin-top:10px; font-size:.84rem; color:var(--clay);
+  font-family:var(--mono)}
+</style>
+
+<div class="wrap">
+
+<div class="prog">
+  <span class="n" id="progLabel">0 of 0 done</span>
+  <span class="bar"><i id="progBar"></i></span>
+  <span class="n">tick as you go</span>
+</div>
+
+<p class="kicker" style="margin-top:36px">Bilby · launch runbook · August 2026</p>
+<h1>What I need from you, and the order it unblocks things.</h1>
+<p class="stand">Nothing here needs a decision, they are all settled. Vercel with DNS pointed from
+Hostinger, Stripe as merchant, all three monetisation routes built behind switches, and a supplier
+registry rather than one hardcoded wholesaler. This is the list of things only you can do, and what
+each one is holding up.</p>
+
+<div class="callout">
+  <h3>The one thing I cannot do for you</h3>
+  <p>I do not create accounts and I do not handle passwords, card numbers or API secrets in plain
+  text. Every item below is you signing up and then pasting a value into the project's environment
+  settings yourself. I will tell you exactly which value goes where, and I will never ask you to
+  send me a secret in a message.</p>
+</div>
+
+<h2>Accounts to open</h2>
+<div class="checks" id="accounts">
+  <label class="chk"><input type="checkbox">
+    <span><b>GitHub repository<span class="tag block">blocks everything</span></b>
+    <p>The code is on this machine and nowhere else. A private repo is the first thing, because
+    Vercel deploys from it and because a laptop failure currently costs you the whole project.</p></span></label>
+
+  <label class="chk"><input type="checkbox">
+    <span><b>Vercel, connected to that repo<span class="tag block">blocks every host</span></b>
+    <p>Free tier covers launch. One project, five domains attached to it. Vercel gives you a
+    per project DNS value on the domain card, which is the value you paste into Hostinger. Do not
+    use one you found in a guide, including from me: it is unique to your project.</p></span></label>
+
+  <label class="chk"><input type="checkbox">
+    <span><b>Turso database<span class="tag block">blocks the API</span></b>
+    <p>Create the production database and copy the URL and auth token. There is already a schema in
+    the repo to push into it.</p></span></label>
+
+  <label class="chk"><input type="checkbox">
+    <span><b>Stripe account, and start underwriting today<span class="tag block">blocks revenue</span></b>
+    <p>Travel and telecommunications are both elevated risk categories. Approval can take weeks or
+    be declined, and no amount of code changes the answer, so this starts now rather than when the
+    checkout is finished.</p></span></label>
+
+  <label class="chk"><input type="checkbox">
+    <span><b>Supplier accounts, all three<span class="tag block">blocks real inventory</span></b>
+    <p>eSIM Access, Airalo Partners and ResellPortal. You are building a registry, not picking a
+    winner, so open all three and give me sandbox credentials for each. The adapters get written
+    against the sandboxes and switched on from the admin console when a contract is live.</p></span></label>
+
+  <label class="chk"><input type="checkbox">
+    <span><b>Google, four separate things</b>
+    <p>Search Console for the domain verification record, Analytics for a GA4 measurement ID,
+    AdSense for a publisher ID, AdMob for an app ID and a rewarded unit. Google Ads comes later,
+    when there is something worth sending traffic to.</p></span></label>
+
+  <label class="chk"><input type="checkbox">
+    <span><b>Transactional email<span class="tag block">blocks receipts and recovery</span></b>
+    <p>Resend or Postmark, plus real mailboxes for hello@bilbymobile.com and ns@nextwave.au. Without
+    this there are no receipts, no eSIM delivery emails and no account recovery, and account
+    recovery is the only way back in for a customer since there are no passwords.</p></span></label>
+
+  <label class="chk"><input type="checkbox">
+    <span><b>Sentry, or something like it</b>
+    <p>A crash in the Android app is otherwise invisible to you until someone writes in about it,
+    and most people do not write in, they uninstall.</p></span></label>
+</div>
+
+<h2>DNS at Hostinger</h2>
+<div class="body">
+  <p>I resolved every host in the map against live DNS. <strong>Most of this is already done.</strong>
+  The apex, www, app and api all answer on Vercel edge addresses today, and
+  <span class="m">app.bilbymobile.com</span> is serving a real deployment right now. Two records are
+  outstanding and one of them is pointing at something that is not answering.</p>
+  <p>Your project CNAME is <span class="m">ab6a23cf0f5a3fc1.vercel-dns-017.com</span>, and it
+  resolves correctly, so it is the right value to use everywhere a CNAME is called for below.</p>
+</div>
+<div class="scroll"><table>
+  <thead><tr><th>Zone</th><th>Type</th><th>Name</th><th>Value</th><th>Live check</th></tr></thead>
+  <tbody>
+    <tr><td class="m">bilbymobile.com</td><td>A</td><td class="m">@</td><td class="m">216.198.79.1</td><td class="yes">already correct</td></tr>
+    <tr><td class="m">bilbymobile.com</td><td>CNAME</td><td class="m">www</td><td class="m">ab6a23cf0f5a3fc1.vercel-dns-017.com</td><td class="yes">already resolving</td></tr>
+    <tr><td class="m">bilbymobile.com</td><td>CNAME</td><td class="m">app</td><td class="m">ab6a23cf0f5a3fc1.vercel-dns-017.com</td><td class="yes">already resolving, and serving</td></tr>
+    <tr><td class="m">bilbymobile.com</td><td>CNAME</td><td class="m">api</td><td class="m">ab6a23cf0f5a3fc1.vercel-dns-017.com</td><td class="yes">already resolving</td></tr>
+    <tr><td class="m">nextwave.au</td><td>CNAME</td><td class="m">bilbymobile</td><td class="m">ab6a23cf0f5a3fc1.vercel-dns-017.com</td><td class="cap">record exists, points elsewhere, nothing answering</td></tr>
+    <tr><td class="m">bilbymobile.com</td><td>CNAME</td><td class="m">status</td><td class="cap">a host that is not Vercel</td><td class="cap">no record yet</td></tr>
+    <tr><td class="m">bilbymobile.com</td><td>TXT</td><td class="m">@</td><td class="cap">google-site-verification from Search Console</td><td class="cap">pending</td></tr>
+    <tr><td class="m">bilbymobile.com</td><td>TXT</td><td class="m">@</td><td class="cap">SPF line from your email provider</td><td class="cap">pending</td></tr>
+    <tr><td class="m">bilbymobile.com</td><td>TXT</td><td class="cap">DKIM host from provider</td><td class="cap">DKIM key from provider</td><td class="cap">pending</td></tr>
+    <tr><td class="m">bilbymobile.com</td><td>TXT</td><td class="m">_dmarc</td><td class="m">v=DMARC1; p=none; rua=mailto:ns@nextwave.au</td><td class="cap">pending</td></tr>
+  </tbody>
+</table></div>
+
+<div class="callout warn">
+  <h3>Two things to fix, and one trap</h3>
+  <p><strong>bilbymobile.nextwave.au is pointing at the wrong place.</strong> It resolves to a pair of
+  addresses that are not the ones your project answers on, and nothing responds when you connect.
+  Repoint that CNAME at the project value above.</p>
+  <p><strong>status.bilbymobile.com should not point at Vercel.</strong> A status page hosted on the
+  same platform as the thing it reports on goes down with it, which is the one moment it exists for.
+  Cloudflare Pages or GitHub Pages are both free and independent. Until you pick one, leave the
+  record off rather than pointing it at the same deployment.</p>
+  <p><strong>The trap: DNS is only half of it.</strong> Each hostname also has to be added to the
+  project in Vercel under Settings, Domains. A domain with perfect DNS that has not been attached
+  returns a deployment not found page, which looks exactly like a DNS problem and is not one.</p>
+</div>
+
+<div class="callout">
+  <h3>app-ads.txt is the one that fails silently</h3>
+  <p>It must sit at the root of <span class="m">bilbymobile.com</span> and resolve with no redirect.
+  If it does not, AdMob puts the app into limited serving and the console never tells you why, the
+  revenue is simply lower forever. That is why the apex serves directly and www redirects to it
+  rather than the other way round.</p>
+</div>
+
+<h2>Environment values you paste in</h2>
+<div class="scroll"><table>
+  <thead><tr><th>Key</th><th>Where it comes from</th><th>Without it</th></tr></thead>
+  <tbody>
+    <tr><td class="m">TURSO_DATABASE_URL</td><td>Turso dashboard</td><td>No API at all</td></tr>
+    <tr><td class="m">TURSO_AUTH_TOKEN</td><td>Turso dashboard</td><td>No API at all</td></tr>
+    <tr><td class="m">SESSION_SECRET</td><td>Generate 32 random bytes</td><td>Sessions are forgeable</td></tr>
+    <tr><td class="m">ADMIN_SESSION_SECRET</td><td>A different 32 random bytes</td><td>Staff and customer sessions share a key, which defeats the domain split</td></tr>
+    <tr><td class="m">STRIPE_SECRET_KEY</td><td>Stripe, after approval</td><td>Checkout is a mock</td></tr>
+    <tr><td class="m">STRIPE_WEBHOOK_SECRET</td><td>Stripe, per endpoint</td><td>Orders never move to paid</td></tr>
+    <tr><td class="m">ESIMACCESS_API_KEY</td><td>eSIM Access console</td><td>That provider stays off in the registry</td></tr>
+    <tr><td class="m">AIRALO_CLIENT_ID / SECRET</td><td>Airalo Partners</td><td>That provider stays off</td></tr>
+    <tr><td class="m">RESELLPORTAL_API_KEY</td><td>ResellPortal</td><td>That provider stays off</td></tr>
+    <tr><td class="m">RESEND_API_KEY</td><td>Resend or Postmark</td><td>No receipts, no recovery</td></tr>
+    <tr><td class="m">SENTRY_DSN</td><td>Sentry</td><td>Crashes are invisible</td></tr>
+    <tr><td class="m">NEXT_PUBLIC_GA4_ID</td><td>Google Analytics</td><td>No traffic data</td></tr>
+    <tr><td class="m">NEXT_PUBLIC_ADSENSE_ID</td><td>AdSense</td><td>Display ads stay off, which is the default anyway</td></tr>
+    <tr><td class="m">ADMOB_APP_ID / ADMOB_REWARDED_ID</td><td>AdMob</td><td>Rewarded video stays off in the app</td></tr>
+    <tr><td class="m">OWNER_EMAIL</td><td>You</td><td>Nobody can sign into the staff console</td></tr>
+  </tbody>
+</table></div>
+
+<h2>The three monetisation switches</h2>
+<div class="body">
+  <p>You asked for all three and to decide later, so all three get built behind flags that default to
+  off. Turning one on is a setting in the staff console, not a deploy.</p>
+</div>
+<div class="scroll"><table>
+  <thead><tr><th>Switch</th><th>What it does</th><th>My honest read</th></tr></thead>
+  <tbody>
+    <tr><td><b>Google Ads</b><br><span class="cap">buy traffic</span></td>
+        <td>Conversion tracking on purchase, so you can see cost per sale rather than cost per click.</td>
+        <td>The one worth turning on first. Build the tracking now even at zero budget, because
+        retrofitting conversion data loses you the history you need to judge the first campaign.</td></tr>
+    <tr><td><b>AdSense</b><br><span class="cap">sell space</span></td>
+        <td>Display slots on the marketing pages only. Never on checkout, never in the web app.</td>
+        <td>Off by default and I would leave it off. On a page where someone is about to spend twenty
+        dollars, an ad unit earns you fractions of a cent and can hand your buyer to a competitor.
+        If you do switch it on, put it on future blog and guide pages, not the landing page.</td></tr>
+    <tr><td><b>AdMob</b><br><span class="cap">rewarded video</span></td>
+        <td>Rewarded video in the Android app, wired to the credit ledger that already exists.</td>
+        <td>Worth wiring even with the free tier off, because the SDK, the app-ads.txt crawl and the
+        Play declarations all have lead time. Switching it on later then costs nothing.</td></tr>
+  </tbody>
+</table></div>
+
+<h2>Many suppliers, and room for what comes after eSIMs</h2>
+<div class="body">
+  <p>You asked for something you can extend, so the design separates <strong>what you sell</strong>
+  from <strong>who delivers it</strong>. A catalogue item is a thing with a price and a description.
+  A fulfiller is whoever actually provisions it. An eSIM plan happens to be a catalogue item
+  fulfilled by a wholesale eSIM provider, and nothing in that sentence is specific to eSIMs, which
+  is what makes a second product category cheap later.</p>
+</div>
+<pre>interface Fulfiller {
+  readonly id: string;              // "esimaccess", "airalo", "resellportal"
+  readonly kind: "esim" | string;   // the category, so a future product is not a special case
+  health(): Promise&lt;Health&gt;;        // polled, and shown in the console
+  balance(): Promise&lt;Money | null&gt;; // prepaid wallet, when the provider has one
+  quote(item: CatalogItem): Promise&lt;Quote&gt;;
+  fulfil(order: Order): Promise&lt;Fulfilment&gt;;
+}</pre>
+<div class="body">
+  <p>Three things make this work rather than just look tidy:</p>
+  <p><strong>Routing lives in the database, not in code.</strong> A row per country saying preferred
+  provider and fallback provider. Changing who serves Indonesia is a click in the console, not a
+  deploy, which matters the first time a provider has an outage on a Friday night.</p>
+  <p><strong>Cost is captured on the order, never looked up.</strong> The rate you paid on the day is
+  a fact about that order. Recomputing margin from today's rate card makes last month's numbers
+  move, and a dashboard whose history changes is one nobody trusts twice.</p>
+  <p><strong>A provider that fails health checks stops receiving orders automatically</strong> and
+  the console says so, rather than silently failing customer purchases until someone notices.</p>
+</div>
+
+<h2>The order things happen in</h2>
+<div class="phases">
+  <div class="ph"><div class="when">Phase 0</div><div>
+    <h3>Repository and pipeline</h3>
+    <p>Code onto GitHub, Vercel connected, preview deploys working, the five domains attached and
+    verified. Nothing is shipped to a customer yet and everything after this depends on it.</p>
+    <span class="gate">needs: GitHub, Vercel, Hostinger DNS</span></div></div>
+
+  <div class="ph"><div class="when">Phase 1</div><div>
+    <h3>Public surface live</h3>
+    <p>Landing page, legal pages, app-ads.txt, status page, analytics and Search Console. The
+    unsubstantiated coverage numbers come off or get evidence behind them before this goes public.</p>
+    <span class="gate">needs: Phase 0, Google Search Console and Analytics</span></div></div>
+
+  <div class="ph"><div class="when">Phase 2</div><div>
+    <h3>Supplier registry and the three adapters</h3>
+    <p>Providers table, per country routing, health checks, and the admin page that turns each one on
+    and off. Built against sandboxes, so no contract is needed to finish it.</p>
+    <span class="gate">needs: sandbox credentials for each provider</span></div></div>
+
+  <div class="ph"><div class="when">Phase 3</div><div>
+    <h3>Checkout</h3>
+    <p>Stripe, the signed single use handoff token so a purchase started in the app lands on the
+    right account, receipts by email, and the refund path.</p>
+    <span class="gate">gated by: Stripe underwriting, which is why it starts in week one</span></div></div>
+
+  <div class="ph"><div class="when">Phase 4</div><div>
+    <h3>Staff console</h3>
+    <p>Dashboard, operations queue with retry, costing and margin, discount codes, customer lookup,
+    refunds, and the append only audit log underneath all of it.</p>
+    <span class="gate">needs: Phase 2 and 3 to have anything to show</span></div></div>
+
+  <div class="ph"><div class="when">Phase 5</div><div>
+    <h3>Web app end to end</h3>
+    <p>Destination, plan, pay, install, usage, support. The whole customer journey working in a
+    browser before any of it is asked to work in a binary you cannot patch quickly.</p>
+    <span class="gate">needs: Phases 2 to 4</span></div></div>
+
+  <div class="ph"><div class="when">Phase 6</div><div>
+    <h3>Android release</h3>
+    <p>The R8 crash bisect that is still open, the signed bundle, Data Safety declarations generated
+    from the data inventory already in the code, and closed testing before production.</p>
+    <span class="gate">needs: Phase 5, and the crash resolved</span></div></div>
+
+  <div class="ph"><div class="when">Phase 7</div><div>
+    <h3>Monetisation on</h3>
+    <p>Google Ads conversion tracking first, AdMob second if the free tier comes back, AdSense only
+    if you decide the display revenue is worth the buyer you lose.</p>
+    <span class="gate">needs: real traffic to measure against</span></div></div>
+</div>
+
+<h2>Running alongside, on your clock not mine</h2>
+<ol class="risks">
+  <li><b>Carriage service provider registration</b><span>Wholesale providers are prohibited from
+    supplying an unregistered CSP under the 2025 amendments. This gates supply itself, so it sits
+    ahead of every commercial conversation, and it is the single item most likely to delay launch.</span></li>
+  <li><b>Stripe underwriting</b><span>Elevated risk category, weeks of lead time, and a real chance
+    of decline. Apply in week one so a no arrives while there is still time to arrange an alternative.</span></li>
+  <li><b>GST, now that you are the merchant</b><span>Stripe is not a merchant of record, so the tax
+    is yours. Registration is required once turnover passes the threshold, sales to Australian
+    consumers carry GST, and every tax invoice must show the ABN even though no page prints it.
+    Worth an hour with an accountant before the first sale rather than after the first quarter.</span></li>
+  <li><b>The telecommunications lawyer</b><span>Still unbooked. Written only support under the TCP
+    Code, comparative advertising if you name competitors, and the CSP obligations all land in the
+    same conversation.</span></li>
+  <li><b>The coverage claims</b><span>190 plus countries and 200 plus carriers are representations
+    about a future matter until a supplier is signed. Either evidence them or change them before the
+    page is public.</span></li>
+</ol>
+
+</div>
+
+<script>
+const boxes = [...document.querySelectorAll('.chk input')];
+const bar = document.getElementById('progBar');
+const label = document.getElementById('progLabel');
+function sync(){
+  const n = boxes.filter(b => b.checked).length;
+  bar.style.width = (n / boxes.length * 100) + '%';
+  label.textContent = n + ' of ' + boxes.length + ' done';
+}
+boxes.forEach(b => b.addEventListener('change', sync));
+sync();
+</script>

@@ -1,0 +1,607 @@
+<title>Bilby Signal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+/* ─────────────────────────────────────────────────────────────────────────
+   Bilby, landing page.
+
+   One visual world on purpose: warm cream ground, deep navy ink, sand and
+   clay from the Australian interior, a single teal for anything that means
+   "this is fine" and a pale sky blue reserved exclusively for signal. The
+   hero render is lit at golden hour, so the page does not offer a dark mode.
+   A dark inversion would fight the photograph rather than serve it, and the
+   reader is usually anxious rather than nocturnal.
+   ───────────────────────────────────────────────────────────────────── */
+:root{
+  --cream:#F7EFE4; --surface:#FDF9F3; --raised:#F1E6D7; --sunk:#EADCC9;
+  --line:#E7DAC8; --line2:#F0E5D6;
+  --ink:#0B2038; --ink2:#3A4C60; --ink3:#7C8B99;
+  --sand:#EEBF8B; --clay:#C87F45; --teal:#35857A; --teal-wash:#DCEAE6;
+  --sky:#5EA9CE;
+  --shadow:0 1px 2px rgba(11,32,56,.04), 0 14px 38px rgba(11,32,56,.07);
+  --lift:0 2px 6px rgba(11,32,56,.06), 0 26px 60px rgba(11,32,56,.12);
+  --display:"Outfit",-apple-system,"Segoe UI",sans-serif;
+  --body:"Plus Jakarta Sans",-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --base:16.5px;
+}
+:root.big{--base:19.5px}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0; background:var(--cream); color:var(--ink); font-family:var(--body);
+  font-size:var(--base); line-height:1.66; -webkit-font-smoothing:antialiased; overflow-x:hidden}
+h1,h2,h3{font-family:var(--display); margin:0; letter-spacing:-.03em; text-wrap:balance}
+p{margin:0}
+a{color:inherit}
+img{max-width:100%; display:block}
+:focus-visible{outline:2.5px solid var(--teal); outline-offset:3px; border-radius:8px}
+
+.shell{max-width:1240px; margin:0 auto; padding:0 28px}
+.band{padding:clamp(62px,7.5vw,108px) 0}
+.band--s{background:var(--surface); border-block:1px solid var(--line2)}
+.eyebrow{font-family:var(--mono); font-size:.68rem; letter-spacing:.17em;
+  text-transform:uppercase; color:var(--ink3); margin:0 0 14px}
+.head{max-width:56ch; margin-bottom:clamp(30px,4vw,48px)}
+.head h2{font-size:clamp(27px,3.5vw,42px); line-height:1.1; font-weight:600; margin-bottom:14px}
+.head p{font-size:1.05rem; color:var(--ink2); max-width:60ch}
+
+/* ── Nav ────────────────────────────────────────────────────────────── */
+.nav{position:sticky; top:0; z-index:50; background:rgba(247,239,228,.86);
+  backdrop-filter:blur(16px) saturate(1.2); border-bottom:1px solid transparent;
+  transition:border-color .3s ease, background .3s ease}
+.nav.stuck{border-bottom-color:var(--line)}
+.nav .shell{display:flex; align-items:center; gap:30px; height:82px}
+.brand{display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink)}
+.brand span{font-family:var(--display); font-weight:700; font-size:1.55rem; letter-spacing:-.045em}
+.nav .links{margin-left:auto; display:flex; gap:26px; font-size:.95rem; align-items:center}
+.nav .links a{color:var(--ink2); text-decoration:none; display:flex; align-items:center; gap:5px;
+  transition:color .22s}
+.nav .links a:hover{color:var(--ink)}
+.nav .links svg{opacity:.5}
+.login{border:1.5px solid var(--ink); border-radius:999px; padding:12px 26px;
+  font-family:var(--display); font-weight:500; font-size:.98rem; text-decoration:none;
+  color:var(--ink); white-space:nowrap; transition:background .28s ease, color .28s ease}
+.login:hover{background:var(--ink); color:var(--cream)}
+
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  padding:17px 34px; border-radius:999px; font-family:var(--display); font-weight:600;
+  font-size:1rem; text-decoration:none; border:1.5px solid transparent; cursor:pointer;
+  transition:transform .45s cubic-bezier(.22,1.2,.36,1), box-shadow .45s ease}
+.btn:hover{transform:translateY(-2px); box-shadow:var(--lift)}
+.btn--go{background:var(--ink); color:var(--cream)}
+.btn--quiet{background:var(--surface); color:var(--ink); border-color:var(--line)}
+
+/* ── Hero ───────────────────────────────────────────────────────────── */
+.hero{position:relative; overflow:hidden; display:flex; align-items:center;
+  min-height:min(86vh,880px); padding:clamp(34px,5vw,72px) 0 clamp(46px,6vw,86px)}
+.hero .shell{position:relative; z-index:2; width:100%}
+.copy{max-width:min(560px,52%)}
+.hero h1{font-size:clamp(42px,5.6vw,76px); line-height:1.02; font-weight:600;
+  letter-spacing:-.045em; margin-bottom:22px}
+.hero h1 .n{font-variant-numeric:tabular-nums}
+.hero .lede{font-size:clamp(17px,1.5vw,22px); color:var(--ink2); max-width:30ch; margin-bottom:36px}
+.hero .acts{display:flex; flex-wrap:wrap; gap:14px; margin-bottom:42px}
+
+.pills{display:inline-flex; flex-wrap:wrap; align-items:center; gap:6px;
+  background:rgba(234,220,201,.5); border-radius:999px; padding:9px 12px}
+.pill{display:inline-flex; align-items:center; gap:10px; padding:6px 16px 6px 6px;
+  border-radius:999px; font-size:.9rem; color:var(--ink2); white-space:nowrap}
+.pill i{width:30px; height:30px; border-radius:50%; display:grid; place-items:center;
+  background:var(--ink); color:var(--cream); font-family:var(--mono); font-size:.6rem;
+  font-style:normal; flex:none}
+.pill.ok i{background:var(--teal)}
+
+/* Hero art, bled to the right edge the way the render is composed */
+.art{position:absolute; inset:0 0 0 auto; width:min(64%,1020px); z-index:1; overflow:hidden}
+.art img{width:100%; height:100%; object-fit:cover; object-position:54% 46%;
+  animation:drift 11s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translateY(8px) scale(1.01)} to{transform:translateY(-10px) scale(1.035)}}
+.art .fade{position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(90deg, var(--cream) 0%, rgba(247,239,228,.92) 14%,
+             rgba(247,239,228,.35) 34%, rgba(247,239,228,0) 52%),
+             linear-gradient(0deg, var(--cream) 0%, rgba(247,239,228,0) 16%),
+             linear-gradient(180deg, var(--cream) 0%, rgba(247,239,228,0) 12%)}
+.art .sig{position:absolute; inset:0; width:100%; height:100%; pointer-events:none}
+.wave{fill:none; stroke:#D6F1FF; stroke-width:12; stroke-linecap:round;
+  filter:drop-shadow(0 0 10px rgba(150,215,255,.95)); opacity:0;
+  transform-box:view-box; transform-origin:559px 308px;
+  animation:emit 3s cubic-bezier(.32,.6,.4,1) infinite}
+.wave:nth-child(2){animation-delay:1s}
+.wave:nth-child(3){animation-delay:2s}
+@keyframes emit{
+  0%{opacity:0; transform:scale(.3)}
+  16%{opacity:.95}
+  66%{opacity:.45}
+  100%{opacity:0; transform:scale(1.45)}
+}
+.spark{fill:#E8F7FF; transform-box:view-box; transform-origin:559px 308px;
+  animation:spark 3s ease-in-out infinite}
+@keyframes spark{0%,100%{opacity:.35; transform:scale(.8)} 50%{opacity:.95; transform:scale(1.2)}}
+.orbit{fill:none; stroke:#CFEDFF; stroke-width:3.5; opacity:0;
+  filter:drop-shadow(0 0 6px rgba(150,215,255,.7));
+  animation:orbit 8s linear infinite}
+.orbit.b{animation-delay:3s}
+@keyframes orbit{0%{opacity:0; stroke-dashoffset:0} 14%{opacity:.6} 82%{opacity:.4}
+  100%{opacity:0; stroke-dashoffset:-1600}}
+
+/* ── Steps ──────────────────────────────────────────────────────────── */
+.steps{display:grid; grid-template-columns:repeat(3,1fr); gap:20px}
+.step{background:var(--surface); border:1px solid var(--line); border-radius:26px;
+  padding:32px 30px 34px; transition:transform .5s cubic-bezier(.22,1,.36,1), box-shadow .5s ease}
+.step:hover{transform:translateY(-5px); box-shadow:var(--lift)}
+.step .num{width:44px; height:44px; border-radius:14px; background:var(--ink); color:var(--cream);
+  display:grid; place-items:center; font-family:var(--display); font-weight:600; font-size:1.05rem;
+  margin-bottom:20px}
+.step h3{font-size:1.24rem; font-weight:600; margin-bottom:11px}
+.step p{font-size:.96rem; color:var(--ink2)}
+
+/* ── Destinations ───────────────────────────────────────────────────── */
+.dests{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px}
+.dest{background:var(--surface); border:1px solid var(--line); border-radius:22px; padding:22px 22px 20px;
+  cursor:pointer; text-align:left; font:inherit; color:inherit;
+  transition:transform .45s cubic-bezier(.22,1,.36,1), box-shadow .45s ease, border-color .3s}
+.dest:hover{transform:translateY(-4px); box-shadow:var(--lift); border-color:var(--sand)}
+.dest .swatch{width:46px; height:46px; border-radius:14px; margin-bottom:16px;
+  background:var(--ink); color:var(--cream); display:grid; place-items:center;
+  font-family:var(--mono); font-size:.86rem; letter-spacing:.04em;
+  transition:background .3s ease, color .3s ease}
+.dest:hover .swatch{background:var(--sand); color:#2A1A0B}
+.dest h3{font-size:1.05rem; font-weight:600; margin-bottom:4px}
+.dest p{font-size:.86rem; color:var(--ink3); font-variant-numeric:tabular-nums}
+.dest .from{font-family:var(--display); font-weight:600; color:var(--ink); font-size:1.1rem;
+  margin-top:12px; font-variant-numeric:tabular-nums}
+
+/* ── Plans ──────────────────────────────────────────────────────────── */
+.plans{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; align-items:start}
+.plan{background:var(--surface); border:1px solid var(--line); border-radius:28px; padding:32px 30px 34px;
+  position:relative; transition:transform .5s cubic-bezier(.22,1,.36,1), box-shadow .5s ease}
+.plan:hover{transform:translateY(-5px); box-shadow:var(--lift)}
+.plan.best{background:var(--ink); color:var(--cream); border-color:var(--ink)}
+.plan.best .amt, .plan.best h3{color:var(--cream)}
+.plan.best li{color:rgba(247,239,228,.82)}
+.plan.best .note{color:rgba(247,239,228,.6)}
+.plan .tagbest{position:absolute; top:22px; right:24px; font-family:var(--mono); font-size:.62rem;
+  letter-spacing:.14em; text-transform:uppercase; background:var(--sand); color:#2A1A0B;
+  padding:5px 11px; border-radius:999px}
+.plan h3{font-size:1.16rem; font-weight:600; margin-bottom:6px}
+.plan .note{font-size:.87rem; color:var(--ink3); margin-bottom:22px}
+.plan .amt{font-family:var(--display); font-size:2.6rem; font-weight:600; letter-spacing:-.04em;
+  color:var(--ink); font-variant-numeric:tabular-nums; line-height:1}
+.plan .per{font-size:.9rem; color:var(--ink3); margin-bottom:24px}
+.plan ul{list-style:none; padding:0; margin:0 0 28px; display:grid; gap:11px}
+.plan li{font-size:.94rem; color:var(--ink2); padding-left:26px; position:relative}
+.plan li::before{content:""; position:absolute; left:0; top:.52em; width:15px; height:8px;
+  border-left:2px solid var(--teal); border-bottom:2px solid var(--teal);
+  transform:rotate(-45deg)}
+.plan.best li::before{border-color:var(--sand)}
+.plan .btn{width:100%}
+.plan.best .btn--go{background:var(--sand); color:#2A1A0B}
+
+/* ── Why ────────────────────────────────────────────────────────────── */
+.why{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px}
+.wy{background:var(--raised); border-radius:24px; padding:28px}
+.wy .ic{width:40px; height:40px; border-radius:12px; background:var(--surface);
+  display:grid; place-items:center; margin-bottom:18px}
+.wy h3{font-size:1.05rem; font-weight:600; margin-bottom:9px}
+.wy p{font-size:.92rem; color:var(--ink2)}
+
+/* ── Field notes ────────────────────────────────────────────────────── */
+.board{background:var(--surface); border:1px solid var(--line); border-radius:30px;
+  padding:clamp(24px,3.4vw,42px); box-shadow:var(--shadow)}
+.empty{border:1.5px dashed var(--line); border-radius:24px; padding:48px 30px; text-align:center}
+.empty h3{font-size:1.3rem; font-weight:600; margin-bottom:12px}
+.empty p{font-size:.98rem; color:var(--ink2); max-width:54ch; margin:0 auto 24px}
+.notes{display:grid; grid-template-columns:repeat(auto-fit,minmax(255px,1fr)); gap:16px}
+.fnote{background:var(--raised); border-radius:22px; padding:24px; position:relative}
+.fnote .where{font-family:var(--mono); font-size:.72rem; letter-spacing:.07em; color:var(--clay);
+  margin-bottom:13px; display:flex; justify-content:space-between; gap:10px; padding-right:70px}
+.fnote p{font-size:.95rem; margin-bottom:14px}
+.fnote .who{font-size:.85rem; color:var(--ink3)}
+.tagex{position:absolute; top:18px; right:20px; font-family:var(--mono); font-size:.6rem;
+  letter-spacing:.13em; color:var(--ink3); background:var(--sunk); padding:3px 9px; border-radius:8px}
+.hidden{display:none}
+
+/* ── Closing ────────────────────────────────────────────────────────── */
+.close{background:var(--ink); color:var(--cream); border-radius:36px; padding:clamp(40px,5vw,66px);
+  display:grid; grid-template-columns:1fr auto; gap:34px; align-items:center}
+.close h2{font-size:clamp(26px,3.2vw,40px); line-height:1.1; font-weight:600; margin-bottom:14px}
+.close p{color:rgba(247,239,228,.72); max-width:46ch}
+.close .btn--go{background:var(--sand); color:#2A1A0B}
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+.foot{background:var(--cream); padding:60px 0 68px; border-top:1px solid var(--line)}
+.foot .shell{display:flex; flex-wrap:wrap; gap:36px; justify-content:space-between; align-items:flex-start}
+.foot .about{max-width:34ch}
+.foot .about p{font-size:.87rem; color:var(--ink3); margin-top:14px}
+.foot .contact{margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:baseline}
+.foot .contact a{color:var(--ink2); text-decoration:none; border-bottom:1px solid var(--line)}
+.foot .contact a:hover{color:var(--ink); border-bottom-color:var(--ink)}
+.foot .contact span{color:var(--ink3)}
+.foot .cols{display:flex; gap:52px; flex-wrap:wrap; font-size:.9rem}
+.foot .cols div{display:grid; gap:10px; align-content:start}
+.foot .cols b{font-family:var(--mono); font-size:.64rem; letter-spacing:.15em;
+  text-transform:uppercase; color:var(--ink3); font-weight:500}
+.foot .cols a{color:var(--ink2); text-decoration:none}
+.foot .cols a:hover{color:var(--ink)}
+.smallprint{border-top:1px solid var(--line); margin-top:44px; padding-top:22px;
+  font-size:.78rem; color:var(--ink3); font-family:var(--mono); letter-spacing:.02em}
+
+/* ── Reveal ─────────────────────────────────────────────────────────── */
+.rv{opacity:0; transform:translateY(22px);
+  transition:opacity .85s ease, transform .85s cubic-bezier(.22,1,.36,1)}
+.rv.in{opacity:1; transform:none}
+
+@media (max-width:980px){
+  .hero{display:block; min-height:0; padding:0 0 clamp(40px,7vw,64px)}
+  .art{position:relative; width:100%; height:auto; margin-bottom:26px; overflow:visible}
+  .art img{height:auto; animation:none}
+  .art .fade{background:linear-gradient(0deg, var(--cream) 0%, rgba(247,239,228,0) 26%),
+             linear-gradient(180deg, var(--cream) 0%, rgba(247,239,228,0) 14%)}
+  .copy{max-width:100%}
+  .steps{grid-template-columns:1fr}
+  .nav .links{display:none}
+  .close{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none !important; transition:none !important}
+  .rv{opacity:1; transform:none}
+  .wave{opacity:.6}
+}
+</style>
+
+<header class="nav" id="nav">
+  <div class="shell">
+    <a class="brand" href="#top">
+      <svg width="34" height="37" viewBox="0 0 300 330" aria-label="Bilby">
+        <g fill="var(--ink)">
+          <path d="M96 262 C 58 272, 48 300, 72 308" fill="none" stroke="var(--ink)" stroke-width="17" stroke-linecap="round"/>
+          <ellipse cx="150" cy="248" rx="62" ry="56"/>
+          <ellipse cx="132" cy="108" rx="17" ry="62" transform="rotate(-9 132 152)"/>
+          <ellipse cx="166" cy="96" rx="17" ry="64" transform="rotate(8 166 148)"/>
+          <ellipse cx="148" cy="180" rx="48" ry="42"/>
+          <path d="M182 160 C 210 162, 236 178, 238 190 C 236 200, 214 205, 190 200 C 182 188, 180 172, 182 160 Z"/>
+        </g>
+        <ellipse cx="182" cy="176" rx="7.4" ry="8" fill="var(--cream)"/>
+      </svg>
+      <span>Bilby</span>
+    </a>
+    <nav class="links">
+      <a href="#top">Home</a>
+      <a href="#plans">eSIM Plans <svg width="10" height="6" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></a>
+      <a href="#dests">Destinations <svg width="10" height="6" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></a>
+      <a href="#help">Help <svg width="10" height="6" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></a>
+      <a href="#partners">Affiliate</a>
+      <a href="#partners">Partners</a>
+    </nav>
+    <a class="login" href="#top">Login / Sign Up</a>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="art">
+    <img src="__HERO__" alt="The Bilby mascot floating above the Earth over Australia, broadcasting a signal">
+    <svg class="sig" viewBox="0 0 1400 1484" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <g transform="rotate(6 559 308)">
+        <path class="wave" d="M446 131 A 142 142 0 0 1 672 131"/>
+        <path class="wave" d="M446 131 A 142 142 0 0 1 672 131"/>
+        <path class="wave" d="M446 131 A 142 142 0 0 1 672 131"/>
+      </g>
+      <circle class="spark" cx="559" cy="308" r="11"/>
+      <ellipse class="orbit" cx="700" cy="1180" rx="560" ry="150" stroke-dasharray="26 22"/>
+      <ellipse class="orbit b" cx="700" cy="1244" rx="650" ry="180" stroke-dasharray="16 32"/>
+    </svg>
+    <div class="fade"></div>
+  </div>
+  <div class="shell">
+    <div class="copy">
+      <h1>Stay online in <span class="n" id="count">190</span>+ countries.</h1>
+      <p class="lede">Get eSIM data for any trip. Simple. Fast. Reliable.</p>
+      <div class="acts">
+        <a class="btn btn--go" href="#dests">Get my trip eSIM</a>
+        <a class="btn btn--quiet" href="#how">See how it works</a>
+      </div>
+      <div class="pills">
+        <span class="pill"><i><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/></svg></i> 190+ Countries</span>
+        <span class="pill"><i>5G</i> 200+ Carriers</span>
+        <span class="pill ok"><i><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></i> eSIM Compatible</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band band--s" id="how">
+  <div class="shell">
+    <div class="head rv">
+      <p class="eyebrow">How it works</p>
+      <h2>Three steps, and none of them happen at the airport.</h2>
+      <p>The thing that goes wrong in this category is a traveller standing at arrivals at eleven at
+        night trying to install something. So Bilby moves all of it earlier.</p>
+    </div>
+    <div class="steps rv">
+      <div class="step">
+        <div class="num">1</div>
+        <h3>Pick where you are going</h3>
+        <p>Choose a country and a size. The full price is on the card before you pay, including what
+          happens if the eSIM never activates.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3>Install it at home</h3>
+        <p>One scan on your own couch, on your own wifi, with time to spare. Nothing switches on yet
+          and nothing starts counting down.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3>Land already connected</h3>
+        <p>Turn the phone on and it finds a local network by itself. No app to open and no code to
+          type while you are carrying a bag and a passport.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="dests">
+  <div class="shell">
+    <div class="head rv">
+      <p class="eyebrow">Destinations</p>
+      <h2>The places Australians actually fly to.</h2>
+      <p>Pick one to see the plans. Prices are per trip, not per month, and nothing renews on its own
+        after you come home.</p>
+    </div>
+    <div class="dests rv" id="destGrid"></div>
+  </div>
+</section>
+
+<section class="band band--s" id="plans">
+  <div class="shell">
+    <div class="head rv">
+      <p class="eyebrow">eSIM plans</p>
+      <h2>Three sizes for <span id="planCountry">Indonesia</span>.</h2>
+      <p>Full local speed on every plan. No throttle after a hidden allowance, because a slow eSIM you
+        cannot use is the same as no eSIM at all.</p>
+    </div>
+    <div class="plans rv" id="planGrid"></div>
+  </div>
+</section>
+
+<section class="band" id="help">
+  <div class="shell">
+    <div class="head rv">
+      <p class="eyebrow">Why Bilby</p>
+      <h2>A small Australian business, which is the point.</h2>
+      <p>The large travel eSIM brands are support desks in another time zone reselling the same
+        underlying networks. What differs is who picks up when it goes wrong.</p>
+    </div>
+    <div class="why rv">
+      <div class="wy">
+        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><path d="M21 12a8 8 0 0 1-8 8H6l-3 2 1-4a8 8 0 1 1 17-6z"/></svg></div>
+        <h3>Someone answers</h3>
+        <p>A person in Australian hours who can see your profile and fix it. Not a form, and not a bot
+          that asks you to restart your phone.</p>
+      </div>
+      <div class="wy">
+        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><path d="M4 6h16v12H4z"/><path d="M4 10h16"/></svg></div>
+        <h3>Australian consumer law</h3>
+        <p>You are covered by Australian Consumer Law, not by terms written in a jurisdiction you have
+          never been to.</p>
+      </div>
+      <div class="wy">
+        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><path d="M20 7L9 18l-5-5"/></svg></div>
+        <h3>A refund if it never worked</h3>
+        <p>If the eSIM never activated on your trip you get your money back, and we do not ask you to
+          prove it with screenshots.</p>
+      </div>
+      <div class="wy">
+        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg></div>
+        <h3>Nothing renews behind you</h3>
+        <p>The plan ends when the trip ends. There is no subscription quietly billing you three months
+          after you got home.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band band--s" id="notes">
+  <div class="shell">
+    <div class="head rv">
+      <p class="eyebrow">Field notes</p>
+      <h2>Travellers write down what actually happened.</h2>
+      <p>Not a star rating. A note: which airport, which network it picked up, and how long it took
+        between the plane door and the first bar of signal. The next person going there reads it
+        before they fly.</p>
+    </div>
+    <div class="board rv">
+      <div class="empty" id="emptyState">
+        <h3>The board is empty, and we are leaving it that way.</h3>
+        <p>Bilby has not flown with anyone yet. When the first traveller lands, their note goes here.
+          We would rather show you an empty board than invent a single review.</p>
+        <button class="btn btn--quiet" id="previewBtn">Show me how it will look</button>
+      </div>
+      <div class="notes hidden" id="noteList">
+        <div class="fnote">
+          <div class="where"><span>Denpasar DPS</span><span>14 Aug</span></div>
+          <span class="tagex">Example</span>
+          <p>Picked up Telkomsel on the walk to baggage claim. Two minutes, no messing about.</p>
+          <p class="who">Sam, flying from Perth</p>
+        </div>
+        <div class="fnote">
+          <div class="where"><span>Narita NRT</span><span>9 Aug</span></div>
+          <span class="tagex">Example</span>
+          <p>Nothing for the first ten minutes and I did start to panic. Toggled flight mode once and
+            it caught Docomo straight away.</p>
+          <p class="who">Priya, flying from Melbourne</p>
+        </div>
+        <div class="fnote">
+          <div class="where"><span>Suvarnabhumi BKK</span><span>2 Aug</span></div>
+          <span class="tagex">Example</span>
+          <p>Was already connected before the plane doors opened. Texted home from the taxi queue.</p>
+          <p class="who">Tom, flying from Brisbane</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="partners">
+  <div class="shell">
+    <div class="close rv">
+      <div>
+        <h2>Sort the phone out before you sort the packing.</h2>
+        <p>Five minutes on the couch tonight, and the part of the trip nobody enjoys thinking about is
+          already done.</p>
+      </div>
+      <a class="btn btn--go" href="#dests">Get my trip eSIM</a>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="shell">
+    <div class="about">
+      <a class="brand" href="#top">
+        <svg width="30" height="33" viewBox="0 0 300 330" aria-hidden="true">
+          <g fill="var(--ink)">
+            <path d="M96 262 C 58 272, 48 300, 72 308" fill="none" stroke="var(--ink)" stroke-width="17" stroke-linecap="round"/>
+            <ellipse cx="150" cy="248" rx="62" ry="56"/>
+            <ellipse cx="132" cy="108" rx="17" ry="62" transform="rotate(-9 132 152)"/>
+            <ellipse cx="166" cy="96" rx="17" ry="64" transform="rotate(8 166 148)"/>
+            <ellipse cx="148" cy="180" rx="48" ry="42"/>
+            <path d="M182 160 C 210 162, 236 178, 238 190 C 236 200, 214 205, 190 200 C 182 188, 180 172, 182 160 Z"/>
+          </g>
+          <ellipse cx="182" cy="176" rx="7.4" ry="8" fill="var(--cream)"/>
+        </svg>
+        <span>Bilby</span>
+      </a>
+      <p>Bilby is the telecommunications division of Nextwave.au, Australia.</p>
+      <p class="contact"><a href="mailto:ns@nextwave.au">ns@nextwave.au</a>
+        <span>·</span> <a href="https://nextwave.au">nextwave.au</a></p>
+    </div>
+    <div class="cols">
+      <div>
+        <b>Product</b>
+        <a href="#plans">eSIM plans</a>
+        <a href="#dests">Destinations</a>
+        <a href="#how">How it works</a>
+        <a href="#notes">Field notes</a>
+      </div>
+      <div>
+        <b>Support</b>
+        <a href="#help">Help centre</a>
+        <a href="#help">Device check</a>
+        <a href="#help">Contact us</a>
+        <a href="#help">Network status</a>
+      </div>
+      <div>
+        <b>Company</b>
+        <a href="#partners">Affiliate</a>
+        <a href="#partners">Partners</a>
+        <a href="#help">About us</a>
+      </div>
+      <div>
+        <b>Legal</b>
+        <a href="#help">Terms</a>
+        <a href="#help">Privacy</a>
+        <a href="#help">Refunds</a>
+      </div>
+    </div>
+  </div>
+  <div class="shell">
+    <p class="smallprint">Design mockup. Coverage counts, carrier counts and prices on this page are
+      placeholders and none of them are contracted yet.</p>
+  </div>
+</footer>
+
+<script>
+const DESTS = [
+  {k:"Indonesia", code:"ID", cities:"Bali, Jakarta", from:12},
+  {k:"Thailand", code:"TH",  cities:"Bangkok, Phuket", from:11},
+  {k:"Japan", code:"JP",     cities:"Tokyo, Osaka",  from:14},
+  {k:"Vietnam", code:"VN",   cities:"Hanoi, Da Nang", from:11},
+  {k:"China", code:"CN",     cities:"Shanghai, Beijing", from:16},
+  {k:"Pakistan", code:"PK",  cities:"Lahore, Karachi", from:15},
+  {k:"Singapore", code:"SG", cities:"Changi", from:12},
+  {k:"New Zealand", code:"NZ", cities:"Auckland, Queenstown", from:13}
+];
+
+const SIZES = [
+  {n:"Short trip", note:"A long weekend, maps and messages", gb:3,  days:15, mult:1.0},
+  {n:"Two weeks",  note:"The one most people actually need", gb:10, days:30, mult:1.85, best:true},
+  {n:"Long stay",  note:"A month away, or working as you go", gb:20, days:60, mult:3.1}
+];
+
+let pick = 0;
+
+function money(n){ return "A$" + n.toFixed(0); }
+
+function renderDests(){
+  const g = document.getElementById("destGrid");
+  g.innerHTML = "";
+  DESTS.forEach((d, i) => {
+    const b = document.createElement("button");
+    b.className = "dest"; b.type = "button";
+    b.innerHTML = '<div class="swatch">' + d.code + '</div>' +
+      '<h3>' + d.k + '</h3><p>' + d.cities + '</p>' +
+      '<div class="from">from ' + money(d.from) + '</div>';
+    b.addEventListener("click", () => { pick = i; renderPlans();
+      document.getElementById("plans").scrollIntoView({behavior:"smooth", block:"start"}); });
+    g.appendChild(b);
+  });
+}
+
+function renderPlans(){
+  const d = DESTS[pick];
+  document.getElementById("planCountry").textContent = d.k;
+  const g = document.getElementById("planGrid");
+  g.innerHTML = "";
+  SIZES.forEach(s => {
+    const el = document.createElement("div");
+    el.className = "plan" + (s.best ? " best" : "");
+    el.innerHTML =
+      (s.best ? '<span class="tagbest">Most chosen</span>' : '') +
+      '<h3>' + s.n + '</h3>' +
+      '<p class="note">' + s.note + '</p>' +
+      '<div class="amt">' + money(d.from * s.mult) + '</div>' +
+      '<p class="per">' + s.gb + ' GB, valid ' + s.days + ' days from first use</p>' +
+      '<ul><li>Full local speed, never throttled</li>' +
+      '<li>Hotspot included</li>' +
+      '<li>Install before you fly</li>' +
+      '<li>Refunded if it never activates</li></ul>' +
+      '<a class="btn ' + (s.best ? 'btn--go' : 'btn--quiet') + '" href="#top">Choose this one</a>';
+    g.appendChild(el);
+  });
+}
+
+renderDests();
+renderPlans();
+
+document.getElementById("previewBtn").addEventListener("click", () => {
+  document.getElementById("emptyState").classList.add("hidden");
+  document.getElementById("noteList").classList.remove("hidden");
+});
+
+const nav = document.getElementById("nav");
+addEventListener("scroll", () => nav.classList.toggle("stuck", scrollY > 10), {passive:true});
+
+const io = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } });
+}, {threshold:.1, rootMargin:"0px 0px -50px 0px"});
+document.querySelectorAll(".rv").forEach(el => io.observe(el));
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const c = document.getElementById("count");
+if (!reduce){
+  let t0 = null;
+  const step = ts => {
+    if (t0 === null) t0 = ts;
+    const p = Math.min((ts - t0) / 1300, 1);
+    c.textContent = Math.round(190 * (1 - Math.pow(1 - p, 3)));
+    if (p < 1) requestAnimationFrame(step);
+  };
+  c.textContent = "0";
+  requestAnimationFrame(step);
+}
+</script>

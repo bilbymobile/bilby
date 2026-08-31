@@ -1,0 +1,1039 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bilby — interactive preview</title>
+<meta name="theme-color" content="#05070a">
+<style>
+/* ─────────────────────────────────────────────────────────────────────────
+   Design tokens — copied verbatim from app/lib/brand.dart so this preview
+   cannot drift from the build. The three marked FIX values are the
+   accessibility corrections from the review; the original is kept in the
+   comment so the change is auditable rather than silent.
+   ───────────────────────────────────────────────────────────────────────── */
+:root{
+  --bg:#07090D;
+  --surface:#0E1319;
+  --surface2:#151C25;
+  --track:#26313D;      /* FIX was --surface2 #151C25 → 1.09:1 against surface */
+  --border:#1E2833;
+  --text:#E8EEF5;
+  --muted:#8B9AAB;
+  --muted-strong:#AEBCCB; /* FIX error detail was #4A5665 → 1.33:1 */
+  --accent:#2EE6A8;
+  --accent-dim:#10A97A;
+  --on-accent:#04120C;
+  --warn:#FFB347;
+  --danger:#FF6B6B;
+  --fast:140ms; --base:260ms; --slow:620ms; --page:340ms;
+  --enter:cubic-bezier(.215,.61,.355,1);
+  --emph:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{
+  background:#05070a; color:var(--text);
+  font:400 15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  display:flex; flex-direction:column; align-items:center; gap:18px;
+  padding:18px 12px 32px;
+}
+h1,h2,h3,p{margin:0}
+
+/* ── Page chrome (not part of the app) ───────────────────────────────── */
+.pagehead{max-width:400px;text-align:center;color:#7C8A99;font-size:13px;line-height:1.55}
+.pagehead b{color:#C6D2DE;font-weight:600}
+
+/* ── Phone frame ─────────────────────────────────────────────────────── */
+.phone{
+  /* flex:none matters — body is a column flex container, so without it the
+     phone shrinks to fit the window and the primary CTA disappears below the
+     nav on any laptop screen. */
+  flex:none;
+  width:390px; height:844px;
+  background:var(--bg); border-radius:44px; position:relative; overflow:hidden;
+  border:10px solid #14181e;
+  box-shadow:0 0 0 1.5px #2a3038, 0 40px 90px -20px rgba(0,0,0,.9);
+  display:flex; flex-direction:column;
+}
+.notch{
+  position:absolute;top:9px;left:50%;transform:translateX(-50%);
+  width:112px;height:27px;background:#000;border-radius:99px;z-index:40;
+}
+.statusbar{
+  height:46px;flex:0 0 46px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 26px;font-size:13px;font-weight:600;color:var(--text);z-index:30;
+}
+.statusbar .r{display:flex;gap:5px;align-items:center;opacity:.9}
+.viewport{flex:1;position:relative;overflow:hidden}
+
+/* Scroll body of each screen */
+.screen{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;
+  padding:8px 20px 32px; -webkit-overflow-scrolling:touch;
+}
+.screen::-webkit-scrollbar{width:0}
+
+/* Page push transition, matching FadeUpwardsPageTransitionsBuilder */
+@keyframes pageIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.screen.enter{animation:pageIn var(--page) var(--enter) both}
+
+/* Staggered entrance — the Flutter _stagger() helper, 55ms apart */
+@keyframes riseIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.stagger>*{animation:riseIn 420ms var(--enter) both}
+.stagger>*:nth-child(1){animation-delay:0ms}
+.stagger>*:nth-child(2){animation-delay:55ms}
+.stagger>*:nth-child(3){animation-delay:110ms}
+.stagger>*:nth-child(4){animation-delay:165ms}
+.stagger>*:nth-child(5){animation-delay:220ms}
+.stagger>*:nth-child(6){animation-delay:275ms}
+
+/* ── Components ──────────────────────────────────────────────────────── */
+.h1{font-size:30px;font-weight:700;letter-spacing:-.9px;line-height:1.1}
+.sub{font-size:15px;color:var(--muted);line-height:1.5;margin-top:8px}
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:20px;position:relative;overflow:hidden;
+}
+.card.tight{padding:16px}
+.row{display:flex;align-items:center;justify-content:space-between}
+.pill{
+  display:inline-flex;align-items:center;padding:5px 10px;border-radius:99px;
+  background:rgba(46,230,168,.12);color:var(--accent);
+  font-size:11.5px;font-weight:600;white-space:nowrap;
+}
+.pill.plain{background:var(--surface2);color:var(--muted)}
+.pill.warn{background:rgba(255,179,71,.14);color:var(--warn)}
+
+.balance{
+  font-size:52px;font-weight:700;letter-spacing:-2px;line-height:1;
+  font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:8px;
+}
+.balance small{font-size:19px;font-weight:600;color:var(--muted);letter-spacing:0}
+
+.meter{height:8px;border-radius:99px;background:var(--track);overflow:hidden;margin-top:18px}
+.meter i{
+  display:block;height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--accent-dim),var(--accent));
+  width:0;transition:width var(--slow) var(--enter);
+}
+.hint{font-size:13px;color:var(--muted);margin-top:10px}
+
+.stats{display:flex;gap:26px;margin-top:18px}
+.stat .k{font-size:10.5px;letter-spacing:.8px;font-weight:600;color:var(--muted);text-transform:uppercase}
+.stat .v{font-size:18px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+
+.actions{display:flex;gap:10px;margin-top:14px}
+.btn{
+  border:0;font:inherit;font-weight:600;font-size:15px;border-radius:12px;
+  padding:16px 12px;cursor:pointer;transition:transform var(--fast) var(--enter),
+  background var(--fast) linear,opacity var(--fast) linear;
+  display:flex;align-items:center;justify-content:center;gap:9px;text-align:center;
+}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn.primary{background:var(--accent);color:var(--on-accent);flex:3}
+.btn.primary:disabled{background:rgba(46,230,168,.35);color:rgba(4,18,12,.75)}
+.btn.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);flex:2}
+.btn.ghost:disabled{color:var(--muted)}
+.btn:disabled{cursor:default}
+.btn.wide{width:100%;flex:1}
+
+/* Busy spinner. FIX: was rgba(4,18,12,.45) on accent → 2.47:1. */
+.spin{
+  width:18px;height:18px;border-radius:50%;
+  border:2px solid rgba(4,18,12,.85);border-top-color:transparent;
+  animation:rot .7s linear infinite;
+}
+.spin.accent{border-color:var(--accent);border-top-color:transparent}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+.note{
+  margin-top:14px;padding:12px 14px;border-radius:0 8px 8px 0;font-size:14px;line-height:1.45;
+  background:rgba(46,230,168,.07);border-left:2px solid var(--accent);color:#C9F5E5;
+  animation:riseIn var(--base) var(--enter) both;
+}
+.note.err{background:rgba(255,107,107,.07);border-left-color:var(--danger);color:#F5CFCF}
+.note.warn{background:rgba(255,179,71,.07);border-left-color:var(--warn);color:#FFE0B8}
+
+.title{font-size:15px;font-weight:600}
+.body{font-size:14px;color:var(--muted);line-height:1.5;margin-top:8px}
+.body.warn{color:var(--warn)}
+
+/* Reward burst */
+.burst{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.burst b{
+  position:absolute;width:7px;height:7px;border-radius:50%;background:var(--accent);
+  left:50%;top:44%;opacity:0;
+}
+@keyframes fly{
+  0%{opacity:1;transform:translate(0,0) scale(1)}
+  100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2)}
+}
+
+.destbar{cursor:pointer;margin-bottom:0}
+.destbar:active{background:var(--surface2)}
+.destrow{margin-bottom:10px;cursor:pointer;transition:border-color var(--fast) linear,background var(--fast) linear}
+.destrow.sel{border-color:var(--accent);background:var(--surface2)}
+.destrow:active{background:var(--surface2)}
+.legs{display:flex;align-items:center;margin-top:12px}
+.leg{flex:1}
+.leg .k{font-size:9.5px;letter-spacing:.7px;font-weight:600;color:var(--muted);text-transform:uppercase}
+.leg .v{font-size:15px;font-weight:700;margin-top:3px}
+.leg .v.hi{color:var(--accent)}
+.divider{width:1px;height:30px;background:var(--border)}
+
+/* Chips row (plans) */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 20px 2px 0;margin:20px -20px 18px 0}
+.chips::-webkit-scrollbar{height:0}
+.chip{
+  flex:0 0 auto;padding:0 16px;height:38px;display:flex;align-items:center;
+  border-radius:99px;background:var(--surface2);border:1px solid var(--border);
+  color:var(--muted);font-size:13.5px;font-weight:600;cursor:pointer;
+  transition:background var(--fast) linear,color var(--fast) linear;
+}
+.chip.on{background:var(--accent);border-color:transparent;color:var(--on-accent)}
+
+.plan{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.plan .d{font-size:20px;font-weight:700;letter-spacing:-.4px}
+.plan .m{font-size:13px;color:var(--muted);margin-top:6px}
+.buy{
+  background:var(--accent);color:var(--on-accent);border:0;font:inherit;font-weight:700;
+  font-size:15px;padding:11px 16px;border-radius:10px;cursor:pointer;
+  transition:transform var(--fast) var(--enter);
+}
+.buy:active{transform:scale(.96)}
+
+/* eSIM tile */
+.tile{display:flex;align-items:center;gap:14px;cursor:pointer}
+.ico{
+  width:42px;height:42px;flex:0 0 42px;border-radius:11px;background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;font-size:19px;
+}
+/* Tabular figures in the UI face — numbers that change in place must not
+   reflow the text around them. Distinct from .mono, which is a real monospace
+   face and is only for machine strings (ICCID, LPA) where character-level
+   legibility beats typographic fit. */
+.tabnum{font-variant-numeric:tabular-nums}
+.mono{font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:-.1px}
+
+/* Copy rows on the install screen */
+.crow{
+  display:flex;align-items:center;gap:12px;padding:11px 12px;margin-top:10px;
+  background:var(--surface2);border-radius:10px;cursor:pointer;
+  transition:background var(--fast) linear;
+}
+.crow:active{background:#1b2530}
+.crow .k{font-size:10.5px;letter-spacing:.8px;font-weight:600;color:var(--muted);text-transform:uppercase}
+.crow .v{font-size:13.5px;margin-top:3px;word-break:break-all;line-height:1.4}
+.crow .c{margin-left:auto;color:var(--accent);font-size:12px;font-weight:600;flex:0 0 auto}
+
+/* App bar for pushed screens */
+.appbar{
+  display:flex;align-items:center;gap:6px;padding:4px 0 10px;
+}
+.back{
+  background:none;border:0;color:var(--text);font:inherit;font-size:22px;line-height:1;
+  padding:6px 10px 6px 0;cursor:pointer;
+}
+.appbar h2{font-size:17px;font-weight:600}
+
+/* Bottom nav */
+.nav{
+  flex:0 0 auto;background:var(--surface);display:flex;padding:10px 0 24px;
+  border-top:1px solid var(--border);
+}
+.nav button{
+  flex:1;background:none;border:0;color:var(--muted);font:inherit;font-size:12px;
+  font-weight:500;display:flex;flex-direction:column;align-items:center;gap:5px;
+  cursor:pointer;padding:0;
+}
+.nav .ind{
+  width:56px;height:30px;border-radius:99px;display:flex;align-items:center;justify-content:center;
+  font-size:19px;transition:background var(--base) var(--enter);
+}
+.nav button.on{color:var(--text);font-weight:600}
+.nav button.on .ind{background:rgba(46,230,168,.15)}
+
+/* Centred states */
+.center{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:16px;padding:32px;text-align:center;
+}
+.center .d{font-size:13px;color:var(--muted-strong);line-height:1.5;max-width:280px}
+
+/* Toast */
+.toast{
+  position:absolute;left:16px;right:16px;bottom:16px;z-index:50;
+  background:#20262e;border:1px solid var(--border);border-radius:10px;
+  padding:13px 15px;font-size:13.5px;color:var(--text);
+  animation:riseIn 220ms var(--enter) both;
+}
+
+/* Full-screen simulated ad */
+.adplayer{
+  position:absolute;inset:0;z-index:60;background:#000;color:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  animation:pageIn 220ms var(--enter) both;
+}
+.adplayer .box{
+  width:78%;aspect-ratio:16/10;border-radius:14px;
+  background:linear-gradient(135deg,#1d2b6b,#6c2bb8 60%,#b8365e);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;letter-spacing:2px;font-weight:600;color:rgba(255,255,255,.75);
+}
+.adplayer .t{font-size:13px;color:rgba(255,255,255,.6)}
+
+/* ── Control panel ───────────────────────────────────────────────────── */
+.panel{
+  width:390px;max-width:100%;background:#0b0e13;border:1px solid #1b2129;
+  border-radius:16px;padding:16px;
+}
+.panel h3{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#7C8A99;font-weight:600}
+.panel .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.panel button{
+  background:#141a22;border:1px solid #232c37;color:#C6D2DE;font:inherit;font-size:12.5px;
+  padding:10px 8px;border-radius:9px;cursor:pointer;text-align:left;line-height:1.3;
+}
+.panel button:hover{border-color:#3a4756}
+.panel button.on{border-color:var(--accent);color:var(--accent)}
+.panel .why{font-size:11.5px;color:#6C7A89;line-height:1.5;margin-top:12px}
+
+@media (max-width:430px){
+  body{padding:0;gap:0}
+  .pagehead{display:none}
+  .phone{
+    width:100%;height:100dvh;max-height:none;border:0;border-radius:0;box-shadow:none;
+  }
+  .notch{display:none}
+  .statusbar{height:calc(12px + env(safe-area-inset-top));flex-basis:auto;padding-top:env(safe-area-inset-top)}
+  .statusbar span{display:none}
+  .nav{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+  .panel{position:fixed;left:8px;right:8px;bottom:8px;z-index:99;width:auto;
+    max-height:44vh;overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.7)}
+  .panel.collapsed{max-height:44px;overflow:hidden;padding:12px 16px}
+  .panel h3{cursor:pointer}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+
+<div class="pagehead">
+  <b>Bilby — interactive preview.</b> Real copy, real tokens, real motion.
+  Tap through it. Scenario switches are underneath.
+</div>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar">
+    <span id="clock">9:41</span>
+    <div class="r"><span>▮▮▮</span><span>◗</span><span>84%</span></div>
+  </div>
+  <div class="viewport" id="viewport"></div>
+  <div class="nav" id="nav"></div>
+</div>
+
+<div class="panel" id="panel">
+  <h3 id="panelHead">Scenarios · tap to switch</h3>
+  <div class="grid" id="scenarios"></div>
+  <div class="why" id="why"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   State — mirrors the /api/me response shape exactly, so what you see here
+   is what the Flutter app renders from.
+   ═══════════════════════════════════════════════════════════════════════ */
+const BASE = {
+  screen: 'earn',
+  firstRun: false,
+  loading: false,
+  error: null,
+  country: 'AU', countryName: 'Australia',
+  homeCountry: 'AU',
+  atHome: true,
+  destination: 'JP', destinationName: 'Japan',
+  atHomeMbPerAd: 7, onArrivalMbPerAd: 6, bankBeforeYouFly: false,
+  balanceMb: 0,
+  mbPerAd: 7,
+  adsWatchedToday: 0,
+  dailyAdCap: 10,
+  thresholdMb: 50,
+  regionSupported: true,
+  budgetExhausted: false,
+  status: null, statusKind: 'ok',
+  busy: false,
+  esims: [],
+  installIccid: null,
+  planIso: 'JP',
+  toast: null,
+  ad: false,
+};
+let S = {...BASE};
+
+const SCENARIOS = {
+  firstrun: {
+    label:'First run · picker',
+    note:'The fix for the biggest hole the review found. Home country was set immutably from your first geo lookup, so anyone who installed while still in Australia was permanently priced against AU roaming — where the free tier is switched off — and got told free data was unavailable in their country. In the exact week they were most motivated to install, on the only connection reliable enough to download an eSIM profile. Every number in this list is real output from the pricing engine, including China and Pakistan.',
+    apply:s=>({...BASE, firstRun:true, screen:'firstrun'})
+  },
+  athome:{
+    label:'At home, before flying',
+    note:'Sydney, a week before Bali. 13 MB per ad here against 6 MB after landing — and that is not a promotion, it is arithmetic. Ads are priced by who the advertiser thinks they are buying; data is priced by where the handset is. Earning at home is the full Australian ad rate with no roaming discount applied, because an Australian watching an Australian ad on an Australian IP is not a hypothesis about roaming, it is just an Australian ad impression.',
+    apply:s=>({...BASE, atHome:true, country:'AU', countryName:'Australia',
+      destination:'ID', destinationName:'Indonesia',
+      atHomeMbPerAd:13, onArrivalMbPerAd:6, mbPerAd:13, balanceMb:26, adsWatchedToday:2})
+  },
+  landed:{
+    label:'Landed in Bali',
+    note:'Same user, same destination, now on an Indonesian network. The rate drops to 6 MB and the app says so rather than quietly changing the number. Note what did NOT change: the balance they banked at home is still theirs at the rate they earned it.',
+    apply:s=>({...BASE, atHome:false, country:'ID', countryName:'Indonesia',
+      destination:'ID', destinationName:'Indonesia',
+      atHomeMbPerAd:13, onArrivalMbPerAd:6, mbPerAd:6, balanceMb:39, adsWatchedToday:5})
+  },
+  pakistan:{
+    label:'Pakistan · bank first',
+    note:'The case that proves the model. South Asian ad rates cannot fund a usable grant in-country — the engine refuses at 5 MB — but at Australian rates the same destination funds 10 MB per ad. So Pakistan is not "unsupported", it is "stock up before you go", and the app says exactly that. Under the old single-country model this destination was simply off.',
+    apply:s=>({...BASE, atHome:true, country:'AU', countryName:'Australia',
+      destination:'PK', destinationName:'Pakistan',
+      atHomeMbPerAd:10, onArrivalMbPerAd:5, mbPerAd:10, bankBeforeYouFly:true,
+      balanceMb:30, adsWatchedToday:3})
+  },
+  usa:{
+    label:'USA · the exception',
+    note:"Proof the copy is derived rather than asserted. American eCPMs are higher than Australian ones, so for the US the arbitrage runs backwards: 7 MB before you fly, 9 MB after you land. An app that told everyone to stock up before departure would be confidently wrong about a number the user can check — which is exactly how an honesty-positioned product loses its position.",
+    apply:s=>({...BASE, atHome:true, country:'AU', countryName:'Australia',
+      destination:'US', destinationName:'United States',
+      atHomeMbPerAd:7, onArrivalMbPerAd:9, mbPerAd:7, balanceMb:14, adsWatchedToday:2})
+  },
+  ready:{
+    label:'Ready to redeem',
+    note:'Threshold cleared, so the second button lights up. Redeeming pushes straight to the install screen rather than dropping a sentence and leaving you to find it — every tap between here and an installed profile loses users, and the eSIM is worth nothing until it is on the phone.',
+    apply:s=>({...BASE, atHome:true, destination:'ID', destinationName:'Indonesia',
+      atHomeMbPerAd:13, onArrivalMbPerAd:6, mbPerAd:13, balanceMb:52, adsWatchedToday:4})
+  },
+  australia:{
+    label:'Australia · honest no',
+    note:"Australia is in the picker, priced, and switched off — by 2%. An Australian ad view funds 4.9 MB against a 5 MB floor, so the engine refuses rather than handing over a token amount and calling it free. Competitors run a free tier here on enterprise-volume wholesale, not on a different idea: it flips on at the growth tier, around 500 activations a month. The break-even calculator prints the exact rate to take to a supplier.",
+    apply:s=>({...BASE, atHome:true, country:'AU', countryName:'Australia',
+      destination:'AU', destinationName:'Australia',
+      atHomeMbPerAd:5, onArrivalMbPerAd:5, mbPerAd:5,
+      regionSupported:false, balanceMb:0})
+  },
+  pool:{
+    label:"Today's pool spent",
+    note:'Region-unsupported and pool-exhausted were a single boolean, so every time the $5 daily cap tripped, an honesty-branded app told every user in every country that their destination was unsupported. False, and the fastest possible way to destroy the differentiator. Two fields now — and the reasons are independent conditions rather than an else-if chain, so a permanent property of the destination can no longer suppress a transient one.',
+    apply:s=>({...BASE, atHome:true, destination:'ID', destinationName:'Indonesia',
+      atHomeMbPerAd:13, onArrivalMbPerAd:6, mbPerAd:13,
+      balanceMb:26, adsWatchedToday:2, budgetExhausted:true})
+  },
+  offline:{
+    label:'No network',
+    note:'The modal first-run condition for a connectivity product: an airport captive portal. This used to spin forever with no retry and no exit. The cold-start gate now also carries a "continue offline" escape, so one failed request cannot lock you out of the whole app.',
+    apply:s=>({...BASE, error:'Failed host lookup: bilbymobile.com', screen:'earn'})
+  },
+  installed:{
+    label:'Has an eSIM',
+    note:'One profile, topped up forever. Every redemption adds to the same eSIM rather than issuing a new one — nobody wants nine profiles in their settings.',
+    apply:s=>({...BASE, atHome:false, country:'ID', countryName:'Indonesia',
+      destination:'ID', destinationName:'Indonesia',
+      atHomeMbPerAd:13, onArrivalMbPerAd:6, mbPerAd:6,
+      balanceMb:4, adsWatchedToday:6,
+      esims:[{iccid:'8944500102123456789', free:true, installed:true, remainingMb:52}]})
+  },
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Helpers
+   ═══════════════════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const remaining = () => Math.max(0, S.dailyAdCap - S.adsWatchedToday);
+const canRedeem = () => S.balanceMb >= S.thresholdMb;
+const progress  = () => Math.min(1, S.balanceMb / S.thresholdMb);
+const freeTierAvailable = () => S.regionSupported && !S.budgetExhausted;
+
+function toast(msg){ S.toast = msg; render(); setTimeout(()=>{ S.toast=null; render(); }, 2200); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Screens
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Real output of compareDestination('AU', iso, 'starter') — generated from
+   web/src/lib/pricing.ts, not typed by hand. Two numbers per destination
+   because for most of them they differ by 2x, and for the US they run the
+   other way round. */
+const DESTS_PRICED = [
+ {
+  "iso": "JP",
+  "name": "Japan",
+  "flag": "🇯🇵",
+  "blurb": "Excellent coverage on all three networks",
+  "caution": null,
+  "atHomeMb": 7,
+  "onArrivalMb": 6,
+  "freeTierAtHome": true,
+  "freeTierOnArrival": true,
+  "bankBeforeYouFly": false
+ },
+ {
+  "iso": "ID",
+  "name": "Indonesia",
+  "flag": "🇮🇩",
+  "blurb": "Bali, Jakarta, Lombok",
+  "caution": null,
+  "atHomeMb": 13,
+  "onArrivalMb": 6,
+  "freeTierAtHome": true,
+  "freeTierOnArrival": true,
+  "bankBeforeYouFly": false
+ },
+ {
+  "iso": "TH",
+  "name": "Thailand",
+  "flag": "🇹🇭",
+  "blurb": "Cheapest data of any destination we cover",
+  "caution": null,
+  "atHomeMb": 13,
+  "onArrivalMb": 6,
+  "freeTierAtHome": true,
+  "freeTierOnArrival": true,
+  "bankBeforeYouFly": false
+ },
+ {
+  "iso": "VN",
+  "name": "Vietnam",
+  "flag": "🇻🇳",
+  "blurb": null,
+  "caution": null,
+  "atHomeMb": 13,
+  "onArrivalMb": 6,
+  "freeTierAtHome": true,
+  "freeTierOnArrival": true,
+  "bankBeforeYouFly": false
+ },
+ {
+  "iso": "SG",
+  "name": "Singapore",
+  "flag": "🇸🇬",
+  "blurb": null,
+  "caution": null,
+  "atHomeMb": 13,
+  "onArrivalMb": 6,
+  "freeTierAtHome": true,
+  "freeTierOnArrival": true,
+  "bankBeforeYouFly": false
+ },
+ {
+  "iso": "CN",
+  "name": "China",
+  "flag": "🇨🇳",
+  "blurb": "Roaming data is carried on your profile's home network",
+  "caution": "Because your data is carried back through the home network rather than breaking out locally, apps that are unreachable on a local Chinese SIM generally still work. We can't guarantee it — routing is set by the network, not by us — so don't rely on it for anything critical.",
+  "atHomeMb": 7,
+  "onArrivalMb": 6,
+  "freeTierAtHome": true,
+  "freeTierOnArrival": true,
+  "bankBeforeYouFly": false
+ },
+ {
+  "iso": "PK",
+  "name": "Pakistan",
+  "flag": "🇵🇰",
+  "blurb": "Karachi, Lahore, Islamabad",
+  "caution": "Check your handset supports eSIM before you start earning — support is less widespread on phones sold in the region than elsewhere.",
+  "atHomeMb": 10,
+  "onArrivalMb": 5,
+  "freeTierAtHome": true,
+  "freeTierOnArrival": false,
+  "bankBeforeYouFly": true
+ },
+ {
+  "iso": "AE",
+  "name": "UAE",
+  "flag": "🇦🇪",
+  "blurb": null,
+  "caution": "Voice and video calling over the internet is restricted on UAE networks, and that restriction can apply to roaming traffic too.",
+  "atHomeMb": 5,
+  "onArrivalMb": 5,
+  "freeTierAtHome": true,
+  "freeTierOnArrival": false,
+  "bankBeforeYouFly": true
+ },
+ {
+  "iso": "US",
+  "name": "United States",
+  "flag": "🇺🇸",
+  "blurb": null,
+  "caution": null,
+  "atHomeMb": 7,
+  "onArrivalMb": 9,
+  "freeTierAtHome": true,
+  "freeTierOnArrival": true,
+  "bankBeforeYouFly": false
+ },
+ {
+  "iso": "GB",
+  "name": "United Kingdom",
+  "flag": "🇬🇧",
+  "blurb": null,
+  "caution": null,
+  "atHomeMb": 9,
+  "onArrivalMb": 9,
+  "freeTierAtHome": true,
+  "freeTierOnArrival": true,
+  "bankBeforeYouFly": false
+ },
+ {
+  "iso": "IT",
+  "name": "Italy",
+  "flag": "🇮🇹",
+  "blurb": null,
+  "caution": null,
+  "atHomeMb": 9,
+  "onArrivalMb": 9,
+  "freeTierAtHome": true,
+  "freeTierOnArrival": true,
+  "bankBeforeYouFly": false
+ },
+ {
+  "iso": "AU",
+  "name": "Australia",
+  "flag": "🇦🇺",
+  "blurb": "Home. Earn here before you fly, or use it around the country",
+  "caution": "Free data isn't switched on for Australia yet — an ad here earns well, but home-network data still costs more than it earns at our current supply rates. You can still earn here for a trip somewhere else.",
+  "atHomeMb": 5,
+  "onArrivalMb": 5,
+  "freeTierAtHome": false,
+  "freeTierOnArrival": false,
+  "bankBeforeYouFly": false
+ },
+ {
+  "iso": "NZ",
+  "name": "New Zealand",
+  "flag": "🇳🇿",
+  "blurb": null,
+  "caution": "Free data isn't available for New Zealand yet — Trans-Tasman roaming costs more than an ad earns. Paid plans work normally.",
+  "atHomeMb": 5,
+  "onArrivalMb": 5,
+  "freeTierAtHome": false,
+  "freeTierOnArrival": false,
+  "bankBeforeYouFly": false
+ }
+];
+
+function firstRunScreen(){
+  return `<div class="screen enter stagger" style="padding-top:30px">
+    <div>
+      <div class="h1">Where are you<br>heading?</div>
+      <p class="sub">We price a free ad against where you will be using the data, not where you are standing now. Pick a destination and we will show you exactly what one ad is worth there.</p>
+    </div>
+    <div class="note" style="margin-top:16px">
+      This phone supports eSIM. We check first, so nobody spends a week earning toward a profile their handset cannot install.
+    </div>
+    <div style="margin-top:16px">
+      ${DESTS_PRICED.map(d=>destRow(d)).join('')}
+    </div>
+    <div class="note" style="margin-top:6px">
+      You can change this any time from the Earn screen. Nothing is locked to where you first opened the app.
+    </div>
+  </div>`;
+}
+
+function destRow(d){
+  const possible = d.freeTierAtHome || d.freeTierOnArrival;
+  const best = Math.max(d.atHomeMb, d.onArrivalMb);
+  const betterAtHome = d.atHomeMb > d.onArrivalMb;
+  const sel = d.iso === S.destination;
+  return `<div class="card tight destrow ${sel?'sel':''}" data-act="dest" data-iso="${d.iso}">
+    <div class="row" style="align-items:flex-start">
+      <span style="font-size:22px;line-height:1">${d.flag}</span>
+      <div style="flex:1;margin:0 12px">
+        <div style="font-size:16px;font-weight:600">${esc(d.name)}</div>
+        ${d.blurb?`<div style="font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.35">${esc(d.blurb)}</div>`:''}
+      </div>
+      <span class="pill ${possible?'':'plain'}">${possible?best+' MB / ad':'Paid plans'}</span>
+    </div>
+    ${possible && d.atHomeMb !== d.onArrivalMb ? `
+      <div class="legs">
+        <div class="leg"><div class="k">Before you fly</div>
+          <div class="v ${betterAtHome?'hi':''}">${d.freeTierAtHome?d.atHomeMb+' MB':'—'}</div></div>
+        <div class="divider"></div>
+        <div class="leg"><div class="k">After you land</div>
+          <div class="v ${!betterAtHome?'hi':''}">${d.freeTierOnArrival?d.onArrivalMb+' MB':'—'}</div></div>
+      </div>` : ''}
+    ${d.caution?`<div class="note warn" style="margin-top:12px">${esc(d.caution)}</div>`:''}
+  </div>`;
+}
+
+function earnScreen(){
+  if (S.error) {
+    return `<div class="center">
+      <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="var(--muted)"
+           stroke-width="1.6" stroke-linecap="round"><path d="M2 8.5a15 15 0 0 1 20 0"/>
+        <path d="M5.5 12.5a10 10 0 0 1 13 0"/><path d="M9 16.5a5 5 0 0 1 6 0"/>
+        <circle cx="12" cy="20" r="1.1" fill="var(--muted)" stroke="none"/>
+        <path d="M3 3l18 18" stroke="var(--danger)"/></svg>
+      <div class="title">Can't reach Bilby</div>
+      <div class="d">${esc(S.error)}</div>
+      <button class="btn ghost" data-act="retry" style="flex:0 0 auto;padding:13px 26px">Try again</button>
+    </div>`;
+  }
+  if (S.loading) {
+    return `<div class="center"><div class="spin accent" style="width:26px;height:26px"></div></div>`;
+  }
+
+  const short = S.thresholdMb - S.balanceMb;
+  const watchLabel = !freeTierAvailable()
+    ? 'Free data unavailable'
+    : remaining() === 0
+      ? 'Back tomorrow'
+      : `Watch ad · earn ${S.mbPerAd} MB`;
+
+  return `<div class="screen enter stagger">
+    <div>
+      <div class="h1">Big ears.<br>Free data.</div>
+      <p class="sub">Watch a short ad, get data on your eSIM. Pay only on the days you want full speed.</p>
+    </div>
+
+    <div class="card tight destbar" data-act="editdest" style="margin-top:16px">
+      <div class="row">
+        <span style="color:var(--muted);font-size:16px">&#9678;</span>
+        <div style="flex:1;margin-left:10px">
+          <div class="k" style="font-size:9.5px;letter-spacing:.8px;font-weight:600;color:var(--muted)">EARNING FOR</div>
+          <div style="font-size:15px;font-weight:600;margin-top:3px">${esc(S.destinationName)}</div>
+        </div>
+        <span style="font-size:13px;font-weight:600;color:var(--accent)">Change &rsaquo;</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="burst" id="burst"></div>
+      <div class="row">
+        <div class="title">Your balance</div>
+        <span class="pill">${S.mbPerAd} MB per ad · ${esc(S.destinationName)}</span>
+      </div>
+      <div class="balance" style="margin-top:16px"><span id="bal">${S.balanceMb}</span><small>MB</small></div>
+      <div class="meter"><i id="meter"></i></div>
+      <div class="hint">${canRedeem()
+        ? 'Ready to load onto your eSIM.'
+        : `${short} MB to go before you can load it onto an eSIM.`}</div>
+      <div class="stats">
+        <div class="stat"><div class="k">Ads left today</div><div class="v">${remaining()}/${S.dailyAdCap}</div></div>
+        <div class="stat"><div class="k">Max today</div><div class="v">${S.mbPerAd * S.dailyAdCap} MB</div></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" data-act="watch"
+        ${(S.busy || remaining()===0 || !freeTierAvailable()) ? 'disabled' : ''}>
+        ${S.busy ? '<span class="spin"></span>' : esc(watchLabel)}
+      </button>
+      <button class="btn ghost" data-act="redeem" ${(S.busy || !canRedeem()) ? 'disabled' : ''}>
+        Load onto eSIM
+      </button>
+    </div>
+
+    ${S.status ? `<div class="note ${S.statusKind==='err'?'err':''}">${esc(S.status)}</div>` : ''}
+
+    <div class="card" style="margin-top:14px">
+      <div class="title">Why the number changes</div>
+      <p class="body">Data costs us more in some countries than others, and ads are worth more in some than others. So we work out what one ad can actually pay for where you are going — right now that is ${S.mbPerAd} MB for ${esc(S.destinationName)}.</p>
+      ${S.atHome && S.atHomeMbPerAd > S.onArrivalMbPerAd ? `<p class="body" style="color:#C9F5E5">You're earning at home rates: ${S.atHomeMbPerAd} MB per ad now, against ${S.onArrivalMbPerAd} MB once you land. Stock up before you fly — and install the eSIM while you still have Wi-Fi, because you will not have any when you get off the plane.</p>` : ''}
+      ${S.atHome && S.onArrivalMbPerAd > S.atHomeMbPerAd ? `<p class="body">Ads are worth more in ${esc(S.destinationName)} than they are here, so you will earn faster once you arrive — ${S.onArrivalMbPerAd} MB per ad against ${S.atHomeMbPerAd} now. Still worth installing the eSIM before you go.</p>` : ''}
+      ${S.bankBeforeYouFly && S.atHome ? `<p class="body warn">Worth knowing: free data for ${esc(S.destinationName)} only works if you earn it before you go. Ad rates there cannot fund a useful grant on their own, so whatever you bank now is what you land with.</p>` : ''}
+      ${!S.regionSupported ? `<p class="body warn">Free data is not offered for ${esc(S.destinationName)} — an ad earns less than a usable amount of data there costs. We would rather say so than hand you 2 MB and call it free. Paid plans work normally.</p>` : ''}
+      ${S.budgetExhausted ? `<p class="body warn">Today's free-data pool is used up — that's our daily limit, not yours, and it refills at midnight UTC. Your balance is safe and paid plans are unaffected.</p>` : ''}
+    </div>
+  </div>`;
+}
+
+const DESTS = {JP:'Japan',ID:'Indonesia',TH:'Thailand',VN:'Vietnam',SG:'Singapore',
+               US:'United States',GB:'United Kingdom',IT:'Italy',AE:'UAE',NZ:'New Zealand'};
+const CATALOG = {
+  JP:[['1 GB',7,4.90],['3 GB',15,9.90],['10 GB',30,22.00]],
+  ID:[['1 GB',7,3.90],['5 GB',30,9.50],['20 GB',30,26.00]],
+  TH:[['1 GB',8,3.50],['5 GB',15,10.90],['10 GB',30,17.50]],
+  VN:[['1 GB',7,3.20],['3 GB',15,7.90],['10 GB',30,16.00]],
+  SG:[['1 GB',7,4.20],['3 GB',15,9.20],['10 GB',30,19.00]],
+  US:[['1 GB',7,5.50],['5 GB',30,17.00],['10 GB',30,28.00]],
+  GB:[['1 GB',7,4.80],['5 GB',30,15.00],['10 GB',30,25.00]],
+  IT:[['1 GB',7,4.40],['5 GB',30,14.00],['10 GB',30,23.00]],
+  AE:[['1 GB',7,8.90],['3 GB',15,19.00],['10 GB',30,45.00]],
+  NZ:[['1 GB',7,6.20],['5 GB',30,18.50],['10 GB',30,31.00]],
+};
+
+function plansScreen(){
+  const plans = CATALOG[S.planIso] || [];
+  return `<div class="screen enter">
+    <div class="h1" style="font-size:26px">Plans</div>
+    <p class="sub">Full speed, no ads, hotspot included. Buy one only for the days you actually need it — the free tier covers maps and messages the rest of the time.</p>
+    <div class="chips">
+      ${Object.entries(DESTS).map(([iso,name])=>
+        `<button class="chip ${iso===S.planIso?'on':''}" data-act="iso" data-iso="${iso}">${esc(name)}</button>`).join('')}
+    </div>
+    ${plans.map(([label,days,price])=>`
+      <div class="card tight plan">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="d">${label}</span><span class="pill plain">${days} days</span>
+          </div>
+          <div class="m">$${(price/parseFloat(label)).toFixed(2)} per GB</div>
+        </div>
+        <button class="buy" data-act="buy">$${price.toFixed(2)}</button>
+      </div>`).join('')}
+    <div class="note" style="margin-top:16px">Checkout opens in your browser. Your eSIM appears in My eSIMs as soon as payment clears.</div>
+  </div>`;
+}
+
+function esimsScreen(){
+  return `<div class="screen enter">
+    <div class="h1" style="font-size:26px">My eSIMs</div>
+    <p class="sub">Install once and keep it. Every ad you watch tops up this same profile rather than issuing a new one.</p>
+    <div style="margin-top:20px"></div>
+    ${S.esims.length === 0 ? `
+      <div class="card">
+        <div class="title">Nothing here yet</div>
+        <p class="body">Earn enough data to load onto an eSIM and we will issue your profile then — not before. That way you never install something you have no data for.</p>
+      </div>` :
+      S.esims.map(e=>`
+      <div class="card tight" style="margin-bottom:10px">
+        <div class="tile" data-act="open" data-iccid="${e.iccid}">
+          <div class="ico" style="color:${e.installed?'var(--accent)':'var(--warn)'}">${e.installed?ICON.sim:ICON.download}</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="pill ${e.free?'':'plain'}">${e.free?'Free tier':'Paid'}</span>
+              <span style="font-size:12.5px;color:var(--muted)">${e.installed?'Installed':'Not installed'}</span>
+            </div>
+            <div class="mono" style="font-size:13px;margin-top:6px">••• ${e.iccid.slice(-6)}</div>
+          </div>
+          <span style="color:var(--muted);font-size:20px">›</span>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function installScreen(){
+  const e = S.esims.find(x=>x.iccid===S.installIccid) || S.esims[0];
+  if(!e) return `<div class="center"><div class="d">No eSIM selected.</div></div>`;
+  const smdp = 'rsp.truphone.com';
+  const match = 'QR-G-5C-1TC-1WLQ3TZ';
+  return `<div class="screen enter">
+    <div class="appbar">
+      <button class="back" data-act="back">‹</button>
+      <h2>Install your eSIM</h2>
+    </div>
+    <p class="sub" style="margin-top:0">Do this while you still have Wi-Fi. Downloading the profile needs a connection, and the whole point is that you will not have one when you land.</p>
+
+    <div class="card" style="margin-top:20px">
+      <div class="row">
+        <div>
+          <div style="font-size:13px;color:var(--muted)">Data remaining</div>
+          <div class="tabnum" style="font-size:24px;font-weight:700;color:var(--accent);margin-top:4px">${e.remainingMb} MB</div>
+        </div>
+        <span class="pill plain">enabled</span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="title" style="font-size:16px">One-tap install</div>
+      <p class="body">Make sure you are on the phone that will use this eSIM.</p>
+      <button class="btn primary wide" data-act="installnow" style="margin-top:16px">Install now</button>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="title" style="font-size:16px">Or enter manually</div>
+      <p class="body">Settings → Mobile → Add eSIM → Enter details manually. Works on every device, including older Androids.</p>
+      <div class="crow" data-act="copy" data-label="SM-DP+ address"><div><div class="k">SM-DP+ address</div><div class="v mono">${smdp}</div></div><span class="c">Copy</span></div>
+      <div class="crow" data-act="copy" data-label="Activation code"><div><div class="k">Activation code</div><div class="v mono">${match}</div></div><span class="c">Copy</span></div>
+      <div class="crow" data-act="copy" data-label="ICCID"><div><div class="k">ICCID</div><div class="v mono">${e.iccid}</div></div><span class="c">Copy</span></div>
+      <div class="crow" data-act="copy" data-label="Full LPA string"><div><div class="k">Full LPA string</div><div class="v mono">LPA:1$${smdp}$${match}</div></div><span class="c">Copy</span></div>
+    </div>
+
+    <div class="note warn">Switch data roaming ON for this eSIM in your phone settings — it will not connect otherwise. Keep your usual SIM for calls and texts.</div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Render
+   ═══════════════════════════════════════════════════════════════════════ */
+/* Icons as inline SVG rather than emoji: emoji render in the platform's colour
+   font, ignore currentColor, and sit differently on every OS — which is exactly
+   the kind of small inconsistency that reads as "unfinished" without anyone
+   being able to say why. These match the Material outline set the Flutter build
+   uses (bolt / sim_card / travel_explore). */
+const ICON = {
+  earn:'<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2 4.5 13.5H11l-.5 8.5L19 10.5h-6.5z"/></svg>',
+  plans:'<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 2h8l4 4v16H6z"/><rect x="9" y="12" width="6" height="6" rx="1"/></svg>',
+  esims:'<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>',
+  download:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M4 19h16"/></svg>',
+  sim:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 2h8l4 4v16H6z"/><rect x="9" y="12" width="6" height="6" rx="1"/></svg>',
+};
+const TABS = [['earn','Earn'],['plans','Plans'],['esims','My eSIMs']];
+
+function render(){
+  const v = $('viewport');
+  let html =
+    S.screen==='firstrun' ? firstRunScreen() :
+    S.screen==='plans'    ? plansScreen()    :
+    S.screen==='esims'    ? esimsScreen()    :
+    S.screen==='install'  ? installScreen()  : earnScreen();
+
+  if (S.toast) html += `<div class="toast">${esc(S.toast)}</div>`;
+  if (S.ad) html += `<div class="adplayer">
+      <div class="box">YOUR AD HERE</div>
+      <div class="t">Rewarded video · ${S.adSecs}s</div>
+    </div>`;
+  v.innerHTML = html;
+
+  // Bottom nav hidden during first-run and the pushed install screen —
+  // both are single-purpose flows and a visible tab bar invites people to
+  // leave halfway through the one thing that matters.
+  const showNav = !['firstrun','install'].includes(S.screen);
+  $('nav').style.display = showNav ? 'flex' : 'none';
+  $('nav').innerHTML = TABS.map(([id,label])=>
+    `<button class="${S.screen===id?'on':''}" data-act="tab" data-tab="${id}">
+       <span class="ind">${ICON[id]}</span>${label}</button>`).join('');
+
+  // Meter animates from 0 on next frame so the transition actually runs.
+  const m = $('meter');
+  if (m) requestAnimationFrame(()=>{ m.style.width = (progress()*100).toFixed(1)+'%'; });
+}
+
+/* Count-up on the balance, matching AnimatedBalance's spring feel. */
+function countUp(from, to){
+  const el = $('bal'); if(!el) return;
+  const t0 = performance.now(), dur = 620;
+  (function step(t){
+    const p = Math.min(1,(t-t0)/dur);
+    const e = 1-Math.pow(1-p,3);
+    el.textContent = Math.round(from+(to-from)*e);
+    if(p<1) requestAnimationFrame(step);
+  })(t0);
+}
+
+function burst(){
+  const host = $('burst'); if(!host) return;
+  for(let i=0;i<18;i++){
+    const b = document.createElement('b');
+    const a = (Math.PI*2*i)/18 + Math.random()*0.3;
+    const d = 70 + Math.random()*70;
+    b.style.setProperty('--dx', (Math.cos(a)*d).toFixed(0)+'px');
+    b.style.setProperty('--dy', (Math.sin(a)*d).toFixed(0)+'px');
+    b.style.animation = `fly ${620+Math.random()*260}ms cubic-bezier(.215,.61,.355,1) both`;
+    b.style.animationDelay = (Math.random()*70)+'ms';
+    host.appendChild(b);
+  }
+  setTimeout(()=>{ if($('burst')) $('burst').innerHTML=''; }, 1000);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Flow
+   ═══════════════════════════════════════════════════════════════════════ */
+async function watchAd(){
+  S.ad = true; S.adSecs = 5; S.status = null; render();
+  await new Promise(r=>{
+    const t = setInterval(()=>{
+      S.adSecs--; render();
+      if(S.adSecs<=0){ clearInterval(t); r(); }
+    }, 700);
+  });
+  S.ad = false;
+
+  // The honest bit: the reward is granted out-of-band by an SSV callback that
+  // lands after the ad closes. Showing a finished ad and an unchanged balance
+  // is how users conclude they were cheated, so the wait is explicit.
+  S.busy = true;
+  S.status = 'Confirming with the ad network…'; S.statusKind='ok';
+  render();
+  await new Promise(r=>setTimeout(r, 1100));
+
+  const before = S.balanceMb;
+  S.balanceMb += S.mbPerAd;
+  S.adsWatchedToday++;
+  S.busy = false;
+  S.status = `+${S.mbPerAd} MB`;
+  render();
+  countUp(before, S.balanceMb);
+  burst();
+  if(navigator.vibrate) navigator.vibrate(18);
+}
+
+async function redeem(){
+  S.busy = true; render();
+  await new Promise(r=>setTimeout(r, 900));
+  const mb = S.balanceMb;
+  const isNew = S.esims.length === 0;
+  if(isNew){
+    S.esims = [{iccid:'8944500102123456789', free:true, installed:false, remainingMb:mb}];
+  } else {
+    S.esims[0].remainingMb += mb;
+  }
+  S.balanceMb = 0;
+  S.busy = false;
+  S.status = isNew ? `${mb} MB loaded onto a new eSIM.`
+                   : `${mb} MB added to your eSIM — nothing to reinstall.`;
+  if(navigator.vibrate) navigator.vibrate([12,40,24]);
+  if(isNew){ S.installIccid = S.esims[0].iccid; S.screen = 'install'; }
+  render();
+}
+
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-act]'); if(!el) return;
+  const a = el.dataset.act;
+
+  if(a==='tab'){ S.screen = el.dataset.tab; S.status=null; render(); }
+  else if(a==='watch'){ watchAd(); }
+  else if(a==='redeem'){ redeem(); }
+  else if(a==='retry'){
+    S.loading = true; render();
+    setTimeout(()=>{ S.loading=false; S.error=null; render(); }, 900);
+  }
+  else if(a==='open'){ S.installIccid = el.dataset.iccid; S.screen='install'; render(); }
+  else if(a==='back'){ S.screen = S.esims.length?'esims':'earn'; render(); }
+  else if(a==='iso'){ S.planIso = el.dataset.iso; render(); }
+  else if(a==='buy'){ toast('Opening checkout in your browser…'); }
+  else if(a==='installnow'){ toast('Handing off to the system eSIM installer…'); }
+  else if(a==='copy'){ toast(`${el.dataset.label} copied`); }
+  else if(a==='editdest'){ S.screen='firstrun'; render(); }
+  else if(a==='dest'){
+    const d = DESTS_PRICED.find(x=>x.iso===el.dataset.iso);
+    S.destination = d.iso;
+    S.destinationName = d.name;
+    S.atHomeMbPerAd = d.atHomeMb;
+    S.onArrivalMbPerAd = d.onArrivalMb;
+    S.bankBeforeYouFly = d.bankBeforeYouFly;
+    // Which rate applies depends on where the handset is, not on the choice.
+    S.mbPerAd = S.atHome ? d.atHomeMb : d.onArrivalMb;
+    S.regionSupported = S.atHome ? d.freeTierAtHome : d.freeTierOnArrival;
+    S.firstRun = false;
+    S.screen = 'earn';
+    render();
+  }
+  else if(a==='scenario'){
+    S = SCENARIOS[el.dataset.k].apply(S);
+    $('why').textContent = SCENARIOS[el.dataset.k].note;
+    document.querySelectorAll('#scenarios button').forEach(b=>b.classList.toggle('on', b===el));
+    render();
+  }
+});
+
+/* Control panel */
+$('scenarios').innerHTML = Object.entries(SCENARIOS)
+  .map(([k,v])=>`<button data-act="scenario" data-k="${k}">${v.label}</button>`).join('');
+$('why').textContent = SCENARIOS.athome.note;
+document.querySelectorAll('#scenarios button')[1].classList.add('on');
+
+$('panelHead').addEventListener('click', ()=> $('panel').classList.toggle('collapsed'));
+
+setInterval(()=>{
+  const d = new Date();
+  $('clock').textContent = d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+}, 1000);
+
+render();
+</script>
+</body>
+</html>

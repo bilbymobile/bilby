@@ -1,0 +1,315 @@
+<title>Bilby Mark Options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500&display=swap">
+
+<style>
+:root{
+  --ground:#F4F8F8; --surface:#FFFFFF; --raised:#EBF2F1;
+  --line:#DCE7E6; --line2:#EAF1F0;
+  --ink:#0E1D1C; --ink2:#4E625F; --ink3:#7E918E;
+  --teal:#0E9C86; --teal-deep:#0A7C6B; --teal-wash:#DEF2EE;
+  --dark:#07080B; --dark-teal:#2BE8C8;
+  --bad:#B3402F; --bad-wash:#FBE6E2;
+  --display:"Archivo",-apple-system,sans-serif;
+  --body:"Public Sans",-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--ground); color:var(--ink); font-family:var(--body);
+  font-size:15.5px; line-height:1.62; -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display); margin:0; letter-spacing:-.03em; text-wrap:balance}
+p{margin:0}
+.wrap{max-width:1000px; margin:0 auto; padding:46px 20px 84px}
+.kicker{font-family:var(--mono); font-size:11px; letter-spacing:.15em;
+  text-transform:uppercase; color:var(--ink3); margin-bottom:12px}
+h1{font-size:31px; font-weight:700; line-height:1.08; margin-bottom:13px}
+.stand{font-size:16.5px; color:var(--ink2); max-width:64ch}
+h2{font-size:12.5px; font-family:var(--mono); font-weight:500; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--ink3); margin:44px 0 18px;
+  padding-bottom:9px; border-bottom:1px solid var(--line)}
+
+/* Verdict cards */
+.verdicts{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.v{border-radius:18px; padding:20px 22px}
+.v.keep{background:var(--teal-wash)}
+.v.drop{background:var(--bad-wash)}
+.v h3{font-size:16px; font-weight:600; margin-bottom:10px}
+.v.keep h3{color:var(--teal-deep)} .v.drop h3{color:var(--bad)}
+.v ul{list-style:none; padding:0; margin:0; display:grid; gap:8px}
+.v li{font-size:14.5px; color:var(--ink2); padding-left:18px; position:relative}
+.v li::before{content:""; position:absolute; left:0; top:9px; width:5px; height:5px; border-radius:50%}
+.v.keep li::before{background:var(--teal)} .v.drop li::before{background:var(--bad)}
+.v li b{color:var(--ink); font-weight:500}
+
+/* Mark cards */
+.marks{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.mark{background:var(--surface); border:1px solid var(--line); border-radius:22px; overflow:hidden}
+.mark-head{padding:20px 24px 0}
+.mark-head .tag{font-family:var(--mono); font-size:10.5px; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--teal-deep); margin-bottom:6px}
+.mark-head h3{font-size:19px; font-weight:600; margin-bottom:7px}
+.mark-head p{font-size:14px; color:var(--ink2)}
+.stage{display:grid; grid-template-columns:1fr 1fr; margin-top:18px; border-top:1px solid var(--line2)}
+.pane{padding:30px; display:flex; align-items:center; justify-content:center; min-height:150px}
+.pane.lightbg{background:var(--raised)}
+.pane.darkbg{background:var(--dark)}
+.sizes{display:flex; align-items:flex-end; gap:16px; padding:16px 24px 20px;
+  border-top:1px solid var(--line2); background:var(--surface)}
+.sz{display:flex; flex-direction:column; align-items:center; gap:6px}
+.sz span{font-family:var(--mono); font-size:9.5px; color:var(--ink3)}
+
+/* Wordmark */
+.lock{background:var(--surface); border:1px solid var(--line); border-radius:20px;
+  padding:26px 30px; display:flex; align-items:center; gap:36px; flex-wrap:wrap}
+.wm{display:flex; align-items:center; gap:12px}
+.wm .t{font-family:var(--display); font-weight:700; font-size:27px; letter-spacing:-.045em; color:var(--ink)}
+.lock .dk{background:var(--dark); border-radius:14px; padding:18px 24px}
+.lock .dk .t{color:#F5F7FA}
+
+/* Palette */
+.pal{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.palcard{background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:22px 24px}
+.palcard h3{font-size:16px; font-weight:600; margin-bottom:4px}
+.palcard .sub{font-size:13.5px; color:var(--ink2); margin-bottom:16px}
+.chips{display:flex; gap:8px; flex-wrap:wrap}
+.chip{width:52px; height:52px; border-radius:13px; position:relative}
+.chip i{position:absolute; bottom:-17px; left:0; font-family:var(--mono);
+  font-size:9px; color:var(--ink3); font-style:normal; letter-spacing:-.02em}
+.palcard .note{margin-top:30px; font-size:13.5px; color:var(--ink2)}
+.palcard .note b{color:var(--ink); font-weight:500}
+
+.rec{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--teal);
+  border-radius:0 18px 18px 0; padding:22px 26px; margin-top:16px}
+.rec p{font-size:15px; color:var(--ink2)} .rec p + p{margin-top:11px}
+.rec b{color:var(--ink); font-weight:600}
+
+@media (max-width:820px){
+  .marks,.verdicts,.pal{grid-template-columns:1fr}
+  .wrap{padding:32px 15px 60px} h1{font-size:26px}
+}
+:focus-visible{outline:2px solid var(--teal); outline-offset:3px}
+</style>
+
+<div class="wrap">
+
+<p class="kicker">Brand mark · four directions for decision</p>
+<h1>Keep the bilby. Lose the cape.</h1>
+<p class="stand">
+  A bilby is a genuinely good asset, because the animal's defining feature is
+  enormous ears and ears are antennae. That is a real bridge between the animal
+  and the product, and it is already written into your design system. A caped
+  superhero is a different bridge, to a different product.
+</p>
+
+<h2>What I would keep and what I would drop</h2>
+<div class="verdicts">
+  <div class="v keep">
+    <h3>Keep from the mockup</h3>
+    <ul>
+      <li><b>The bilby itself.</b> Distinctive, Australian, ownable, and nobody in this category has an animal.</li>
+      <li><b>A phone mockup in the hero.</b> People buy an app; showing it is right.</li>
+      <li><b>Destination search as the main action.</b> That is the actual first job.</li>
+      <li><b>Scroll reveals and a moving background.</b> Restrained motion earns its place.</li>
+    </ul>
+  </div>
+  <div class="v drop">
+    <h3>Drop, and why</h3>
+    <ul>
+      <li><b>The cape and mask.</b> Your buyer is anxious about being cut off abroad. A cartoon superhero is the wrong register at the moment that matters.</li>
+      <li><b>Indigo to cyan gradient.</b> That is Tailwind's default indigo 500 to cyan 500, the single most recognisable generated look on the web.</li>
+      <li><b>Space Grotesk.</b> Same problem: it reads as the default choice.</li>
+      <li><b>A trusted by logo row.</b> You have no customers yet. Do not build a section that needs inventing.</li>
+      <li><b>A second palette entirely.</b> The Flutter app is already built against the existing tokens. Changing them means rebuilding it.</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Four marks. Each shown light, dark, and at real sizes</h2>
+<div class="marks">
+
+  <div class="mark">
+    <div class="mark-head">
+      <p class="tag">Direction A</p>
+      <h3>Signal Ears</h3>
+      <p>Two ears that are also a signal strength meter. The most direct expression of the idea, and the only one that says both things at once.</p>
+    </div>
+    <div class="stage">
+      <div class="pane lightbg">
+        <svg width="104" height="104" viewBox="0 0 64 64" aria-label="Signal Ears mark">
+          <rect x="19" y="20" width="10" height="30" rx="5" fill="#0E9C86" transform="rotate(-7 24 35)"/>
+          <rect x="35" y="14" width="10" height="36" rx="5" fill="#0E9C86" transform="rotate(7 40 32)"/>
+          <circle cx="32" cy="53" r="4.6" fill="#0A7C6B"/>
+        </svg>
+      </div>
+      <div class="pane darkbg">
+        <svg width="104" height="104" viewBox="0 0 64 64" aria-hidden="true">
+          <rect x="19" y="20" width="10" height="30" rx="5" fill="#2BE8C8" transform="rotate(-7 24 35)"/>
+          <rect x="35" y="14" width="10" height="36" rx="5" fill="#2BE8C8" transform="rotate(7 40 32)"/>
+          <circle cx="32" cy="53" r="4.6" fill="#7BF3DD"/>
+        </svg>
+      </div>
+    </div>
+    <div class="sizes">
+      <div class="sz"><svg width="48" height="48" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0E9C86"/><rect x="19" y="20" width="10" height="30" rx="5" fill="#fff" transform="rotate(-7 24 35)"/><rect x="35" y="14" width="10" height="36" rx="5" fill="#fff" transform="rotate(7 40 32)"/><circle cx="32" cy="53" r="4.6" fill="#A8EFE2"/></svg><span>48</span></div>
+      <div class="sz"><svg width="32" height="32" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0E9C86"/><rect x="19" y="20" width="10" height="30" rx="5" fill="#fff" transform="rotate(-7 24 35)"/><rect x="35" y="14" width="10" height="36" rx="5" fill="#fff" transform="rotate(7 40 32)"/><circle cx="32" cy="53" r="4.6" fill="#A8EFE2"/></svg><span>32</span></div>
+      <div class="sz"><svg width="16" height="16" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0E9C86"/><rect x="19" y="20" width="10" height="30" rx="5" fill="#fff" transform="rotate(-7 24 35)"/><rect x="35" y="14" width="10" height="36" rx="5" fill="#fff" transform="rotate(7 40 32)"/><circle cx="32" cy="53" r="4.6" fill="#A8EFE2"/></svg><span>16</span></div>
+    </div>
+  </div>
+
+  <div class="mark">
+    <div class="mark-head">
+      <p class="tag">Direction B</p>
+      <h3>Broadcast Arcs</h3>
+      <p>Concentric arcs in ear proportions. Abstract, calm, and it survives being shrunk further than anything else here.</p>
+    </div>
+    <div class="stage">
+      <div class="pane lightbg">
+        <svg width="104" height="104" viewBox="0 0 64 64" aria-label="Broadcast Arcs mark">
+          <path d="M32 52 A 12 20 0 0 1 32 12" fill="none" stroke="#0E9C86" stroke-width="6.5" stroke-linecap="round"/>
+          <path d="M32 52 A 22 30 0 0 1 32 6" fill="none" stroke="#0E9C86" stroke-width="6.5" stroke-linecap="round" opacity=".42"/>
+          <circle cx="32" cy="52" r="5" fill="#0A7C6B"/>
+        </svg>
+      </div>
+      <div class="pane darkbg">
+        <svg width="104" height="104" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M32 52 A 12 20 0 0 1 32 12" fill="none" stroke="#2BE8C8" stroke-width="6.5" stroke-linecap="round"/>
+          <path d="M32 52 A 22 30 0 0 1 32 6" fill="none" stroke="#2BE8C8" stroke-width="6.5" stroke-linecap="round" opacity=".42"/>
+          <circle cx="32" cy="52" r="5" fill="#7BF3DD"/>
+        </svg>
+      </div>
+    </div>
+    <div class="sizes">
+      <div class="sz"><svg width="48" height="48" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0E9C86"/><path d="M32 50 A 11 18 0 0 1 32 14" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round"/><path d="M32 50 A 20 27 0 0 1 32 9" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" opacity=".5"/><circle cx="32" cy="50" r="5" fill="#A8EFE2"/></svg><span>48</span></div>
+      <div class="sz"><svg width="32" height="32" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0E9C86"/><path d="M32 50 A 11 18 0 0 1 32 14" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round"/><path d="M32 50 A 20 27 0 0 1 32 9" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" opacity=".5"/><circle cx="32" cy="50" r="5" fill="#A8EFE2"/></svg><span>32</span></div>
+      <div class="sz"><svg width="16" height="16" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0E9C86"/><path d="M32 50 A 11 18 0 0 1 32 14" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round"/><path d="M32 50 A 20 27 0 0 1 32 9" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" opacity=".5"/><circle cx="32" cy="50" r="5" fill="#A8EFE2"/></svg><span>16</span></div>
+    </div>
+  </div>
+
+  <div class="mark">
+    <div class="mark-head">
+      <p class="tag">Direction C</p>
+      <h3>Eared B</h3>
+      <p>A monogram whose two bowls lean apart into ears. Reads as a letter first, which makes it the safest choice on a crowded store shelf.</p>
+    </div>
+    <div class="stage">
+      <div class="pane lightbg">
+        <svg width="104" height="104" viewBox="0 0 64 64" aria-label="Eared B monogram">
+          <rect x="17" y="12" width="7" height="40" rx="3.5" fill="#0E9C86"/>
+          <path d="M24 15 h10 a10 10 0 0 1 0 20 h-10" fill="none" stroke="#0E9C86" stroke-width="7" stroke-linecap="round"/>
+          <path d="M24 33 h12 a10.5 10.5 0 0 1 0 19 h-12" fill="none" stroke="#0E9C86" stroke-width="7" stroke-linecap="round"/>
+          <circle cx="45" cy="9" r="3.4" fill="#0A7C6B"/>
+        </svg>
+      </div>
+      <div class="pane darkbg">
+        <svg width="104" height="104" viewBox="0 0 64 64" aria-hidden="true">
+          <rect x="17" y="12" width="7" height="40" rx="3.5" fill="#2BE8C8"/>
+          <path d="M24 15 h10 a10 10 0 0 1 0 20 h-10" fill="none" stroke="#2BE8C8" stroke-width="7" stroke-linecap="round"/>
+          <path d="M24 33 h12 a10.5 10.5 0 0 1 0 19 h-12" fill="none" stroke="#2BE8C8" stroke-width="7" stroke-linecap="round"/>
+          <circle cx="45" cy="9" r="3.4" fill="#7BF3DD"/>
+        </svg>
+      </div>
+    </div>
+    <div class="sizes">
+      <div class="sz"><svg width="48" height="48" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0E9C86"/><rect x="19" y="14" width="7" height="37" rx="3.5" fill="#fff"/><path d="M26 17 h9 a9.5 9.5 0 0 1 0 18 h-9" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/><path d="M26 33 h11 a10 10 0 0 1 0 18 h-11" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/></svg><span>48</span></div>
+      <div class="sz"><svg width="32" height="32" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0E9C86"/><rect x="19" y="14" width="7" height="37" rx="3.5" fill="#fff"/><path d="M26 17 h9 a9.5 9.5 0 0 1 0 18 h-9" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/><path d="M26 33 h11 a10 10 0 0 1 0 18 h-11" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/></svg><span>32</span></div>
+      <div class="sz"><svg width="16" height="16" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0E9C86"/><rect x="19" y="14" width="7" height="37" rx="3.5" fill="#fff"/><path d="M26 17 h9 a9.5 9.5 0 0 1 0 18 h-9" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/><path d="M26 33 h11 a10 10 0 0 1 0 18 h-11" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/></svg><span>16</span></div>
+    </div>
+  </div>
+
+  <div class="mark">
+    <div class="mark-head">
+      <p class="tag">Direction D</p>
+      <h3>Bilby Head</h3>
+      <p>The animal, stripped to a silhouette. The most charming and the most fragile: it needs the most care at small sizes and it is the hardest to keep from drifting cute.</p>
+    </div>
+    <div class="stage">
+      <div class="pane lightbg">
+        <svg width="104" height="104" viewBox="0 0 64 64" aria-label="Bilby head mark">
+          <ellipse cx="24" cy="20" rx="6" ry="12" fill="#0E9C86" transform="rotate(-16 24 20)"/>
+          <ellipse cx="40" cy="19" rx="6" ry="13" fill="#0E9C86" transform="rotate(14 40 19)"/>
+          <path d="M32 30 c11 0 17 8 17 15 c0 6-6 9-17 9 s-17-3-17-9 c0-7 6-15 17-15 z" fill="#0A7C6B"/>
+          <circle cx="32" cy="49" r="2.6" fill="#F4F8F8"/>
+        </svg>
+      </div>
+      <div class="pane darkbg">
+        <svg width="104" height="104" viewBox="0 0 64 64" aria-hidden="true">
+          <ellipse cx="24" cy="20" rx="6" ry="12" fill="#2BE8C8" transform="rotate(-16 24 20)"/>
+          <ellipse cx="40" cy="19" rx="6" ry="13" fill="#2BE8C8" transform="rotate(14 40 19)"/>
+          <path d="M32 30 c11 0 17 8 17 15 c0 6-6 9-17 9 s-17-3-17-9 c0-7 6-15 17-15 z" fill="#7BF3DD"/>
+          <circle cx="32" cy="49" r="2.6" fill="#07080B"/>
+        </svg>
+      </div>
+    </div>
+    <div class="sizes">
+      <div class="sz"><svg width="48" height="48" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0E9C86"/><ellipse cx="24" cy="21" rx="5.5" ry="11" fill="#fff" transform="rotate(-16 24 21)"/><ellipse cx="40" cy="20" rx="5.5" ry="12" fill="#fff" transform="rotate(14 40 20)"/><path d="M32 30 c10 0 16 7 16 14 c0 5-6 8-16 8 s-16-3-16-8 c0-7 6-14 16-14 z" fill="#A8EFE2"/></svg><span>48</span></div>
+      <div class="sz"><svg width="32" height="32" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0E9C86"/><ellipse cx="24" cy="21" rx="5.5" ry="11" fill="#fff" transform="rotate(-16 24 21)"/><ellipse cx="40" cy="20" rx="5.5" ry="12" fill="#fff" transform="rotate(14 40 20)"/><path d="M32 30 c10 0 16 7 16 14 c0 5-6 8-16 8 s-16-3-16-8 c0-7 6-14 16-14 z" fill="#A8EFE2"/></svg><span>32</span></div>
+      <div class="sz"><svg width="16" height="16" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0E9C86"/><ellipse cx="24" cy="21" rx="5.5" ry="11" fill="#fff" transform="rotate(-16 24 21)"/><ellipse cx="40" cy="20" rx="5.5" ry="12" fill="#fff" transform="rotate(14 40 20)"/><path d="M32 30 c10 0 16 7 16 14 c0 5-6 8-16 8 s-16-3-16-8 c0-7 6-14 16-14 z" fill="#A8EFE2"/></svg><span>16</span></div>
+    </div>
+  </div>
+
+</div>
+
+<h2>Wordmark lockup, using the recommended mark</h2>
+<div class="lock">
+  <div class="wm">
+    <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+      <rect x="19" y="20" width="10" height="30" rx="5" fill="#0E9C86" transform="rotate(-7 24 35)"/>
+      <rect x="35" y="14" width="10" height="36" rx="5" fill="#0E9C86" transform="rotate(7 40 32)"/>
+      <circle cx="32" cy="53" r="4.6" fill="#0A7C6B"/>
+    </svg>
+    <span class="t">Bilby</span>
+  </div>
+  <div class="dk">
+    <div class="wm">
+      <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+        <rect x="19" y="20" width="10" height="30" rx="5" fill="#2BE8C8" transform="rotate(-7 24 35)"/>
+        <rect x="35" y="14" width="10" height="36" rx="5" fill="#2BE8C8" transform="rotate(7 40 32)"/>
+        <circle cx="32" cy="53" r="4.6" fill="#7BF3DD"/>
+      </svg>
+      <span class="t">Bilby</span>
+    </div>
+  </div>
+</div>
+
+<h2>The palette question, side by side</h2>
+<div class="pal">
+  <div class="palcard">
+    <h3>Proposed in the mockup</h3>
+    <p class="sub">Indigo, cyan, amber</p>
+    <div class="chips">
+      <span class="chip" style="background:#6366f1"><i>6366f1</i></span>
+      <span class="chip" style="background:#06b6d4"><i>06b6d4</i></span>
+      <span class="chip" style="background:#f59e0b"><i>f59e0b</i></span>
+      <span class="chip" style="background:#0f172a"><i>0f172a</i></span>
+    </div>
+    <p class="note"><b>The problem is not that it is ugly.</b> Those are Tailwind's indigo 500, cyan 500, amber 500 and slate 900, unmodified. Three brand colours also means no colour carries meaning, and it would require rebuilding the Flutter app, which is written against the existing tokens.</p>
+  </div>
+  <div class="palcard">
+    <h3>Already in the codebase</h3>
+    <p class="sub">One accent, four tonal surfaces</p>
+    <div class="chips">
+      <span class="chip" style="background:#0E9C86"><i>0E9C86</i></span>
+      <span class="chip" style="background:#2BE8C8"><i>2BE8C8</i></span>
+      <span class="chip" style="background:#F4F8F8; border:1px solid #DCE7E6"><i>F4F8F8</i></span>
+      <span class="chip" style="background:#07080B"><i>07080B</i></span>
+    </div>
+    <p class="note"><b>Two steps of one hue,</b> deep teal for light backgrounds and luminous aqua for dark, plus the two grounds. Amber and red stay reserved for warnings and errors so they still mean something when they appear.</p>
+  </div>
+</div>
+
+<div class="rec">
+  <p><b>My recommendation is Direction A, Signal Ears.</b> It is the only mark
+     that says both things at once: ears, and signal strength. It holds at 16
+     pixels, it works as a loading indicator when the bars fill one by one, and
+     it gives you an animation that is about connecting rather than about a
+     cartoon flying.</p>
+  <p><b>Direction B is the safe second.</b> More abstract, calmer, and it would
+     scale down further than anything else here. Choose it if you want the brand
+     to feel like infrastructure rather than like a character.</p>
+  <p><b>Direction D is the one to resist</b> unless you are certain. A literal
+     animal is charming in a pitch and it drifts toward cute in production, which
+     is the same trap as the cape.</p>
+</div>
+
+</div>

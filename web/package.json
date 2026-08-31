@@ -1,0 +1,29 @@
+{
+  "name": "nesim-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "^7.2.0",
+    "@capacitor/core": "^7.6.8",
+    "@libsql/client": "^0.17.4",
+    "next": "^15.5.23",
+    "qrcode": "^1.5.4",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^7.6.8",
+    "@capacitor/cli": "^7.6.8",
+    "@types/node": "^22.15.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "tsx": "^4.23.12",
+    "typescript": "^5.8.3"
+  }
+}

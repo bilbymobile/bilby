@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bilby · interface v2</title>
+<meta name="theme-color" content="#07080B">
+<style>
+/* ══════════════════════════════════════════════════════════════════════════
+   BILBY INTERFACE v2
+
+   Built from a study of Firsty, Airalo, Holafly, Trip.com, Hopper, Revolut,
+   Wise and the 2026 Apple Design Award winners. Six decisions carry it:
+
+   1. Dark first, four tonal surfaces, depth from luminance rather than shadow.
+      Nobody in the eSIM category is dark first. Revolut builds hierarchy this
+      way and it is why their dark mode reads as engineered instead of inverted.
+
+   2. One loud accent, never two. Firsty owns acid lime, Wise owns leaf green,
+      so we take the unclaimed adjacent slot. Three directions ship here and
+      you can switch between them live.
+
+   3. A living graphite field behind everything. Four blurred masses drifting
+      on slow prime numbered cycles so they never resynchronise, plus one
+      tinted with the accent. The screen is never dead.
+
+   4. The balance is the hero object, set enormous, rolled like an odometer,
+      locked to tabular figures so digits never jitter.
+
+   5. One continuous touchable data object instead of a progress bar. Drag the
+      curve. This is the Tide Guide and Moonlitt move that won design awards in
+      2026, and no eSIM app has anything like it.
+
+   6. The home screen is built around a trip, not a service grid. Trip.com
+      scales by addition and looks like it. Adding flights or stays here means
+      adding a card type inside a trip, never another tab.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* Four tonal surfaces. Every step is a luminance change, no shadows. */
+  --c0:#07080B;   /* canvas */
+  --c1:#0F1216;   /* surface */
+  --c2:#171B21;   /* raised */
+  --c3:#20252C;   /* control */
+  --line:rgba(255,255,255,.10);
+  --line2:rgba(255,255,255,.06);
+  --tx:#F5F7FA;
+  --tx2:rgba(245,247,250,.64);
+  --tx3:rgba(245,247,250,.40);
+
+  /* Accent, overwritten by the theme switcher. */
+  --a:#2BE8C8;
+  --a-ink:#04241E;
+  --a-deep:#17B9A0;
+  --warn:#FFB454;
+  --bad:#FF5C6E;
+
+  /* Radius ladder. Child radius equals parent radius minus the inset, so
+     nested corners stay concentric instead of drifting. */
+  --r-sheet:34px; --r-hero:28px; --r-card:20px; --r-chip:16px; --r-pill:999px;
+
+  /* Two springs and one curve. Nothing else. */
+  --snap:380ms cubic-bezier(.22,1.2,.36,1);     /* taps, chips, toggles */
+  --gentle:560ms cubic-bezier(.16,1.08,.3,1);   /* sheets, cards, the numeral */
+  --flat:180ms cubic-bezier(.2,0,0,1);          /* opacity and colour only */
+}
+
+/* Three accent directions. The graphite base is shared, so switching one
+   variable changes the entire personality without touching a layout value. */
+[data-theme="aurora"]{ --a:#2BE8C8; --a-ink:#04241E; --a-deep:#17B9A0; }
+[data-theme="signal"]{ --a:#8B7CFF; --a-ink:#120C33; --a-deep:#6A5AE0; }
+[data-theme="solstice"]{ --a:#FFC857; --a-ink:#241A04; --a-deep:#D9A032; }
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{
+  background:#050609;color:var(--tx);
+  font:400 15px/1.5 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  display:flex;flex-direction:column;align-items:center;gap:16px;padding:16px 12px 28px;
+}
+h1,h2,h3,p{margin:0}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ── Phone ────────────────────────────────────────────────────────────── */
+.phone{
+  flex:none;width:390px;height:844px;position:relative;overflow:hidden;
+  background:var(--c0);border-radius:46px;border:10px solid #101318;
+  box-shadow:0 0 0 1.5px #262c34,0 44px 100px -24px rgba(0,0,0,.95);
+  display:flex;flex-direction:column;isolation:isolate;
+}
+.notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);
+  width:110px;height:26px;background:#000;border-radius:99px;z-index:60}
+
+/* ── The living graphite field ───────────────────────────────────────────
+   Four masses on 29s, 37s, 43s and 53s cycles. Prime numbers on purpose: the
+   pattern never repeats inside a session, so it reads as weather rather than
+   as a loop. Heavy blur means it costs almost nothing to composite. */
+.field{position:absolute;inset:-40%;z-index:0;filter:blur(64px);opacity:.85;pointer-events:none}
+.field i{position:absolute;display:block;border-radius:50%;mix-blend-mode:screen}
+.f1{width:70%;height:46%;left:-6%;top:2%;background:#2A3138;animation:drift1 29s ease-in-out infinite}
+.f2{width:62%;height:40%;right:-10%;top:16%;background:#161C22;animation:drift2 37s ease-in-out infinite}
+.f3{width:78%;height:52%;left:6%;bottom:-4%;background:#343C45;animation:drift3 43s ease-in-out infinite}
+.f4{width:52%;height:34%;right:2%;bottom:14%;background:var(--a);opacity:.16;
+  animation:drift4 53s ease-in-out infinite;transition:background var(--flat)}
+@keyframes drift1{0%,100%{transform:translate3d(0,0,0) scale(1)}33%{transform:translate3d(12%,8%,0) scale(1.15)}66%{transform:translate3d(-8%,14%,0) scale(.92)}}
+@keyframes drift2{0%,100%{transform:translate3d(0,0,0) scale(1.05)}50%{transform:translate3d(-14%,18%,0) scale(.88)}}
+@keyframes drift3{0%,100%{transform:translate3d(0,0,0) scale(.95)}40%{transform:translate3d(10%,-12%,0) scale(1.2)}75%{transform:translate3d(-6%,-4%,0) scale(1.02)}}
+@keyframes drift4{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-18%,-22%,0) scale(1.3)}}
+
+.scrim{position:absolute;left:0;right:0;bottom:0;height:170px;z-index:40;pointer-events:none;
+  background:linear-gradient(to top,var(--c0) 22%,color-mix(in srgb,var(--c0) 72%,transparent) 55%,transparent);
+  transition:opacity var(--gentle)}
+.scrim.hide{opacity:0}
+.statusbar{position:relative;z-index:20;height:48px;flex:0 0 48px;display:flex;
+  align-items:center;justify-content:space-between;padding:0 24px;font-size:13px;font-weight:600}
+.statusbar .r{display:flex;gap:6px;align-items:center;opacity:.85;font-size:11px}
+.viewport{flex:1;position:relative;overflow:hidden;z-index:10}
+
+.screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:0 20px 128px}
+.screen::-webkit-scrollbar{width:0}
+@keyframes screenIn{from{opacity:0;transform:translateY(20px) scale(.985)}to{opacity:1;transform:none}}
+.screen.enter{animation:screenIn var(--gentle) both}
+
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.stagger>*{animation:rise 520ms cubic-bezier(.16,1.08,.3,1) both}
+.stagger>*:nth-child(1){animation-delay:20ms}
+.stagger>*:nth-child(2){animation-delay:75ms}
+.stagger>*:nth-child(3){animation-delay:130ms}
+.stagger>*:nth-child(4){animation-delay:185ms}
+.stagger>*:nth-child(5){animation-delay:240ms}
+.stagger>*:nth-child(6){animation-delay:295ms}
+.stagger>*:nth-child(7){animation-delay:350ms}
+
+/* ── Surfaces ─────────────────────────────────────────────────────────── */
+.card{background:var(--c1);border:1px solid var(--line2);border-radius:var(--r-card);
+  padding:18px;position:relative;overflow:hidden}
+.hero{border-radius:var(--r-hero);padding:22px}
+.raised{background:var(--c2)}
+
+/* Glass, used in exactly one place: the floating navigation and the live pill.
+   Nielsen Norman are right that transparency over content destroys legibility,
+   so no numeral or body copy ever sits on it. */
+.glass{background:rgba(255,255,255,.055);backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(255,255,255,.14)}
+
+/* ── The hero numeral ────────────────────────────────────────────────────
+   72px, weight 550, line height 1, tracking negative 3%, tabular figures.
+   Wise retooled the numerals in their typeface specifically because a giant
+   number is their hero object. Same principle, applied to megabytes. */
+.bignum{display:flex;align-items:flex-end;gap:10px;margin:10px 0 2px}
+.odo{display:flex;height:74px;overflow:hidden;font-size:72px;font-weight:550;
+  letter-spacing:-2.4px;font-variant-numeric:tabular-nums}
+/* Column width in `em`, so it scales with the digits rather than with the
+   inherited body size. Tabular figures make every digit the same advance,
+   which is the whole reason the roll does not jitter. */
+.odo .col{width:.58em;height:74px;overflow:hidden;position:relative}
+.odo .col u{display:block;text-decoration:none;transition:transform var(--gentle)}
+.odo .col u b{display:block;height:74px;line-height:74px;font-weight:inherit;
+  font-size:inherit;letter-spacing:inherit}
+.bignum .unit{font-size:17px;font-weight:600;color:var(--tx2);padding-bottom:14px;letter-spacing:.2px}
+
+.eyebrow{font-size:10px;letter-spacing:1.1px;text-transform:uppercase;font-weight:650;color:var(--tx3)}
+.h1{font-size:31px;font-weight:640;letter-spacing:-1.1px;line-height:1.08}
+.h2{font-size:19px;font-weight:620;letter-spacing:-.4px}
+.sub{font-size:14.5px;color:var(--tx2);line-height:1.55}
+.tiny{font-size:12.5px;color:var(--tx3);line-height:1.5}
+
+/* ── The scrubbable data object ─────────────────────────────────────────
+   Drag it. The numeral follows your finger and the readout tracks the hour.
+   This is the single strongest differentiator in the whole design: a dense
+   utility becomes one continuous instrument you can touch. */
+.scrub{position:relative;height:132px;margin:6px -18px 0;touch-action:none;cursor:grab}
+.scrub:active{cursor:grabbing}
+.scrub svg{display:block;width:100%;height:100%}
+.scrub .cursorline{transition:opacity var(--flat)}
+.scrubhint{display:flex;justify-content:space-between;padding:0 2px;margin-top:2px}
+
+/* ── Flash: the reward sweep ─────────────────────────────────────────────
+   A 26 degree sheen crossing the card in 760ms. Fires once when data lands.
+   No confetti. Confetti is 2019 and every fintech already does it. */
+.sheen{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:inherit}
+.sheen::after{content:"";position:absolute;top:-60%;bottom:-60%;width:46%;left:-60%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.20),transparent);
+  transform:skewX(-26deg);opacity:0}
+.sheen.go::after{animation:sweep 760ms cubic-bezier(.3,0,.2,1) 1}
+@keyframes sweep{0%{left:-60%;opacity:0}18%{opacity:1}100%{left:130%;opacity:0}}
+
+/* Splash bloom on the accent, used when a grant lands. */
+.bloom{position:absolute;left:50%;top:44%;width:8px;height:8px;border-radius:50%;
+  background:var(--a);transform:translate(-50%,-50%) scale(1);opacity:0;pointer-events:none}
+.bloom.go{animation:bloom 900ms cubic-bezier(.2,.8,.3,1) 1}
+@keyframes bloom{0%{opacity:.55;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(46)}}
+
+/* ── Controls ─────────────────────────────────────────────────────────── */
+.btn{border:0;font:inherit;font-weight:620;font-size:14.5px;border-radius:var(--r-pill);
+  padding:16px 18px;white-space:nowrap;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform var(--snap),background var(--flat),opacity var(--flat);position:relative;overflow:hidden}
+.btn:active:not(:disabled){transform:scale(.965)}
+.btn.pri{background:var(--a);color:var(--a-ink)}
+.btn.pri:disabled{background:color-mix(in srgb,var(--a) 34%,var(--c2));color:rgba(255,255,255,.5)}
+.btn.sec{background:var(--c3);color:var(--tx);border:1px solid var(--line)}
+.btn.sec:disabled{color:var(--tx3)}
+.btn:disabled{cursor:default}
+.btn.block{width:100%}
+.row{display:flex;gap:10px}
+.row>.btn{flex:1}
+
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:var(--r-pill);
+  background:color-mix(in srgb,var(--a) 14%,transparent);color:var(--a);
+  font-size:11.5px;font-weight:620;white-space:nowrap}
+.pill.mute{background:var(--c2);color:var(--tx2)}
+.pill.warn{background:rgba(255,180,84,.14);color:var(--warn)}
+
+.spin{width:18px;height:18px;border-radius:50%;border:2px solid currentColor;
+  border-top-color:transparent;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* ── The rail: how new services arrive without a redesign ──────────────── */
+.rail{display:flex;gap:9px;overflow-x:auto;margin:0 -20px;padding:2px 20px 4px;scroll-snap-type:x mandatory}
+.rail::-webkit-scrollbar{height:0}
+.rchip{flex:0 0 auto;scroll-snap-align:start;display:flex;align-items:center;gap:8px;
+  padding:11px 15px;border-radius:var(--r-chip);background:var(--c2);border:1px solid var(--line2);
+  font-size:13.5px;font-weight:600;cursor:pointer;transition:background var(--flat),transform var(--snap)}
+.rchip:active{transform:scale(.96)}
+.rchip.on{background:var(--a);color:var(--a-ink);border-color:transparent}
+.rchip.soon{color:var(--tx3)}
+.rchip svg{width:17px;height:17px}
+
+/* ── Trip spine ───────────────────────────────────────────────────────── */
+.trip{border-radius:var(--r-hero);overflow:hidden;background:var(--c1);border:1px solid var(--line2)}
+.tripimg{height:118px;position:relative;overflow:hidden}
+/* Duotone place imagery instead of flag grids. Shadows map to the canvas,
+   highlights map to the accent, so every destination looks like one family
+   regardless of where the picture came from. */
+.duo{position:absolute;inset:0;background:
+  radial-gradient(120% 90% at 20% 10%, color-mix(in srgb,var(--a) 55%,transparent), transparent 60%),
+  radial-gradient(100% 80% at 85% 90%, #39424C, transparent 65%),
+  linear-gradient(160deg,#0B0E12,#1B2129 60%,#0A0D11)}
+.duo::after{content:"";position:absolute;inset:0;opacity:.5;
+  background-image:radial-gradient(rgba(255,255,255,.10) .5px, transparent .5px);background-size:3px 3px}
+.tripimg .cap{position:absolute;left:16px;bottom:12px;z-index:2}
+.triprow{display:flex;align-items:center;gap:13px;padding:14px 16px;border-top:1px solid var(--line2)}
+.ico{width:38px;height:38px;flex:0 0 38px;border-radius:12px;background:var(--c2);
+  display:flex;align-items:center;justify-content:center;color:var(--a)}
+.ico.dim{color:var(--tx3)}
+.ico svg{width:18px;height:18px}
+
+/* ── Floating navigation ─────────────────────────────────────────────────
+   Floats, shrinks on scroll, four destinations. Large solid bottom bars look
+   dated beside a floating glass control in 2026. */
+.nav{position:absolute;left:16px;right:16px;bottom:16px;z-index:50;border-radius:var(--r-pill);
+  display:flex;padding:7px;gap:3px;transition:transform var(--gentle),opacity var(--gentle)}
+.nav.hide{transform:translateY(130%);opacity:0}
+.nav button{flex:1;background:none;border:0;color:var(--tx3);font:inherit;font-size:10.5px;
+  font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;
+  padding:8px 0 7px;border-radius:var(--r-pill);transition:color var(--flat),background var(--snap)}
+.nav button svg{width:20px;height:20px}
+.nav button.on{color:var(--a-ink);background:var(--a)}
+
+/* Live connection strip, sitting above the navigation. The correct home for
+   status that must never scroll away. */
+.livepill{position:absolute;left:16px;right:16px;bottom:88px;z-index:49;border-radius:var(--r-pill);
+  padding:9px 14px;display:flex;align-items:center;gap:9px;font-size:12.5px;
+  transition:transform var(--gentle),opacity var(--gentle)}
+.livepill.hide{transform:translateY(190%);opacity:0}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--a);flex:0 0 7px;
+  box-shadow:0 0 0 0 color-mix(in srgb,var(--a) 70%,transparent);animation:pulse 2.6s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--a) 55%,transparent)}
+  70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+
+/* ── Splash ───────────────────────────────────────────────────────────── */
+.splash{position:absolute;inset:0;z-index:90;background:var(--c0);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+.splash.out{animation:splashOut 620ms cubic-bezier(.6,0,.2,1) forwards}
+@keyframes splashOut{to{opacity:0;transform:scale(1.08);visibility:hidden}}
+.splash svg{width:104px;height:104px;overflow:visible}
+.splash .stroke{fill:none;stroke:var(--a);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:340;stroke-dashoffset:340;animation:draw 1100ms cubic-bezier(.5,0,.2,1) 120ms forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.splash .ear{opacity:0;animation:earIn 520ms cubic-bezier(.16,1.3,.3,1) 820ms forwards;transform-origin:50% 100%}
+@keyframes earIn{from{opacity:0;transform:scaleY(.2) translateY(8px)}to{opacity:1;transform:none}}
+.splash .word{opacity:0;font-size:23px;font-weight:640;letter-spacing:-.6px;
+  animation:rise 620ms cubic-bezier(.16,1.08,.3,1) 1020ms forwards}
+.splash .tag{opacity:0;font-size:13.5px;color:var(--tx2);
+  animation:rise 620ms cubic-bezier(.16,1.08,.3,1) 1140ms forwards}
+.splashglow{position:absolute;width:280px;height:280px;border-radius:50%;background:var(--a);
+  filter:blur(80px);opacity:0;animation:glow 1600ms ease-out 200ms forwards}
+@keyframes glow{40%{opacity:.30}100%{opacity:.12}}
+
+/* ── Ad player ────────────────────────────────────────────────────────── */
+.adplayer{position:absolute;inset:0;z-index:70;background:#000;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:18px;animation:screenIn 300ms both}
+.adbox{width:80%;aspect-ratio:16/10;border-radius:18px;display:flex;align-items:center;justify-content:center;
+  font-size:12px;letter-spacing:2.5px;font-weight:650;color:rgba(255,255,255,.7);
+  background:linear-gradient(135deg,#1B2E7A,#6B2BB8 55%,#B8365E)}
+
+.toast{position:absolute;left:16px;right:16px;bottom:148px;z-index:55;border-radius:var(--r-chip);
+  padding:13px 15px;font-size:13.5px;animation:rise 260ms both}
+
+.note{padding:13px 15px;border-radius:var(--r-chip);font-size:13.5px;line-height:1.5;
+  background:color-mix(in srgb,var(--a) 8%,transparent);
+  border:1px solid color-mix(in srgb,var(--a) 22%,transparent);color:var(--tx)}
+.note.warn{background:rgba(255,180,84,.08);border-color:rgba(255,180,84,.24)}
+
+/* ── Control panel ────────────────────────────────────────────────────── */
+.panel{width:390px;max-width:100%;background:#0A0D11;border:1px solid #1A2028;
+  border-radius:22px;padding:15px}
+.panel h3{font-size:10.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--tx3);font-weight:650}
+.themes{display:flex;gap:8px;margin-top:11px}
+.sw{flex:1;padding:11px 8px;border-radius:14px;border:1px solid #212a33;background:#11151A;
+  cursor:pointer;color:var(--tx2);font:inherit;font-size:12px;font-weight:600;text-align:left;
+  display:flex;align-items:center;gap:8px}
+.sw i{width:16px;height:16px;border-radius:50%;display:block;flex:0 0 16px}
+.sw.on{border-color:currentColor}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+.grid button{background:#11151A;border:1px solid #212a33;color:#C3CEDA;font:inherit;font-size:12px;
+  padding:10px 9px;border-radius:12px;cursor:pointer;text-align:left;line-height:1.3}
+.grid button.on{border-color:var(--a);color:var(--a)}
+.why{font-size:11.5px;color:#69788A;line-height:1.55;margin-top:11px}
+
+@media (max-width:430px){
+  body{padding:0;gap:0}
+  .phone{width:100%;height:100dvh;border:0;border-radius:0;box-shadow:none}
+  .notch{display:none}
+  .statusbar{height:calc(10px + env(safe-area-inset-top));flex-basis:auto;padding-top:env(safe-area-inset-top)}
+  .statusbar span{display:none}
+  .nav{bottom:calc(12px + env(safe-area-inset-bottom))}
+  .livepill{bottom:calc(84px + env(safe-area-inset-bottom))}
+  .panel{position:fixed;left:8px;right:8px;bottom:8px;z-index:99;width:auto;max-height:42vh;overflow:auto}
+  .panel.collapsed{max-height:42px;overflow:hidden;padding:12px 15px}
+  .panel h3{cursor:pointer}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  .field{opacity:.5}
+}
+</style>
+</head>
+<body data-theme="aurora">
+
+<div class="phone" id="phone">
+  <div class="field"><i class="f1"></i><i class="f2"></i><i class="f3"></i><i class="f4"></i></div>
+  <div class="notch"></div>
+  <div class="statusbar">
+    <span id="clock">9:41</span>
+    <div class="r"><span>&#9679;&#9679;&#9679;</span><span>84%</span></div>
+  </div>
+  <div class="viewport" id="viewport"></div>
+  <div class="scrim" id="scrim"></div>
+  <div class="livepill glass" id="livepill"></div>
+  <div class="nav glass" id="nav"></div>
+</div>
+
+<div class="panel" id="panel">
+  <h3 id="panelHead">Accent direction</h3>
+  <div class="themes" id="themes"></div>
+  <h3 style="margin-top:15px">States</h3>
+  <div class="grid" id="scenarios"></div>
+  <div class="why" id="why"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════ */
+const ICON = {
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>',
+  trips:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v12H3z"/><path d="M8 7V5h8v2"/></svg>',
+  shop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>',
+  you:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>',
+  bolt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2 5 13h6l-1 9 8-11h-6z"/></svg>',
+  sim:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><rect x="9" y="12" width="6" height="5" rx="1"/></svg>',
+  plane:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13l20-7-7 20-3-8z"/></svg>',
+  bed:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-9m0 5h18v4M7 11h4a3 3 0 0 1 3 3H7z"/><path d="M21 14V9a2 2 0 0 0-2-2h-5"/></svg>',
+  ticket:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1 0 4H5a2 2 0 0 1 0-4 2 2 0 0 0 0-4z"/></svg>',
+  pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>',
+};
+
+const THEMES = [
+  {k:'aurora',  label:'Aurora',   c:'#2BE8C8', why:'Luminous aqua on graphite. Firsty owns acid lime and Wise owns leaf green, so this takes the adjacent slot nobody has claimed. It reads as signal and network rather than as money, which is exactly the association we want.'},
+  {k:'signal',  label:'Signal',   c:'#8B7CFF', why:'Electric violet. The furthest from every competitor in the category, and it holds up better than aqua against destination photography because it does not compete with sea and sky.'},
+  {k:'solstice',label:'Solstice', c:'#FFC857', why:'Warm amber. The friendliest of the three and the strongest on light backgrounds later, but it sits nearest Airalo orange and Hopper buttercup, so it is the least differentiated.'},
+];
+
+/* ═══════════════════════════════════════════════════════════════════════
+   State
+   ═══════════════════════════════════════════════════════════════════════ */
+const BASE = {
+  screen:'home', tab:'home', splash:true,
+  destination:'ID', destinationName:'Bali, Indonesia',
+  atHome:true, country:'Australia',
+  balanceMb:26, mbPerAd:13, onArrivalMb:6,
+  adsWatchedToday:2, dailyAdCap:10, thresholdMb:50,
+  freeTierAvailable:true, regionSupported:true, budgetExhausted:false,
+  busy:false, ad:false, adSecs:5, status:null, statusKind:'ok',
+  scrubAt:null, esims:[], toast:null, navHidden:false,
+};
+let S = {...BASE};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const remaining = () => Math.max(0, S.dailyAdCap - S.adsWatchedToday);
+const canRedeem = () => S.balanceMb >= S.thresholdMb;
+
+/* Usage across the day. Feeds the scrubbable curve. */
+const HOURS = [0,3,1,0,0,2,6,11,18,9,4,7,14,22,17,8,3,5,12,9,4,2,1,0];
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Odometer. Each digit rolls independently, staggered 26ms, so the number
+   arrives like a counter settling rather than a text swap.
+   ═══════════════════════════════════════════════════════════════════════ */
+function odometer(value){
+  const digits = String(value).split('');
+  return `<div class="odo" id="odo">${digits.map((d,i)=>`
+    <span class="col"><u style="transition-delay:${i*26}ms;transform:translateY(${-d*74}px)">
+      ${'0123456789'.split('').map(n=>`<b>${n}</b>`).join('')}
+    </u></span>`).join('')}</div>`;
+}
+function rollTo(value){
+  const odo = $('odo'); if(!odo) return;
+  const digits = String(value).split('');
+  const cols = odo.querySelectorAll('.col');
+  if(cols.length !== digits.length){ render(); return; }
+  cols.forEach((c,i)=>{ c.querySelector('u').style.transform = `translateY(${-digits[i]*74}px)`; });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Screens
+   ═══════════════════════════════════════════════════════════════════════ */
+function splashScreen(){
+  return `<div class="splash" id="splash">
+    <div class="splashglow"></div>
+    <svg viewBox="0 0 100 100">
+      <g class="ear"><path class="stroke" style="animation:none;stroke-dashoffset:0"
+         d="M35 36 C 22 20, 20 -2, 30 2 C 39 6, 43 22, 44 28"/></g>
+      <g class="ear" style="animation-delay:880ms"><path class="stroke" style="animation:none;stroke-dashoffset:0"
+         d="M65 36 C 78 20, 80 -2, 70 2 C 61 6, 57 22, 56 28"/></g>
+      <path class="stroke" d="M50 82 C 26 82, 20 62, 26 48 C 31 36, 41 32, 50 32 C 59 32, 69 36, 74 48 C 80 62, 74 82, 50 82 Z"/>
+    </svg>
+    <div class="word">Bilby</div>
+    <div class="tag">Big ears. Free data.</div>
+  </div>`;
+}
+
+function homeScreen(){
+  const pct = Math.min(1, S.balanceMb / S.thresholdMb);
+  const short = S.thresholdMb - S.balanceMb;
+
+  return `<div class="screen enter stagger" id="scrollhost">
+    <div style="padding-top:6px">
+      <div class="eyebrow">Earning for</div>
+      <div class="h1" style="margin-top:5px">${esc(S.destinationName)}</div>
+    </div>
+
+    <div class="card hero" style="margin-top:16px">
+      <div class="sheen" id="sheen"></div>
+      <div class="bloom" id="bloom"></div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div class="eyebrow">Your balance</div>
+        <span class="pill">${S.mbPerAd} MB per ad</span>
+      </div>
+      <div class="bignum">${odometer(S.balanceMb)}<span class="unit">MB</span></div>
+      <div class="tiny">${canRedeem()
+        ? 'Ready to load onto your eSIM.'
+        : `${short} MB to go before you can load it onto an eSIM.`}</div>
+
+      ${scrubField(pct)}
+    </div>
+
+    <div class="row" style="margin-top:12px">
+      <button class="btn pri" data-act="watch" ${(S.busy||remaining()===0||!S.freeTierAvailable)?'disabled':''}
+        style="flex:1.6">${S.busy?'<span class="spin"></span>':(
+          remaining()===0 ? 'Back tomorrow'
+          : !S.freeTierAvailable ? 'Free data paused'
+          : `Watch ad · ${S.mbPerAd} MB`)}</button>
+      <button class="btn sec" data-act="redeem" ${(S.busy||!canRedeem())?'disabled':''}>Load eSIM</button>
+    </div>
+
+    ${S.status?`<div class="note ${S.statusKind==='warn'?'warn':''}" style="margin-top:12px">${esc(S.status)}</div>`:''}
+
+    <div style="margin-top:22px" class="eyebrow">Your trip</div>
+    <div class="trip" style="margin-top:9px">
+      <div class="tripimg">
+        <div class="duo"></div>
+        <div class="cap">
+          <div class="h2">Bali</div>
+          <div class="tiny" style="color:var(--tx2)">12 to 23 September &middot; 11 nights</div>
+        </div>
+      </div>
+      <div class="triprow">
+        <span class="ico">${ICON.sim}</span>
+        <div style="flex:1">
+          <div style="font-size:14.5px;font-weight:600">Data</div>
+          <div class="tiny">${S.esims.length? `${S.esims[0].remainingMb} MB loaded and installed` : `${S.balanceMb} MB banked, not loaded yet`}</div>
+        </div>
+        <span class="pill mute">Free tier</span>
+      </div>
+      <div class="triprow">
+        <span class="ico dim">${ICON.plane}</span>
+        <div style="flex:1">
+          <div style="font-size:14.5px;font-weight:600;color:var(--tx2)">Flights</div>
+          <div class="tiny">Add your booking and we will watch the gate</div>
+        </div>
+        <span class="pill mute">Soon</span>
+      </div>
+      <div class="triprow">
+        <span class="ico dim">${ICON.bed}</span>
+        <div style="flex:1">
+          <div style="font-size:14.5px;font-weight:600;color:var(--tx2)">Stays</div>
+          <div class="tiny">Compare and book without leaving the trip</div>
+        </div>
+        <span class="pill mute">Soon</span>
+      </div>
+    </div>
+
+    <div style="margin-top:20px" class="eyebrow">Do next</div>
+    <div class="rail" style="margin-top:9px">
+      <button class="rchip on" data-act="watch">${ICON.bolt} Earn data</button>
+      <button class="rchip" data-act="tab" data-tab="shop">${ICON.sim} Buy a plan</button>
+      <button class="rchip" data-act="pick">${ICON.pin} Change destination</button>
+      <button class="rchip soon">${ICON.ticket} Activities</button>
+      <button class="rchip soon">${ICON.plane} Flights</button>
+    </div>
+
+    <div class="note" style="margin-top:18px">
+      You are earning at home rates: ${S.mbPerAd} MB per ad now against ${S.onArrivalMb} MB once you land.
+      Stock up before you fly, and install the eSIM while you still have WiFi.
+    </div>
+  </div>`;
+}
+
+/* The scrubbable object. An SVG area chart you can drag across; the readout
+   under it tracks the hour your finger is over. */
+function scrubField(pct){
+  const w = 354, h = 132, pad = 8;
+  const max = Math.max(...HOURS);
+  const pts = HOURS.map((v,i)=>{
+    const x = pad + (i/(HOURS.length-1))*(w-pad*2);
+    const y = h - 22 - (v/max)*(h-52);
+    return [x,y];
+  });
+  // Catmull rom to bezier, so the curve is smooth rather than a polyline.
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for(let i=0;i<pts.length-1;i++){
+    const p0 = pts[i-1]||pts[i], p1 = pts[i], p2 = pts[i+1], p3 = pts[i+2]||p2;
+    d += ` C${(p1[0]+(p2[0]-p0[0])/6).toFixed(1)},${(p1[1]+(p2[1]-p0[1])/6).toFixed(1)}`
+      +  ` ${(p2[0]-(p3[0]-p1[0])/6).toFixed(1)},${(p2[1]-(p3[1]-p1[1])/6).toFixed(1)}`
+      +  ` ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  const idx = S.scrubAt;
+  const cx = idx==null ? null : pad + (idx/(HOURS.length-1))*(w-pad*2);
+  const cy = idx==null ? null : pts[idx][1];
+
+  return `<div class="scrub" id="scrub" data-w="${w}">
+    <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="gfill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stop-color="var(--a)" stop-opacity=".34"/>
+          <stop offset="100%" stop-color="var(--a)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="${d} L${w-pad},${h} L${pad},${h} Z" fill="url(#gfill)"/>
+      <path d="${d}" fill="none" stroke="var(--a)" stroke-width="2.2" stroke-linecap="round"/>
+      ${idx!=null?`
+        <line class="cursorline" x1="${cx}" y1="6" x2="${cx}" y2="${h-14}"
+              stroke="var(--tx3)" stroke-width="1" stroke-dasharray="3 3"/>
+        <circle cx="${cx}" cy="${cy}" r="5.5" fill="var(--a)" stroke="var(--c0)" stroke-width="2.5"/>`:''}
+    </svg>
+  </div>
+  <div class="scrubhint">
+    <span class="tiny">${idx==null?'Today':`${String(idx).padStart(2,'0')}:00`}</span>
+    <span class="tiny" style="color:var(--a);font-weight:600">${
+      idx==null?'Drag the curve':`${HOURS[idx]} MB used`}</span>
+  </div>`;
+}
+
+function shopScreen(){
+  const plans = [['1 GB',7,3.90],['5 GB',30,9.50],['20 GB',30,26.00]];
+  return `<div class="screen enter stagger">
+    <div style="padding-top:8px">
+      <div class="h1">Plans</div>
+      <p class="sub" style="margin-top:8px">Full speed, no ads, hotspot included. Buy one only for the days you actually need it. The free tier covers maps and messages the rest of the time.</p>
+    </div>
+    <div class="rail" style="margin-top:16px">
+      ${['Bali','Japan','Thailand','Vietnam','Singapore'].map((n,i)=>
+        `<button class="rchip ${i===0?'on':''}">${n}</button>`).join('')}
+    </div>
+    ${plans.map(([label,days,price])=>`
+      <div class="card" style="margin-top:10px;display:flex;align-items:center;gap:14px">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:9px">
+            <span style="font-size:22px;font-weight:640;letter-spacing:-.6px">${label}</span>
+            <span class="pill mute">${days} days</span>
+          </div>
+          <div class="tiny" style="margin-top:5px">$${(price/parseFloat(label)).toFixed(2)} per GB</div>
+        </div>
+        <button class="btn pri" data-act="buy" style="padding:12px 17px;font-size:15px">$${price.toFixed(2)}</button>
+      </div>`).join('')}
+    <div class="note" style="margin-top:16px">Checkout opens in your browser. Your eSIM appears under Trips as soon as payment clears.</div>
+  </div>`;
+}
+
+function tripsScreen(){
+  return `<div class="screen enter stagger">
+    <div style="padding-top:8px"><div class="h1">Trips</div>
+      <p class="sub" style="margin-top:8px">Everything for one journey in one place. Data today, and flights, stays and activities as they arrive.</p>
+    </div>
+    <div class="trip" style="margin-top:18px">
+      <div class="tripimg"><div class="duo"></div>
+        <div class="cap"><div class="h2">Bali</div>
+          <div class="tiny" style="color:var(--tx2)">12 to 23 September</div></div></div>
+      <div class="triprow"><span class="ico">${ICON.sim}</span>
+        <div style="flex:1"><div style="font-size:14.5px;font-weight:600">Data</div>
+          <div class="tiny">${S.balanceMb} MB banked</div></div>
+        <span class="pill">Active</span></div>
+    </div>
+    <div class="card" style="margin-top:12px;border-style:dashed;text-align:center;padding:26px 18px">
+      <div class="h2" style="color:var(--tx2)">Plan another trip</div>
+      <p class="tiny" style="margin-top:8px">Add a destination and start banking data for it now, at home rates.</p>
+      <button class="btn sec" data-act="pick" style="margin-top:14px;display:inline-flex">Add a trip</button>
+    </div>
+  </div>`;
+}
+
+function youScreen(){
+  return `<div class="screen enter stagger">
+    <div style="padding-top:8px"><div class="h1">You</div></div>
+    <div class="card" style="margin-top:18px">
+      <div class="eyebrow">Lifetime</div>
+      <div class="bignum" style="margin:8px 0 0"><div class="odo"><span class="col"><u><b>4</b></u></span><span class="col"><u><b>1</b></u></span><span class="col"><u><b>8</b></u></span></div><span class="unit">MB earned</span></div>
+      <div class="tiny" style="margin-top:6px">Across 34 ads and 2 trips.</div>
+    </div>
+    ${[['Home market','Australia'],['Device','eSIM ready'],['Daily cap','10 ads'],['Support','hello at bilbymobile.com']]
+      .map(([k,v])=>`<div class="card" style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;padding:15px 18px">
+        <span class="tiny" style="color:var(--tx2)">${k}</span><span style="font-size:14px;font-weight:600">${v}</span></div>`).join('')}
+  </div>`;
+}
+
+const DESTS = [
+  ['ID','Bali, Indonesia',13,6,null],
+  ['TH','Thailand',13,6,null],
+  ['JP','Japan',7,6,null],
+  ['CN','China',7,6,'Your data is carried back through the home network rather than breaking out locally, so apps that are unreachable on a local Chinese SIM generally still work. We cannot guarantee it, because routing is set by the network.'],
+  ['PK','Pakistan',10,0,'Stock up before you go. Ad rates inside Pakistan cannot fund a useful grant on their own.'],
+  ['US','United States',7,9,null],
+  ['AU','Australia',0,0,'Not switched on yet. An ad here earns well, but home network data still costs more than it earns at our current supply rates.'],
+];
+
+function pickScreen(){
+  return `<div class="screen enter stagger">
+    <div style="padding-top:10px">
+      <div class="h1">Where are you<br>heading?</div>
+      <p class="sub" style="margin-top:9px">We price a free ad against where you will use the data, not where you are standing now. Pick a destination and we will show you what one ad is worth there.</p>
+    </div>
+    <div class="note" style="margin-top:16px">This phone supports eSIM. We check first, so nobody spends a week earning toward a profile their handset cannot install.</div>
+    <div style="margin-top:14px">
+      ${DESTS.map(([iso,name,home,arr,caution])=>{
+        const off = home===0 && arr===0;
+        const best = Math.max(home,arr);
+        const sel = iso===S.destination;
+        return `<div class="card" data-act="dest" data-iso="${iso}" data-name="${esc(name)}"
+             data-home="${home}" data-arr="${arr}"
+             style="margin-top:10px;cursor:pointer;border-color:${sel?'var(--a)':'var(--line2)'};
+             background:${sel?'var(--c2)':'var(--c1)'}">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="ico ${off?'dim':''}">${ICON.pin}</span>
+            <div style="flex:1"><div style="font-size:15.5px;font-weight:620">${esc(name)}</div></div>
+            <span class="pill ${off?'mute':''}">${off?'Paid plans':best+' MB per ad'}</span>
+          </div>
+          ${!off && home!==arr?`<div style="display:flex;align-items:center;margin-top:13px">
+            <div style="flex:1"><div class="eyebrow">Before you fly</div>
+              <div style="font-size:15px;font-weight:650;margin-top:3px;color:${home>arr?'var(--a)':'var(--tx)'}">${home?home+' MB':'&bull;'}</div></div>
+            <div style="width:1px;height:30px;background:var(--line)"></div>
+            <div style="flex:1;padding-left:14px"><div class="eyebrow">After you land</div>
+              <div style="font-size:15px;font-weight:650;margin-top:3px;color:${arr>home?'var(--a)':'var(--tx)'}">${arr?arr+' MB':'&bull;'}</div></div>
+          </div>`:''}
+          ${caution?`<div class="note warn" style="margin-top:12px;font-size:12.5px">${esc(caution)}</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+const TABS = [['home','Home'],['trips','Trips'],['shop','Shop'],['you','You']];
+
+function render(){
+  const v = $('viewport');
+  let html = '';
+  if(S.splash) html = splashScreen();
+  else if(S.screen==='pick') html = pickScreen();
+  else if(S.tab==='shop') html = shopScreen();
+  else if(S.tab==='trips') html = tripsScreen();
+  else if(S.tab==='you') html = youScreen();
+  else html = homeScreen();
+
+  if(S.toast) html += `<div class="toast glass">${esc(S.toast)}</div>`;
+  if(S.ad) html += `<div class="adplayer"><div class="adbox">YOUR AD HERE</div>
+      <div class="tiny">Rewarded video, ${S.adSecs}s</div></div>`;
+  v.innerHTML = html;
+
+  const chrome = !S.splash && S.screen!=='pick';
+  $('nav').style.display = chrome ? 'flex' : 'none';
+  $('livepill').style.display = chrome ? 'flex' : 'none';
+  $('scrim').style.display = chrome ? 'block' : 'none';
+  $('nav').innerHTML = TABS.map(([id,label])=>
+    `<button class="${S.tab===id?'on':''}" data-act="tab" data-tab="${id}">${ICON[id]}${label}</button>`).join('');
+  $('livepill').innerHTML = `<span class="dot"></span>
+    <span style="flex:1;color:var(--tx2)">Connected in ${esc(S.country)}</span>
+    <span style="font-weight:650" class="tnum">${S.balanceMb} MB</span>`;
+
+  bindScrub();
+  bindScrollHide();
+}
+
+/* Drag anywhere on the curve. Pointer events cover mouse and touch. */
+function bindScrub(){
+  const el = $('scrub'); if(!el) return;
+  const set = e=>{
+    const r = el.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (e.clientX - r.left)/r.width));
+    const i = Math.round(x*(HOURS.length-1));
+    if(i !== S.scrubAt){ S.scrubAt = i; render(); if(navigator.vibrate) navigator.vibrate(4); }
+  };
+  el.addEventListener('pointerdown', e=>{ el.setPointerCapture(e.pointerId); set(e); });
+  el.addEventListener('pointermove', e=>{ if(el.hasPointerCapture(e.pointerId)) set(e); });
+  el.addEventListener('pointerup', ()=>{ S.scrubAt=null; render(); });
+  el.addEventListener('pointercancel', ()=>{ S.scrubAt=null; render(); });
+}
+
+/* Navigation shrinks away on scroll down and returns on scroll up. */
+function bindScrollHide(){
+  const host = document.querySelector('.screen'); if(!host) return;
+  let last = 0;
+  host.addEventListener('scroll', ()=>{
+    const y = host.scrollTop;
+    const hide = y > last && y > 60;
+    if(hide !== S.navHidden){
+      S.navHidden = hide;
+      $('nav').classList.toggle('hide', hide);
+      $('livepill').classList.toggle('hide', hide);
+      $('scrim').classList.toggle('hide', hide);
+    }
+    last = y;
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Flow
+   ═══════════════════════════════════════════════════════════════════════ */
+async function watchAd(){
+  S.ad = true; S.adSecs = 5; S.status = null; render();
+  await new Promise(r=>{ const t=setInterval(()=>{ S.adSecs--; render();
+    if(S.adSecs<=0){ clearInterval(t); r(); } },640); });
+  S.ad = false;
+
+  S.busy = true; S.status = 'Confirming with the ad network.'; render();
+  await new Promise(r=>setTimeout(r,1000));
+
+  const before = S.balanceMb;
+  S.balanceMb += S.mbPerAd;
+  S.adsWatchedToday++;
+  S.busy = false;
+  S.status = `${S.mbPerAd} MB landed. Balance is now ${S.balanceMb} MB.`;
+  render();
+
+  // Flash, bloom, roll. In that order: the sheen starts the moment, the bloom
+  // carries it, the number settles last.
+  const sh=$('sheen'), bl=$('bloom');
+  if(sh){ sh.classList.remove('go'); void sh.offsetWidth; sh.classList.add('go'); }
+  if(bl){ bl.classList.remove('go'); void bl.offsetWidth; bl.classList.add('go'); }
+  requestAnimationFrame(()=>rollTo(S.balanceMb));
+  if(navigator.vibrate) navigator.vibrate([8,30,16]);
+}
+
+async function redeem(){
+  S.busy = true; render();
+  await new Promise(r=>setTimeout(r,850));
+  const mb = S.balanceMb;
+  S.esims = [{iccid:'8944500102123456789', remainingMb:mb}];
+  S.balanceMb = 0; S.busy = false;
+  S.status = `${mb} MB loaded onto a new eSIM. Install it now while you have WiFi.`;
+  render();
+  if(navigator.vibrate) navigator.vibrate([12,40,24]);
+}
+
+function toast(msg){ S.toast = msg; render(); setTimeout(()=>{ S.toast=null; render(); },2100); }
+
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-act]'); if(!el) return;
+  const a = el.dataset.act;
+  if(a==='tab'){ S.tab = el.dataset.tab; S.screen='home'; S.status=null; render(); }
+  else if(a==='watch'){ if(!S.busy) watchAd(); }
+  else if(a==='redeem'){ redeem(); }
+  else if(a==='pick'){ S.screen='pick'; render(); }
+  else if(a==='buy'){ toast('Opening checkout in your browser.'); }
+  else if(a==='dest'){
+    S.destination = el.dataset.iso;
+    S.destinationName = el.dataset.name;
+    S.mbPerAd = Number(el.dataset.home) || Number(el.dataset.arr);
+    S.onArrivalMb = Number(el.dataset.arr);
+    S.regionSupported = S.mbPerAd > 0;
+    S.freeTierAvailable = S.regionSupported && !S.budgetExhausted;
+    S.screen = 'home'; S.tab='home';
+    render();
+  }
+  else if(a==='theme'){
+    document.body.dataset.theme = el.dataset.k;
+    document.querySelectorAll('#themes .sw').forEach(b=>b.classList.toggle('on', b===el));
+    $('why').textContent = THEMES.find(t=>t.k===el.dataset.k).why;
+  }
+  else if(a==='scenario'){
+    S = SCEN[el.dataset.k].apply();
+    $('why').textContent = SCEN[el.dataset.k].note;
+    document.querySelectorAll('#scenarios button').forEach(b=>b.classList.toggle('on', b===el));
+    render();
+  }
+});
+
+const SCEN = {
+  splash:{label:'Replay splash', note:'The mark draws itself, the ears spring in on an overshoot, then the wordmark rises. Under two seconds total, and it doubles as the first frame of the loading state so nobody sees a blank screen.',
+    apply:()=>({...BASE, splash:true})},
+  home:{label:'Home', note:'One hero number, one touchable object, one trip. Drag the curve under the balance to scrub the day. Scroll down and the navigation shrinks away, which is what buys the extra vertical space that makes the numeral possible.',
+    apply:()=>({...BASE, splash:false})},
+  reward:{label:'Watch an ad', note:'The reward sequence: sheen sweep across the card, an accent bloom out of the numeral, then each digit rolls independently on a 26 millisecond stagger. Haptics fire before the visuals because touch registers faster than sight.',
+    apply:()=>({...BASE, splash:false})},
+  pick:{label:'Destination picker', note:'Curved sheet, duotone destination surfaces instead of flag grids, two rates side by side. Flags are the visual signature of every eSIM app on the store and they make the category look like a currency exchange window.',
+    apply:()=>({...BASE, splash:false, screen:'pick'})},
+  trips:{label:'Trips', note:'The structural bet. A new service does not add a tab or a grid icon, it adds a row inside a trip. Trip.com scales by addition and looks like it. Hopper scales by a single verb and stays coherent. Ours is arrive: everything we sell is something that happens when you land.',
+    apply:()=>({...BASE, splash:false, tab:'trips'})},
+  shop:{label:'Shop', note:'Deliberately the third tab, not the first. Airalo opens on a store, so it feels like a shop you visit rather than a connection you own.',
+    apply:()=>({...BASE, splash:false, tab:'shop'})},
+  paused:{label:'Free tier paused', note:'Australia, priced honestly and switched off by two percent. The button says what it is rather than going grey and silent.',
+    apply:()=>({...BASE, splash:false, destination:'AU', destinationName:'Australia', mbPerAd:0, onArrivalMb:0, regionSupported:false, freeTierAvailable:false, balanceMb:0})},
+  loaded:{label:'After redemption', note:'Balance rolls to zero, the trip row flips to installed. The eSIM is worth nothing until it is on the phone, so this state exists to push toward install rather than to celebrate.',
+    apply:()=>({...BASE, splash:false, balanceMb:0, esims:[{iccid:'8944500102123456789',remainingMb:52}]})},
+};
+
+/* Boot */
+$('themes').innerHTML = THEMES.map((t,i)=>
+  `<button class="sw ${i===0?'on':''}" data-act="theme" data-k="${t.k}" style="color:${t.c}">
+     <i style="background:${t.c}"></i>${t.label}</button>`).join('');
+$('scenarios').innerHTML = Object.entries(SCEN).map(([k,v])=>
+  `<button data-act="scenario" data-k="${k}">${v.label}</button>`).join('');
+$('why').textContent = THEMES[0].why;
+$('panelHead').addEventListener('click', ()=>$('panel').classList.toggle('collapsed'));
+
+setInterval(()=>{ const d=new Date();
+  $('clock').textContent = d.getHours()+':'+String(d.getMinutes()).padStart(2,'0'); },1000);
+
+render();
+setTimeout(()=>{
+  const sp=$('splash'); if(!sp) return;
+  sp.classList.add('out');
+  setTimeout(()=>{ S.splash=false; render(); }, 560);
+}, 2050);
+</script>
+</body>
+</html>

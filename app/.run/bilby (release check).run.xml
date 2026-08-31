@@ -1,0 +1,18 @@
+<component name="ProjectRunConfigurationManager">
+  <!--
+    Profile-mode build against the real backend. Use this to check animation
+    smoothness on a physical device — debug mode is NOT representative, because
+    Dart runs unoptimised in the VM and the reward burst will drop frames that
+    a release build never drops.
+
+    Swap ADMOB_REWARDED_ID for your real unit only in a true release build.
+    Pointing a debug or profile build at production inventory is how AdMob
+    accounts get suspended for invalid traffic.
+  -->
+  <configuration default="false" name="bilby (profile)" type="FlutterRunConfigurationType" factoryName="Flutter">
+    <option name="buildFlavor" value="" />
+    <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
+    <option name="additionalArgs" value="--profile --dart-define=API_BASE=https://bilbymobile.com --dart-define=ADMOB_REWARDED_ID=ca-app-pub-3940256099942544/5224354917" />
+    <method v="2" />
+  </configuration>
+</component>

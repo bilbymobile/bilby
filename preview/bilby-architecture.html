@@ -1,0 +1,395 @@
+<title>Bilby Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --ground:#F7EFE4; --surface:#FDF9F3; --raised:#F1E6D7; --sunk:#EADCC9;
+  --line:#E1D2BD; --line2:#EFE4D4;
+  --ink:#0B2038; --ink2:#3A4C60; --ink3:#7C8B99;
+  --sand:#EEBF8B; --clay:#B36F3A; --teal:#2F7A6F; --danger:#A93A28;
+  --display:"Outfit",-apple-system,"Segoe UI",sans-serif;
+  --body:"Plus Jakarta Sans",-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#08131F; --surface:#0E1E2E; --raised:#152A3D; --sunk:#0B1826;
+    --line:#22394E; --line2:#182C3E;
+    --ink:#EAF1F6; --ink2:#9FB3C4; --ink3:#6D8296;
+    --sand:#E6BE8F; --clay:#D89257; --teal:#57BCA9; --danger:#E8806C;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#08131F; --surface:#0E1E2E; --raised:#152A3D; --sunk:#0B1826;
+  --line:#22394E; --line2:#182C3E;
+  --ink:#EAF1F6; --ink2:#9FB3C4; --ink3:#6D8296;
+  --sand:#E6BE8F; --clay:#D89257; --teal:#57BCA9; --danger:#E8806C;
+}
+
+*{box-sizing:border-box}
+body{margin:0; background:var(--ground); color:var(--ink); font-family:var(--body);
+  font-size:15.5px; line-height:1.68; -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display); margin:0; letter-spacing:-.028em; text-wrap:balance}
+p{margin:0}
+code,.m{font-family:var(--mono); font-size:.86em}
+code{background:var(--raised); padding:2px 6px; border-radius:6px; color:var(--ink)}
+.wrap{max-width:1000px; margin:0 auto; padding:56px 24px 96px}
+
+.kicker{font-family:var(--mono); font-size:.68rem; letter-spacing:.17em;
+  text-transform:uppercase; color:var(--ink3); margin-bottom:14px}
+h1{font-size:clamp(32px,4.4vw,46px); line-height:1.05; font-weight:600; margin-bottom:16px}
+.stand{font-size:1.1rem; color:var(--ink2); max-width:62ch}
+
+h2{font-size:.76rem; font-family:var(--mono); font-weight:500; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink3); margin:60px 0 20px;
+  padding-bottom:10px; border-bottom:1px solid var(--line)}
+h3{font-size:1.16rem; font-weight:600; margin:30px 0 10px}
+.body{max-width:70ch; display:grid; gap:14px; color:var(--ink2)}
+.body strong{color:var(--ink); font-weight:600}
+
+.scroll{overflow-x:auto; margin:22px 0; border:1px solid var(--line); border-radius:18px;
+  background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:.9rem; min-width:560px}
+th,td{text-align:left; padding:13px 16px; border-bottom:1px solid var(--line2); vertical-align:top}
+thead th{font-family:var(--mono); font-size:.66rem; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--ink3); font-weight:500; background:var(--raised)}
+tbody tr:last-child td{border-bottom:0}
+td.c{text-align:center}
+.yes{color:var(--teal); font-weight:700}
+.cap{color:var(--clay); font-family:var(--mono); font-size:.72rem}
+
+figure{margin:26px 0 0}
+figure svg{width:100%; height:auto; display:block; color:var(--ink)}
+figcaption{font-size:.88rem; color:var(--ink3); margin-top:14px; max-width:70ch}
+
+.callout{border-radius:20px; padding:24px 26px; margin:24px 0; background:var(--raised)}
+.callout h3{margin:0 0 9px; font-size:1.05rem}
+.callout p{font-size:.95rem; color:var(--ink2)}
+.callout.warn{background:color-mix(in srgb, var(--clay) 13%, var(--surface))}
+
+ol.risks{list-style:none; counter-reset:r; padding:0; margin:20px 0 0; display:grid; gap:12px}
+ol.risks li{counter-increment:r; background:var(--surface); border:1px solid var(--line);
+  border-radius:18px; padding:20px 22px 20px 62px; position:relative}
+ol.risks li::before{content:counter(r); position:absolute; left:20px; top:20px;
+  width:28px; height:28px; border-radius:9px; background:var(--ink); color:var(--ground);
+  display:grid; place-items:center; font-family:var(--display); font-weight:600; font-size:.86rem}
+ol.risks b{display:block; font-family:var(--display); font-size:1rem; margin-bottom:5px; color:var(--ink)}
+ol.risks span{font-size:.93rem; color:var(--ink2)}
+
+pre{background:var(--surface); border:1px solid var(--line); border-radius:18px;
+  padding:20px 22px; overflow-x:auto; font-family:var(--mono); font-size:.82rem;
+  line-height:1.7; color:var(--ink2); margin:20px 0}
+</style>
+
+<div class="wrap">
+
+<p class="kicker">Bilby · Nextwave · August 2026</p>
+<h1>Four surfaces, one API, two domains.</h1>
+<p class="stand">Landing page, web app, Android now and iOS later, plus a staff console that
+deliberately does not live on the same registrable domain as anything a customer touches.
+This is the shape to build against once the wholesale contract is signed.</p>
+
+<h2>The host map</h2>
+<div class="scroll"><table>
+  <thead><tr><th>Host</th><th>Serves</th><th>Auth</th><th>Why it is its own name</th></tr></thead>
+  <tbody>
+    <tr><td class="m">bilbymobile.com</td><td>Landing, legal, app-ads.txt</td><td>none</td>
+        <td>Canonical for search. <code>app-ads.txt</code> must resolve here with no redirect or AdMob sits in limited serving and never says why.</td></tr>
+    <tr><td class="m">app.bilbymobile.com</td><td>Web app and its own API routes</td><td>First party cookie</td>
+        <td>Same origin as the API it calls. No CORS, no <code>SameSite=None</code>, no partitioned cookie work when browsers tighten again.</td></tr>
+    <tr><td class="m">api.bilbymobile.com</td><td>The API the mobile binaries call</td><td>Bearer token</td>
+        <td>Compiled into every installed build. Users update slowly, so this name answers for years. No cookies means no CSRF surface at all.</td></tr>
+    <tr><td class="m">status.bilbymobile.com</td><td>Incident and network status</td><td>none</td>
+        <td>Hosted apart from everything else. A status page that dies with the thing it reports on is worse than none.</td></tr>
+    <tr><td class="m">bilbymobile.nextwave.au</td><td>Staff console</td><td>Staff session plus second factor</td>
+        <td>Different registrable domain, on purpose. See below.</td></tr>
+  </tbody>
+</table></div>
+
+<h2>The boundary that matters</h2>
+
+<figure>
+  <svg viewBox="0 0 1060 660" role="img" aria-label="Five hosts across two registrable domains feeding one deployment. Cookies cannot cross from bilbymobile.com to nextwave.au, so a compromised customer session cannot reach the staff console.">
+    <defs>
+      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+      </marker>
+    </defs>
+
+    <!-- clients -->
+    <g font-family="Plus Jakarta Sans, sans-serif" font-size="12.5" fill="currentColor">
+      <rect x="52" y="44" width="180" height="46" rx="12" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".55"/>
+      <text x="142" y="73" text-anchor="middle">Visitor</text>
+
+      <rect x="248" y="44" width="180" height="46" rx="12" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".55"/>
+      <text x="338" y="73" text-anchor="middle">Customer browser</text>
+
+      <rect x="444" y="44" width="110" height="46" rx="12" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".55"/>
+      <text x="499" y="73" text-anchor="middle">Android</text>
+
+      <rect x="566" y="44" width="110" height="46" rx="12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="5 4" opacity=".45"/>
+      <text x="621" y="68" text-anchor="middle" opacity=".7">iOS</text>
+      <text x="621" y="82" text-anchor="middle" font-size="9.5" opacity=".55">later</text>
+
+      <rect x="756" y="44" width="252" height="46" rx="12" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".55"/>
+      <text x="882" y="73" text-anchor="middle">Staff</text>
+    </g>
+
+    <!-- trust zones -->
+    <rect x="36" y="152" width="656" height="118" rx="20" fill="none" stroke="currentColor"
+          stroke-width="1.3" stroke-dasharray="7 6" opacity=".35"/>
+    <text transform="rotate(-90 22 211)" x="22" y="211" text-anchor="middle"
+          font-family="IBM Plex Mono, monospace" font-size="10.5" letter-spacing="1.5"
+          fill="currentColor" opacity=".55">BILBYMOBILE.COM</text>
+
+    <rect x="740" y="152" width="284" height="118" rx="20" fill="none" stroke="currentColor"
+          stroke-width="1.3" stroke-dasharray="7 6" opacity=".35"/>
+    <text transform="rotate(90 1040 211)" x="1040" y="211" text-anchor="middle"
+          font-family="IBM Plex Mono, monospace" font-size="10.5" letter-spacing="1.5"
+          fill="currentColor" opacity=".55">NEXTWAVE.AU</text>
+
+    <!-- hosts -->
+    <g font-family="IBM Plex Mono, monospace" font-size="12" fill="currentColor">
+      <rect x="52" y="186" width="180" height="50" rx="13" fill="currentColor" opacity=".07"/>
+      <text x="142" y="216" text-anchor="middle">bilbymobile.com</text>
+
+      <rect x="248" y="186" width="180" height="50" rx="13" fill="currentColor" opacity=".07"/>
+      <text x="338" y="216" text-anchor="middle">app.bilbymobile.com</text>
+
+      <rect x="444" y="186" width="232" height="50" rx="13" fill="currentColor" opacity=".07"/>
+      <text x="560" y="216" text-anchor="middle">api.bilbymobile.com</text>
+
+      <rect x="756" y="186" width="252" height="50" rx="13" fill="currentColor" opacity=".07"/>
+      <text x="882" y="216" text-anchor="middle">bilbymobile.nextwave.au</text>
+    </g>
+
+    <!-- client to host, with the credential named on each -->
+    <g stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)" fill="none" opacity=".75">
+      <line x1="142" y1="90" x2="142" y2="182"/>
+      <line x1="338" y1="90" x2="338" y2="182"/>
+      <line x1="499" y1="90" x2="530" y2="182"/>
+      <line x1="621" y1="90" x2="592" y2="182"/>
+      <line x1="882" y1="90" x2="882" y2="182"/>
+    </g>
+    <g font-family="Plus Jakarta Sans, sans-serif" font-size="10.5" fill="currentColor" opacity=".72">
+      <text x="150" y="132">no session</text>
+      <text x="346" y="132">first party cookie</text>
+      <text x="470" y="132">bearer token, no cookies</text>
+      <text x="890" y="126">staff session</text>
+      <text x="890" y="140">plus second factor</text>
+    </g>
+
+    <!-- the claim -->
+    <line x1="716" y1="120" x2="716" y2="300" stroke="var(--danger)" stroke-width="2" stroke-dasharray="8 7"/>
+    <circle cx="716" cy="210" r="15" fill="var(--ground)" stroke="var(--danger)" stroke-width="2"/>
+    <line x1="707" y1="201" x2="725" y2="219" stroke="var(--danger)" stroke-width="2"/>
+    <text x="716" y="326" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif"
+          font-size="11.5" font-weight="600" fill="var(--danger)">cookies cannot cross</text>
+    <text x="716" y="342" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif"
+          font-size="10.5" fill="var(--danger)" opacity=".8">so customer XSS cannot reach staff</text>
+
+    <!-- deployment -->
+    <rect x="248" y="392" width="428" height="54" rx="14" fill="currentColor" opacity=".07"/>
+    <text x="462" y="424" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif"
+          font-size="13" font-weight="600" fill="currentColor">one deployment, routed by host</text>
+
+    <g stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)" fill="none" opacity=".55">
+      <path d="M142 236 L142 366 L300 366 L300 388"/>
+      <line x1="338" y1="236" x2="338" y2="388"/>
+      <line x1="560" y1="236" x2="560" y2="388"/>
+      <path d="M882 236 L882 366 L640 366 L640 388"/>
+    </g>
+
+    <!-- stores -->
+    <g font-family="Plus Jakarta Sans, sans-serif" font-size="12.5" fill="currentColor">
+      <rect x="180" y="524" width="256" height="52" rx="14" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".55"/>
+      <text x="308" y="547" text-anchor="middle">Turso</text>
+      <text x="308" y="563" text-anchor="middle" font-size="10.5" opacity=".65">customers, orders, ledger, audit</text>
+
+      <rect x="490" y="524" width="256" height="52" rx="14" fill="none" stroke="var(--teal)" stroke-width="1.6"/>
+      <text x="618" y="547" text-anchor="middle" fill="var(--teal)">supplier adapter</text>
+      <text x="618" y="563" text-anchor="middle" font-size="10.5" fill="var(--teal)" opacity=".8">one interface, any wholesaler</text>
+
+      <rect x="490" y="614" width="256" height="40" rx="12" fill="none" stroke="currentColor"
+            stroke-width="1.4" stroke-dasharray="6 5" opacity=".45"/>
+      <text x="618" y="639" text-anchor="middle" opacity=".7">wholesale eSIM platform</text>
+    </g>
+
+    <g stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)" fill="none" opacity=".55">
+      <path d="M380 446 L380 494 L308 494 L308 520"/>
+      <path d="M560 446 L560 494 L618 494 L618 520"/>
+    </g>
+    <line x1="618" y1="576" x2="618" y2="610" stroke="var(--teal)" stroke-width="1.6"
+          marker-end="url(#ar)" fill="none"/>
+    <text x="636" y="600" font-family="Plus Jakarta Sans, sans-serif" font-size="10.5"
+          fill="var(--teal)">orders, top ups, usage</text>
+  </svg>
+  <figcaption>Each dashed box is one registrable domain. Every host lands on one deployment, but the credential each client carries is
+    different, and the staff credential lives on a domain the customer surfaces cannot reach.
+    That red line is the whole security argument for the split.</figcaption>
+</figure>
+
+<div class="body" style="margin-top:30px">
+  <p><strong>Why not <span class="m">admin.bilbymobile.com</span>.</strong> Because cookies scope to a
+  registrable domain, not a subdomain. A single cross site scripting bug anywhere in the customer
+  web app would put a staff session in reach, and a session with refund and costing rights is the
+  one session worth stealing. Moving the console to <span class="m">nextwave.au</span> costs a
+  separate login system and buys the guarantee that customer code and staff code never share a
+  cookie jar.</p>
+  <p>Two rules, enforced in middleware, both failing closed: nothing customer facing is served from
+  the admin host, and nothing on the admin host is reachable without a staff session.</p>
+</div>
+
+<div class="callout">
+  <h3>Two domains, two jobs</h3>
+  <p><span class="m">bilbymobile.com</span> is the brand and the settled apex: it is the name on the
+  Play listing, the name a person says out loud, and the name every customer host hangs off.
+  <span class="m">nextwave.au</span> is the business behind it and carries nothing a customer
+  touches, which is what makes it the right place for the staff console and the right address on the
+  footer for anyone who needs the company rather than the support queue.</p>
+</div>
+
+<h2>The API</h2>
+<div class="body">
+  <p>One versioned surface, three audiences, three credentials. The version goes in the path from
+  day one, because a mobile binary cannot be asked to migrate.</p>
+</div>
+
+<h3>Customer</h3>
+<div class="scroll"><table>
+  <thead><tr><th>Endpoint</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td class="m">POST /v1/session</td><td>Creates an anonymous identity. Cookie on web, bearer token on mobile.</td></tr>
+    <tr><td class="m">GET /v1/me</td><td>Identity, balance, eSIM list. The one call the app makes on launch.</td></tr>
+    <tr><td class="m">GET /v1/catalog</td><td>Plans for a destination, priced. Wholesale cost is never in the response.</td></tr>
+    <tr><td class="m">POST /v1/orders</td><td>Buy a plan. Returns a checkout handoff, not a charge.</td></tr>
+    <tr><td class="m">GET /v1/orders/:id</td><td>Order state, with provisioning failures in plain words.</td></tr>
+    <tr><td class="m">GET /v1/esims/:iccid</td><td>Install material: activation code, SM-DP+ address, QR payload.</td></tr>
+    <tr><td class="m">GET /v1/esims/:iccid/usage</td><td>Remaining data and expiry. Cached, because suppliers rate limit this hard.</td></tr>
+    <tr><td class="m">POST /v1/esims/:iccid/topup</td><td>Adds a package to an existing profile rather than issuing a new one.</td></tr>
+    <tr><td class="m">GET /v1/notes</td><td>Field notes for a destination.</td></tr>
+    <tr><td class="m">POST /v1/support/tickets</td><td>Written support. There is no telephone channel, by decision.</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Staff, on the admin host only</h3>
+<div class="scroll"><table>
+  <thead><tr><th>Area</th><th>Endpoints</th></tr></thead>
+  <tbody>
+    <tr><td>Dashboard</td><td class="m">GET /metrics/overview · GET /metrics/series</td></tr>
+    <tr><td>Operations</td><td class="m">GET /orders · POST /orders/:id/retry · GET /provisioning/failures</td></tr>
+    <tr><td>Costing</td><td class="m">GET /costing/margins · PATCH /costing/plans/:id · GET /suppliers/balance</td></tr>
+    <tr><td>Discounts</td><td class="m">GET /promos · POST /promos · POST /promos/:code/disable</td></tr>
+    <tr><td>Management</td><td class="m">GET /customers/:id · POST /customers/:id/credit · POST /refunds · GET /audit</td></tr>
+  </tbody>
+</table></div>
+
+<div class="callout">
+  <h3>The checkout handoff, and the one non obvious bug in it</h3>
+  <p>The mobile app hands checkout to a real browser, which is a different origin carrying no
+  session. A checkout link with no identity lands the payment on a fresh anonymous user, and the
+  customer never sees what they bought. The fix is a signed single use token on the URL with a short
+  expiry, exchanged once at the checkout origin. Not a shared cookie domain, which would undo the
+  isolation the host split exists to buy.</p>
+</div>
+
+<h2>Who can do what</h2>
+<div class="scroll"><table>
+  <thead><tr><th>Capability</th><th class="c">Owner</th><th class="c">Operations</th><th class="c">Finance</th><th class="c">Support</th><th class="c">Read only</th></tr></thead>
+  <tbody>
+    <tr><td>Dashboard</td><td class="c yes">●</td><td class="c yes">●</td><td class="c yes">●</td><td class="c yes">●</td><td class="c yes">●</td></tr>
+    <tr><td>Orders, read</td><td class="c yes">●</td><td class="c yes">●</td><td class="c yes">●</td><td class="c yes">●</td><td class="c yes">●</td></tr>
+    <tr><td>Retry provisioning</td><td class="c yes">●</td><td class="c yes">●</td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+    <tr><td>Customer lookup</td><td class="c yes">●</td><td class="c yes">●</td><td class="c yes">●</td><td class="c yes">●</td><td class="c"></td></tr>
+    <tr><td>Manual credit</td><td class="c yes">●</td><td class="c yes">●</td><td class="c"></td><td class="c cap">capped</td><td class="c"></td></tr>
+    <tr><td>Refunds</td><td class="c yes">●</td><td class="c"></td><td class="c yes">●</td><td class="c cap">capped</td><td class="c"></td></tr>
+    <tr><td>Costing, read</td><td class="c yes">●</td><td class="c yes">●</td><td class="c yes">●</td><td class="c"></td><td class="c"></td></tr>
+    <tr><td>Costing, edit</td><td class="c yes">●</td><td class="c"></td><td class="c yes">●</td><td class="c"></td><td class="c"></td></tr>
+    <tr><td>Discount codes</td><td class="c yes">●</td><td class="c"></td><td class="c yes">●</td><td class="c"></td><td class="c"></td></tr>
+    <tr><td>Supplier credentials</td><td class="c yes">●</td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c"></td></tr>
+    <tr><td>Audit log</td><td class="c yes">●</td><td class="c"></td><td class="c yes">●</td><td class="c"></td><td class="c"></td></tr>
+  </tbody>
+</table></div>
+
+<div class="body">
+  <p><strong>Every mutation writes an audit row</strong>: actor, role, action, target, before, after,
+  address, timestamp. The log is append only and no role can delete from it, owner included. That is
+  the point of an audit log and it is worth being inflexible about, because the first instinct after
+  a mistake is always to tidy it away.</p>
+</div>
+
+<h2>Many suppliers, one interface</h2>
+<div class="body">
+  <p>Signing a wholesaler is a configuration change, and so is signing the next four. The design
+  separates <strong>what you sell</strong> from <strong>who delivers it</strong>. A catalogue item is
+  a thing with a price and a description; a fulfiller is whoever provisions it. An eSIM plan happens
+  to be a catalogue item fulfilled by a wholesale eSIM provider, and nothing in that sentence is
+  specific to eSIMs, which is what makes a second product category cheap rather than a rewrite.</p>
+</div>
+
+<pre>interface Fulfiller {
+  readonly id: string;              // "esimaccess", "airalo", "resellportal"
+  readonly kind: "esim" | string;   // the category, so a future product is not a special case
+  health(): Promise&lt;Health&gt;;        // polled, and surfaced in the console
+  balance(): Promise&lt;Money | null&gt;; // prepaid wallet, where the provider has one
+  quote(item: CatalogItem): Promise&lt;Quote&gt;;
+  fulfil(order: Order): Promise&lt;Fulfilment&gt;;
+}</pre>
+
+<div class="scroll"><table>
+  <thead><tr><th>Table</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td class="m">providers</td><td>id, kind, enabled, priority, health, credential reference</td></tr>
+    <tr><td class="m">provider_offerings</td><td>provider, country, remote plan ref, size, days, wholesale cost, fetched at</td></tr>
+    <tr><td class="m">routing_rules</td><td>country, preferred provider, fallback provider, note</td></tr>
+    <tr><td class="m">orders</td><td>the provider used, and the wholesale cost as paid on the day</td></tr>
+  </tbody>
+</table></div>
+
+<div class="body">
+  <p><strong>Routing lives in the database, not in code.</strong> One row per country naming a
+  preferred and a fallback provider. Changing who serves Indonesia is a click in the console rather
+  than a deploy, which matters the first time a provider has an outage on a Friday night.</p>
+  <p><strong>Cost is captured on the order, never looked up.</strong> The rate paid on the day is a
+  fact about that order. Recomputing margin from today's rate card makes last month's numbers move,
+  and a dashboard whose history changes is one nobody trusts twice.</p>
+  <p><strong>A provider failing health checks stops receiving orders automatically</strong>, and the
+  console says so, rather than silently failing purchases until somebody notices. No supplier
+  response reaches a customer verbatim either: their error strings are written for a reseller
+  integrator, not for a person standing at an airport.</p>
+</div>
+
+<h2>iOS, later</h2>
+<div class="body">
+  <p>The app is Flutter, so iOS is the same Dart against the same API, and the design tokens carry
+  across untouched. Two things are genuinely iOS only. Install uses a universal link into the
+  carrier entitlement flow rather than a QR scan, which is a better experience and a different code
+  path. And the payment question needs answering <strong>before</strong> any iOS work starts: Apple
+  requires in app purchase for digital goods consumed in the app, whether a mobile data plan counts
+  is not obvious, and the pattern the incumbents use is checkout in an external browser. Getting it
+  wrong is a rejection rather than a warning, and if in app purchase turns out to be required then
+  Apple's commission belongs inside the pricing model rather than discovered after launch.</p>
+</div>
+
+<h2>What can stop you, in order</h2>
+<ol class="risks">
+  <li><b>Carriage service provider registration</b><span>Under the 2025 telecommunications
+    amendments, wholesale providers are prohibited from supplying an unregistered carriage service
+    provider. This gates supply itself, not just launch, so it sits ahead of everything commercial.</span></li>
+  <li><b>Payment provider underwriting</b><span>Travel and telecommunications are both elevated risk
+    categories for acquirers, and a new business in either can wait weeks for a decision or be
+    declined outright. Start it in parallel with the supplier contract, because it blocks revenue
+    completely and nothing about the code changes the answer.</span></li>
+  <li><b>Apple's payment rules</b><span>Answer before any iOS effort is spent, because the answer
+    changes the pricing model rather than the code.</span></li>
+  <li><b>Written only support under the TCP Code</b><span>No telephone channel is a defensible
+    product decision. Confirm it survives registration, because the obligation attaches then rather
+    than at launch.</span></li>
+  <li><b>The numbers on the landing page</b><span>190 plus countries and 200 plus carriers are
+    representations about a future matter until a supplier is signed, and the burden of showing
+    reasonable grounds sits with you, not with the person who reads it.</span></li>
+</ol>
+
+</div>

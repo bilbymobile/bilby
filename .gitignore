@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+web/.next/
+web/out/
+web/tsconfig.tsbuildinfo
+.vercel
+
+# Local database. Never committed: it is per developer state, and on a shared
+# clone it would ship one person's session cookies and balances to everyone.
+.data/
+*.db
+*.db-journal
+*.db-wal
+
+# Secrets. .env.example is committed, everything else never is.
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Signing material. A keystore in git history cannot be un-leaked, and losing
+# control of it means losing the ability to update the published app.
+*.jks
+*.keystore
+key.properties
+android-config/key.properties
+
+# Flutter and Dart
+app/.dart_tool/
+app/build/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.packages
+app/android/.gradle/
+app/android/local.properties
+app/android/app/build/
+app/ios/Pods/
+app/ios/.symlinks/
+*.iml
+
+# Build output
+*.apk
+*.aab
+*.ipa
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Working artefacts. Screenshots and renders are large, regenerate freely, and
+# do not belong in the history of an application repository.
+preview/*.png
+preview/node_modules/
+preview/_shared.css.html
+_to_delete/
+
+# Loose screenshots from local runs. The ones that matter live in brand/assets.
+/shot-*.png
+/*.png
+preview/hero-crop*.jpg
+preview/*-crop.png
+preview/l1.png
+preview/foot.png

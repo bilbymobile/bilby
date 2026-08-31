@@ -1,0 +1,253 @@
+<title>Supplier Scorecard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500&display=swap">
+
+<style>
+:root{
+  --ground:#F4F8F8; --surface:#FFFFFF; --raised:#EBF2F1;
+  --line:#DCE7E6; --line2:#EAF1F0;
+  --ink:#0E1D1C; --ink2:#4E625F; --ink3:#7E918E;
+  --teal:#0E9C86; --teal-deep:#0A7C6B; --teal-wash:#DEF2EE;
+  --warn:#B4761A; --warn-wash:#FBEFDC; --bad:#B3402F; --bad-wash:#FBE6E2;
+  --display:"Archivo",-apple-system,sans-serif;
+  --body:"Public Sans",-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--ground); color:var(--ink); font-family:var(--body);
+  font-size:15.5px; line-height:1.6; -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display); margin:0; letter-spacing:-.028em; text-wrap:balance}
+p{margin:0}
+.wrap{max-width:1080px; margin:0 auto; padding:44px 20px 80px}
+
+.top{margin-bottom:30px}
+.kicker{font-family:var(--mono); font-size:11px; letter-spacing:.15em;
+  text-transform:uppercase; color:var(--ink3); margin-bottom:12px}
+h1{font-size:32px; font-weight:700; line-height:1.08; margin-bottom:12px}
+.stand{font-size:16.5px; color:var(--ink2); max-width:66ch}
+
+h2{font-size:12.5px; font-family:var(--mono); font-weight:500; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--ink3); margin:38px 0 14px;
+  padding-bottom:9px; border-bottom:1px solid var(--line)}
+
+/* Gates */
+.gates{display:grid; gap:9px}
+.gate{background:var(--surface); border:1px solid var(--line); border-radius:16px;
+  padding:16px 20px; display:grid; grid-template-columns:1fr auto; gap:18px; align-items:center}
+.gate p{font-size:14.5px; color:var(--ink2)}
+.gate b{display:block; color:var(--ink); font-weight:600; font-size:15.5px; margin-bottom:2px}
+.gate .why{font-size:13px; color:var(--ink3); margin-top:4px}
+
+/* Table */
+.scroll{overflow-x:auto; border:1px solid var(--line); border-radius:20px; background:var(--surface)}
+table{width:100%; border-collapse:collapse; font-size:14px; min-width:720px}
+th{font-family:var(--mono); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--ink3); font-weight:500; text-align:left; padding:16px 14px; border-bottom:1px solid var(--line)}
+th.sup{text-align:center; color:var(--ink); font-family:var(--display);
+  font-size:13.5px; letter-spacing:-.01em; text-transform:none}
+td{padding:13px 14px; border-bottom:1px solid var(--line2); vertical-align:top}
+tr:last-child td{border-bottom:0}
+.crit b{display:block; font-weight:500; color:var(--ink); font-size:14.5px}
+.crit span{font-size:12.5px; color:var(--ink3); display:block; margin-top:2px; max-width:46ch}
+.wt{font-family:var(--mono); font-size:12px; color:var(--teal-deep); white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.cell{text-align:center; white-space:nowrap}
+.dots{display:inline-flex; gap:4px}
+.dot{width:24px; height:24px; border-radius:8px; border:1px solid var(--line);
+  background:var(--raised); cursor:pointer; padding:0; font-family:var(--mono);
+  font-size:11px; color:var(--ink3); transition:background .16s, color .16s, border-color .16s}
+.dot:hover{border-color:var(--teal)}
+.dot[aria-pressed="true"]{background:var(--teal); border-color:var(--teal); color:#fff}
+tfoot td{border-top:2px solid var(--line); padding-top:16px; font-family:var(--display); font-weight:600}
+tfoot .total{text-align:center; font-family:var(--mono); font-size:19px;
+  font-variant-numeric:tabular-nums; color:var(--teal-deep)}
+
+.note{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--teal);
+  border-radius:0 16px 16px 0; padding:18px 22px; margin-top:16px}
+.note p{font-size:14.5px; color:var(--ink2)} .note p + p{margin-top:10px}
+.note b{color:var(--ink); font-weight:500}
+
+.reads{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px}
+.read{border-radius:14px; padding:16px 18px; font-size:14px}
+.read b{display:block; font-family:var(--display); font-weight:600; margin-bottom:5px; font-size:15px}
+.read.good{background:var(--teal-wash); color:var(--teal-deep)}
+.read.mid{background:var(--warn-wash); color:var(--warn)}
+.read.bad{background:var(--bad-wash); color:var(--bad)}
+
+.known{display:grid; gap:9px; margin-top:14px}
+.k{background:var(--surface); border:1px solid var(--line2); border-radius:14px;
+  padding:14px 18px; font-size:14.5px; color:var(--ink2)}
+.k b{color:var(--ink); font-weight:600}
+.k .n{font-family:var(--mono); color:var(--teal-deep); font-size:13px}
+
+.reset{margin-top:18px; font-family:var(--display); font-weight:600; font-size:14px;
+  background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  padding:10px 18px; cursor:pointer; color:var(--ink2)}
+.reset:hover{color:var(--ink)}
+
+@media (max-width:760px){ .reads{grid-template-columns:1fr} .wrap{padding:30px 14px 60px} h1{font-size:26px} }
+:focus-visible{outline:2px solid var(--teal); outline-offset:2px}
+</style>
+
+<div class="wrap">
+
+<div class="top">
+  <p class="kicker">Supplier evaluation · Bilby</p>
+  <h1>Score every reply the same way, or you will pick the one that answered fastest.</h1>
+  <p class="stand">
+    Four suppliers, four different formats, four different things left unsaid. This
+    scores them on what actually decides the business rather than on who sounded
+    keenest. Weights follow the published review methodologies: support,
+    activation and transparency carry roughly half, price carries a fifth.
+  </p>
+</div>
+
+<h2>Gates. A no here ends it, whatever the price</h2>
+<div class="gates">
+  <div class="gate">
+    <div>
+      <b>They will contract with a sole trader</b>
+      <p>No minimum monthly commitment you cannot meet before revenue.</p>
+      <p class="why">eSIM Go wants $1,000 a month. That is a no, not a negotiation.</p>
+    </div>
+  </div>
+  <div class="gate">
+    <div>
+      <b>Rate card before money</b>
+      <p>You can see per country pricing before depositing funds.</p>
+      <p class="why">A supplier who wants cash before showing prices is telling you about the prices.</p>
+    </div>
+  </div>
+  <div class="gate">
+    <div>
+      <b>They will state breakout and throttle in writing</b>
+      <p>Per plan, as numbers, in an email you can keep.</p>
+      <p class="why">Your spec sheet is the product. A plan you cannot describe precisely is a plan you cannot sell.</p>
+    </div>
+  </div>
+</div>
+
+<h2>Scored criteria. Click 0 to 3 in each cell</h2>
+<div class="scroll">
+  <table id="sc">
+    <thead>
+      <tr>
+        <th style="min-width:280px">Criterion</th>
+        <th class="wt">Weight</th>
+        <th class="sup">eSIM Access</th>
+        <th class="sup">CMLink</th>
+        <th class="sup">Airalo</th>
+        <th class="sup">ResellPortal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr data-w="20"><td class="crit"><b>Break out location</b><span>Local breakout in the visited country scores 3. Hong Kong or Singapore scores 1. Will not say scores 0.</span></td><td class="wt">20</td></tr>
+      <tr data-w="20"><td class="crit"><b>Failed activation policy</b><span>Who absorbs the cost, and is there a stated replacement or refund SLA? Case by case scores 1.</span></td><td class="wt">20</td></tr>
+      <tr data-w="15"><td class="crit"><b>Throttle stated as a floor</b><span>A number, per plan, in writing. "Up to" scores 1. Silence scores 0.</span></td><td class="wt">15</td></tr>
+      <tr data-w="15"><td class="crit"><b>Price for your six destinations</b><span>Indonesia, NZ, Japan, China, Vietnam, Thailand. Against A$1.07/GB as the ResellPortal baseline.</span></td><td class="wt">15</td></tr>
+      <tr data-w="10"><td class="crit"><b>Top up support and limits</b><span>Unlimited top ups on an existing ICCID scores 3. A hard ceiling of ten scores 1.</span></td><td class="wt">10</td></tr>
+      <tr data-w="8"><td class="crit"><b>Sandbox before spend</b><span>Full purchase to QR flow testable without committing funds.</span></td><td class="wt">8</td></tr>
+      <tr data-w="7"><td class="crit"><b>Recycle window</b><span>How long a dormant profile survives, and whether a top up restarts the clock.</span></td><td class="wt">7</td></tr>
+      <tr data-w="5"><td class="crit"><b>API and documentation</b><span>Public docs, webhooks, status page, rate limits stated.</span></td><td class="wt">5</td></tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="2">Weighted total, out of 100</td>
+        <td class="total" data-t="0">0</td><td class="total" data-t="1">0</td>
+        <td class="total" data-t="2">0</td><td class="total" data-t="3">0</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+<button class="reset" id="reset">Clear all scores</button>
+
+<h2>How to read the total</h2>
+<div class="reads">
+  <div class="read good"><b>70 and above</b>Sign. You can build the spec sheet on this supply and defend it.</div>
+  <div class="read mid"><b>45 to 69</b>Workable, but you are buying a compromise. Name which criterion you are conceding and say it on the product page.</div>
+  <div class="read bad"><b>Under 45</b>Paid plans only, if at all. Do not build a brand promise on it.</div>
+</div>
+
+<h2>What is already known, before anyone replies</h2>
+<div class="known">
+  <div class="k"><b>eSIM Access</b> — no minimum order, no setup fee, adapter already written. But their own docs cap an eSIM at <span class="n">ten top ups, ever</span>, which scores 1 on that row unless they say otherwise.</div>
+  <div class="k"><b>CMLink</b> — the source behind several cheap Australian brands, but the plans resold from them advertise <span class="n">Hong Kong and Singapore IP addresses</span>, so expect 1 on breakout unless they surprise you.</div>
+  <div class="k"><b>Airalo</b> — smallest documented top up is <span class="n">3 GB at $8 net</span>, best documented platform in the category, courting you already. Strong on reliability, weak on granularity.</div>
+  <div class="k"><b>ResellPortal</b> — $0 fees and a $20 deposit, so cheap to learn on. Published wholesale is <span class="n">$0.70 for a 1 GB 7 day plan</span>, roughly A$1.07 per GB, and their pricing page mentions no sandbox.</div>
+</div>
+
+<div class="note">
+  <p><b>One thing the score cannot capture.</b> Ookla measured travel eSIM latency in Japan at
+     54 ms with local routing against 543 ms when traffic exited through Madrid, with worst
+     cases thirty times higher than local users on the same network. Their conclusion was that
+     true local breakout remains uncommon.</p>
+  <p>So if every supplier scores 1 on breakout, that is not four failures. It is the market
+     telling you that routing is not where a small operator can differentiate, and the answer
+     moves to the things you control: support that answers, activation that works, and
+     publishing the numbers everyone else hides.</p>
+</div>
+
+</div>
+
+<script>
+(function () {
+  var table = document.getElementById('sc');
+  var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr'));
+  var SUPPLIERS = 4;
+
+  rows.forEach(function (row) {
+    for (var s = 0; s < SUPPLIERS; s++) {
+      var td = document.createElement('td');
+      td.className = 'cell';
+      var box = document.createElement('div');
+      box.className = 'dots';
+      box.setAttribute('role', 'group');
+      for (var v = 0; v <= 3; v++) {
+        var b = document.createElement('button');
+        b.className = 'dot';
+        b.type = 'button';
+        b.textContent = v;
+        b.setAttribute('aria-pressed', 'false');
+        b.dataset.v = v; b.dataset.s = s;
+        b.setAttribute('aria-label', 'Score ' + v);
+        box.appendChild(b);
+      }
+      td.appendChild(box);
+      row.appendChild(td);
+    }
+  });
+
+  /* Totals are weighted: a score of 3 on a 20 point row contributes the full 20,
+     so the column sums to 100 when every row is a 3. That keeps the number
+     readable as a percentage of the best possible supplier rather than as an
+     arbitrary points tally. */
+  function recalc() {
+    var totals = new Array(SUPPLIERS).fill(0);
+    rows.forEach(function (row) {
+      var w = parseFloat(row.dataset.w);
+      row.querySelectorAll('.dot[aria-pressed="true"]').forEach(function (b) {
+        totals[+b.dataset.s] += (parseInt(b.dataset.v, 10) / 3) * w;
+      });
+    });
+    totals.forEach(function (t, i) {
+      table.querySelector('.total[data-t="' + i + '"]').textContent = Math.round(t);
+    });
+  }
+
+  table.addEventListener('click', function (e) {
+    var b = e.target.closest('.dot');
+    if (!b) return;
+    var group = b.parentNode;
+    var already = b.getAttribute('aria-pressed') === 'true';
+    group.querySelectorAll('.dot').forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
+    if (!already) b.setAttribute('aria-pressed', 'true');
+    recalc();
+  });
+
+  document.getElementById('reset').addEventListener('click', function () {
+    table.querySelectorAll('.dot').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+    recalc();
+  });
+})();
+</script>

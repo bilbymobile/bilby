@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Bilby</string>
+    <string name="title_activity_main">Bilby</string>
+    <string name="package_name">app.simlark.android</string>
+    <string name="custom_url_scheme">app.simlark.android</string>
+    <!-- AdMob application id. Replace with your real id from the AdMob console.
+         This value is the Google-supplied TEST app id: safe in development,
+         and it must be swapped before a release build or ads will not serve. -->
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+</resources>
