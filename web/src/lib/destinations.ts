@@ -43,7 +43,7 @@ export const DESTINATIONS: Destination[] = [
     iso: "TH",
     name: "Thailand",
     flag: "🇹🇭",
-    blurb: "Cheapest data of any destination we cover",
+    blurb: "Bangkok, Phuket, Chiang Mai",
   },
   {
     iso: "VN",
@@ -85,8 +85,8 @@ export const DESTINATIONS: Destination[] = [
     // from the engine. If a supplier deal changes the arithmetic, the message
     // changes with it instead of sitting here going quietly stale.
     caution:
-      "Check your handset supports eSIM before you start earning. Support is "
-      + "less widespread on phones sold in the region than elsewhere.",
+      "Check your handset supports eSIM before you buy. Support is less "
+      + "widespread on phones sold in the region than elsewhere.",
   },
   {
     iso: "AE",
@@ -115,41 +115,34 @@ export const DESTINATIONS: Destination[] = [
     iso: "AU",
     name: "Australia",
     flag: "🇦🇺",
-    blurb: "Home. Earn here before you fly, or use it around the country",
+    blurb: "Home. Set up here before you fly",
     // Australia is in the list because a destination picker that cannot accept
     // "I'm staying here" is a picker that has already decided what your life
-    // looks like. It is also the single most valuable market on the ad side —
-    // the best eCPM of anywhere we serve.
+    // looks like, and because inbound visitors are a real market even though
+    // the brand speaks to outbound Australians.
     //
-    // What stops it today is the supply side, and only just: at rack rate an
-    // Australian ad view funds 4.9 MB against a 5 MB floor. Competitors run a
-    // free tier here on enterprise-volume wholesale, not on a different idea.
-    // `breakEvenUsdPerGb()` prints the exact rate that flips it on — take that
-    // number into supplier conversations rather than asking for "better rates".
-    //
-    // Before flipping it: selling data CONSUMED in Australia to Australians is
-    // a materially different regulatory product from outbound travel roaming,
-    // and that difference is where carriage-service-provider registration and
-    // emergency-call obligations live. Engineering cannot resolve that one.
+    // Before selling it: data CONSUMED in Australia by people in Australia is a
+    // materially different regulatory product from outbound travel roaming, and
+    // that difference is where carriage service provider registration and
+    // emergency call obligations live. Engineering cannot resolve that one, and
+    // it is the reason this entry stays flagged rather than being quietly
+    // treated like any other country.
     caution:
-      "Free data is not switched on for Australia yet. An ad here earns well, "
-      + "but home network data still costs more than it earns at our current "
-      + "supply rates. You can still earn here for a trip somewhere else.",
+      "Domestic Australian plans are not on sale yet. Selling data used inside "
+      + "Australia carries obligations that travel roaming does not, and we are "
+      + "not going to sell it before that is settled.",
   },
   {
     iso: "NZ",
     name: "New Zealand",
     flag: "🇳🇿",
-    // The one destination where there is no arbitrage to have: New Zealand
-    // shares Australia's region, so the ad is worth exactly what it is worth at
-    // home while the data costs Oceania rates — the most expensive region we
-    // serve after sub-Saharan Africa. The engine refuses it at starter volume
-    // and will allow it once volume earns a real rate card. Left in the list on
-    // purpose: it is a destination Australians actually fly to, and showing it
-    // with an honest "paid plans only" beats omitting it and looking incomplete.
+    // Oceania is the most expensive region we serve after sub-Saharan Africa,
+    // so New Zealand will always price higher per gigabyte than Southeast Asia
+    // however good the rate card gets. Worth saying plainly rather than letting
+    // someone discover it at the checkout and assume it is a mistake.
     caution:
-      "Free data is not available for New Zealand yet. Trans Tasman roaming "
-      + "costs more than an ad earns. Paid plans work normally.",
+      "Trans Tasman data costs more per gigabyte than Southeast Asia, so plans "
+      + "here price higher for the same size.",
   },
 ];
 

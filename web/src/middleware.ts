@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { roleForHost } from "@/lib/hosts";
+
 /**
- * Access control for the operator surfaces.
+ * Host routing, and access control for the operator surfaces.
  *
  * ## Why this exists
  *
@@ -41,6 +43,31 @@ const PROTECTED = ["/ops", "/api/economics"];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const role = roleForHost(req.headers.get("host"));
+
+  /*
+   * The apex is the marketing face; the product lives on `app.`. Both want to
+   * own "/", so the marketing root is rewritten to the landing page rather than
+   * redirected. A rewrite keeps the URL as the bare apex, which is what the
+   * canonical tag, the Play listing and every link anyone shares should all
+   * agree on.
+   *
+   * Deliberately only the root. Everything else on the apex, including
+   * /app-ads.txt and the legal pages, is served untouched, because the
+   * app-ads.txt crawl must resolve at the root with no redirect or AdMob drops
+   * into limited serving and never explains why.
+   */
+  if (role === "marketing" && pathname === "/") {
+    return NextResponse.rewrite(new URL("/home", req.url));
+  }
+
+  // The landing page has one address. Reaching it directly, or on the product
+  // host, sends you to the canonical one instead of serving a duplicate.
+  if (pathname === "/home") {
+    return role === "marketing"
+      ? NextResponse.redirect(new URL("/", req.url))
+      : NextResponse.redirect(new URL("https://" + req.headers.get("host")?.replace(/^app\./, "") + "/"));
+  }
 
   if (!PROTECTED.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return NextResponse.next();
@@ -106,6 +133,14 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+/*
+ * Broad matcher, because the host rewrite has to see "/" as well as the
+ * protected paths. Static assets and the well known text routes are excluded:
+ * app-ads.txt and assetlinks.json are fetched by crawlers that are unforgiving
+ * about redirects, and there is no reason for them to pass through here at all.
+ */
 export const config = {
-  matcher: ["/ops/:path*", "/api/economics/:path*", "/ops", "/api/economics"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|app-ads.txt|.well-known|.*\\.(?:png|jpg|jpeg|svg|ico|webp|txt|xml|json)$).*)",
+  ],
 };
