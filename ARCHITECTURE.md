@@ -64,7 +64,7 @@ emits canonical tags pointing at production, and a preview that resolves to
 ```
                     ┌─────────────────────────────┐
   bilbymobile.com ───────▶│                             │
-  app.bilbymobile.com ───▶│      one Next.js app        │──▶ Turso  (customer, orders,
+  app.bilbymobile.com ───▶│      one Next.js app        │──▶ Supabase  (customer, orders,
   api.bilbymobile.com ───▶│   middleware routes by host │           ledger, audit)
   bilbymobile.nextwave.au▶│                             │──▶ supplier adapter ──▶ wholesaler
                     └─────────────────────────────┘

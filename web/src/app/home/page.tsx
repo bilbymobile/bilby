@@ -3,12 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { DESTINATIONS } from "@/lib/destinations";
-import { LEGAL_ENTITY } from "@/lib/legal";
 import { url } from "@/lib/hosts";
 import styles from "./home.module.css";
-import { Nav } from "./nav";
 import { FieldNotes } from "./notes";
-import { Mark } from "./mark";
+import { HeroParallax, Reveal } from "./motion";
 
 /**
  * The marketing landing page, served on the apex.
@@ -84,11 +82,10 @@ export default function HomePage() {
   const count = DESTINATIONS.length;
 
   return (
-    <div className={styles.page}>
-      <Nav />
-
+    <>
       <section className={styles.hero} id="top">
-        <div className={styles.art}>
+        <HeroParallax>
+        <div className={`${styles.art} ${styles.artIn}`}>
           <Image
             src="/hero-bilby.jpg"
             alt="The Bilby mascot above the Earth over Australia, broadcasting a signal"
@@ -111,16 +108,18 @@ export default function HomePage() {
               cx="700" cy="1244" rx="650" ry="180" strokeDasharray="16 32"
             />
           </svg>
+          <div className={styles.vignette} />
           <div className={styles.fade} />
         </div>
+        </HeroParallax>
 
         <div className={`${styles.shell} ${styles.heroShell}`}>
           <div className={styles.copy}>
-            <h1>Land connected in {count} destinations.</h1>
-            <p className={styles.lede}>
+            <h1 className={`${styles.rise} ${styles.rise1}`}>Land connected in {count} destinations.</h1>
+            <p className={`${styles.lede} ${styles.rise} ${styles.rise2}`}>
               Set it up on the couch before you fly. Simple. Calm. Australian.
             </p>
-            <div className={styles.acts}>
+            <div className={`${styles.acts} ${styles.rise} ${styles.rise3}`}>
               <a className={`${styles.btn} ${styles.btnGo}`} href="#dests">
                 See where we go
               </a>
@@ -128,7 +127,7 @@ export default function HomePage() {
                 How it works
               </a>
             </div>
-            <div className={styles.pills}>
+            <div className={`${styles.pills} ${styles.rise} ${styles.rise4}`}>
               <span className={styles.pill}>
                 <i>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -156,15 +155,15 @@ export default function HomePage() {
 
       <section className={`${styles.band} ${styles.bandSurface}`} id="how">
         <div className={styles.shell}>
-          <div className={styles.head}>
+          <Reveal><div className={styles.head}>
             <p className={styles.eyebrow}>How it works</p>
             <h2>Three steps, and none of them happen at the airport.</h2>
             <p>
               The thing that goes wrong in this category is a traveller standing at arrivals at
               eleven at night trying to install something. So Bilby moves all of it earlier.
             </p>
-          </div>
-          <div className={styles.steps}>
+          </div></Reveal>
+          <Reveal delay={80}><div className={styles.steps}>
             {STEPS.map((s) => (
               <div className={styles.step} key={s.n}>
                 <div className={styles.num}>{s.n}</div>
@@ -172,21 +171,21 @@ export default function HomePage() {
                 <p>{s.p}</p>
               </div>
             ))}
-          </div>
+          </div></Reveal>
         </div>
       </section>
 
       <section className={styles.band} id="dests">
         <div className={styles.shell}>
-          <div className={styles.head}>
+          <Reveal><div className={styles.head}>
             <p className={styles.eyebrow}>Destinations</p>
             <h2>The places Australians actually fly to.</h2>
             <p>
               A short list on purpose. Every destination here is one we can quote, price and
               provision, rather than an aspirational map of the world.
             </p>
-          </div>
-          <div className={styles.dests}>
+          </div></Reveal>
+          <Reveal delay={80}><div className={styles.dests}>
             {DESTINATIONS.map((d) => (
               <div className={styles.dest} key={d.iso}>
                 <div className={styles.swatch}>{d.iso}</div>
@@ -194,13 +193,13 @@ export default function HomePage() {
                 <p>{d.blurb ?? "Local networks, full speed"}</p>
               </div>
             ))}
-          </div>
+          </div></Reveal>
         </div>
       </section>
 
       <section className={`${styles.band} ${styles.bandSurface}`} id="pricing">
         <div className={styles.shell}>
-          <div className={styles.head}>
+          <Reveal><div className={styles.head}>
             <p className={styles.eyebrow}>Pricing</p>
             <h2>No prices yet, because we will not guess at them.</h2>
             <p>
@@ -208,8 +207,8 @@ export default function HomePage() {
               invention. What we can tell you now is exactly how the pricing will behave, and that
               part is not going to change.
             </p>
-          </div>
-          <div className={styles.why}>
+          </div></Reveal>
+          <Reveal delay={80}><div className={styles.why}>
             <div className={styles.wy}>
               <h3>The whole cost, on one card</h3>
               <p>Data, validity, the networks it uses, and the refund position. Before you pay, not after.</p>
@@ -226,21 +225,21 @@ export default function HomePage() {
               <h3>Full speed throughout</h3>
               <p>No throttle after a hidden allowance. A slow eSIM you cannot use is the same as no eSIM.</p>
             </div>
-          </div>
+          </div></Reveal>
         </div>
       </section>
 
       <section className={styles.band} id="help">
         <div className={styles.shell}>
-          <div className={styles.head}>
+          <Reveal><div className={styles.head}>
             <p className={styles.eyebrow}>Why Bilby</p>
             <h2>A small Australian business, which is the point.</h2>
             <p>
               The large travel eSIM brands are support desks in another time zone reselling the same
               underlying networks. What differs is who picks up when it goes wrong.
             </p>
-          </div>
-          <div className={styles.why}>
+          </div></Reveal>
+          <Reveal delay={80}><div className={styles.why}>
             {PROMISES.map((w) => (
               <div className={styles.wy} key={w.h}>
                 <div className={styles.ic}>
@@ -252,13 +251,13 @@ export default function HomePage() {
                 <p>{w.p}</p>
               </div>
             ))}
-          </div>
+          </div></Reveal>
         </div>
       </section>
 
       <section className={`${styles.band} ${styles.bandSurface}`} id="notes">
         <div className={styles.shell}>
-          <div className={styles.head}>
+          <Reveal><div className={styles.head}>
             <p className={styles.eyebrow}>Field notes</p>
             <h2>Travellers write down what actually happened.</h2>
             <p>
@@ -266,14 +265,14 @@ export default function HomePage() {
               took between the plane door and the first bar of signal. The next person going there
               reads it before they fly.
             </p>
-          </div>
-          <FieldNotes />
+          </div></Reveal>
+          <Reveal delay={80}><FieldNotes /></Reveal>
         </div>
       </section>
 
       <section className={styles.band}>
         <div className={styles.shell}>
-          <div className={styles.close}>
+          <Reveal><div className={styles.close}>
             <div>
               <h2>Sort the phone out before you sort the packing.</h2>
               <p>
@@ -284,46 +283,10 @@ export default function HomePage() {
             <Link className={`${styles.btn} ${styles.btnGo}`} href="/plans">
               Open the app
             </Link>
-          </div>
+          </div></Reveal>
         </div>
       </section>
 
-      <footer className={styles.foot}>
-        <div className={`${styles.shell} ${styles.footInner}`}>
-          <div className={styles.about}>
-            <Link className={styles.brandLink} href="/">
-              <Mark size={30} />
-              <span>Bilby</span>
-            </Link>
-            <p>{LEGAL_ENTITY.descriptor}</p>
-            <p className={styles.contact}>
-              <a href={`mailto:${LEGAL_ENTITY.parentEmail}`}>{LEGAL_ENTITY.parentEmail}</a>
-              <span>·</span>
-              <a href={LEGAL_ENTITY.parentSiteUrl}>{LEGAL_ENTITY.parentSite}</a>
-            </p>
-          </div>
-          <div className={styles.cols}>
-            <div>
-              <b>Product</b>
-              <a href="#dests">Destinations</a>
-              <a href="#how">How it works</a>
-              <a href="#pricing">Pricing</a>
-              <a href="#notes">Field notes</a>
-            </div>
-            <div>
-              <b>Support</b>
-              <a href={`mailto:${LEGAL_ENTITY.contactEmail}`}>Contact us</a>
-              <a href="#help">About us</a>
-            </div>
-            <div>
-              <b>Legal</b>
-              <Link href="/terms">Terms</Link>
-              <Link href="/privacy">Privacy</Link>
-              <Link href="/refunds">Refunds</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 }

@@ -94,37 +94,17 @@ export const DATA_INVENTORY: DataItem[] = [
     retention: "Until you ask us to delete it, or 24 months after last use.",
   },
   {
-    playCategory: "Device or other IDs",
-    playType: "Device or other IDs",
-    label: "Advertising ID",
+    playCategory: "Financial info",
+    playType: "Purchase history",
+    label: "What you have bought",
     description:
-      "Google's resettable advertising identifier, collected by the Google " +
-      "AdMob SDK inside the app. We do not read it ourselves and it is never " +
-      "stored on our servers.",
+      "Which plan, for which destination, what you paid, any discount code you " +
+      "used, and the outcome. Card details are handled by our payment provider " +
+      "and never reach our servers.",
     purpose:
-      "So Google can serve you a relevant ad and confirm to us that you " +
-      "actually watched it. Ad revenue is what pays for the free data.",
-    collected: true,
-    shared: true,
-    sharedWith: "Google (AdMob)",
-    deletable: true,
-    optional: false,
-    retention:
-      "Held by Google under their policies, not ours. You can reset or delete " +
-      "it in Android Settings → Privacy → Ads.",
-  },
-  {
-    playCategory: "App activity",
-    playType: "Other user-generated content",
-    label: "Your earning and redemption history",
-    description:
-      "A record of each ad view credited to you, how much data it was worth, " +
-      "and when you converted credits into real data. Ad views are recorded " +
-      "against an anonymous transaction ID supplied by Google.",
-    purpose:
-      "To calculate your balance, enforce daily limits, and detect abuse. " +
-      "It is also our accounting record, so we need to be able to show what was " +
-      "granted and why.",
+      "To give you what you paid for, to support you when something goes wrong, " +
+      "and because it is our accounting record and we have to be able to show " +
+      "what was sold and for how much.",
     collected: true,
     shared: false,
     deletable: false,
@@ -157,13 +137,15 @@ export const DATA_INVENTORY: DataItem[] = [
 /** Things we deliberately do NOT collect. Worth stating — silence reads badly. */
 export const NOT_COLLECTED = [
   "Your name",
+  "An advertising identifier. There is no advertising software development kit " +
+    "in this product",
   "Your email address (unless you contact us)",
   "Your phone number",
   "Your postal address",
   "Precise or GPS location",
   "Your contacts, photos, files, messages or call logs",
-  "Payment card details. When we add paid plans, our payment provider will " +
-    "handle those and we will never see your card number",
+  "Payment card details. Our payment provider handles those and we never see " +
+    "your card number",
   "Anything about what you actually do with the data you use. We do not and " +
     "cannot see the sites you visit or the apps you use",
 ];

@@ -7,6 +7,18 @@
   --muted: #8b9aab;
   --accent: #2ee6a8;
   --accent-dim: #10a97a;
+  /* Text drawn ON the accent. Never white: white on aqua is 1.9:1 and
+     unreadable outdoors, which is where a travel app gets used. It is a
+     variable rather than a literal so the marketing surface, where the accent
+     is navy rather than aqua, can flip it to cream instead of shipping dark
+     text on a dark button. */
+  --accent-ink: #04120c;
+  --note-ink: #f0dcc0;
+  --note-ok-ink: #c9f5e5;
+  --note-bad-ink: #f5cfcf;
+  --note-ok-bg: rgba(46, 230, 168, .06);
+  --note-warn-bg: rgba(255, 179, 71, .06);
+  --note-bad-bg: rgba(255, 107, 107, .07);
   --warn: #ffb347;
   --danger: #ff6b6b;
   --radius: 14px;
@@ -70,7 +82,7 @@ nav.links a:hover { color: var(--text); text-decoration: none; }
 
 button, .btn {
   appearance: none; border: 0; cursor: pointer; font: inherit; font-weight: 600;
-  border-radius: 10px; padding: 13px 20px; background: var(--accent); color: #04120c;
+  border-radius: 10px; padding: 13px 20px; background: var(--accent); color: var(--accent-ink);
   transition: filter .15s ease, opacity .15s ease; display: inline-block; text-align: center;
 }
 button:hover:not(:disabled), .btn:hover { filter: brightness(1.08); text-decoration: none; }
@@ -84,12 +96,12 @@ button.ghost, .btn.ghost { background: var(--surface-2); color: var(--text); bor
 .stat .v { font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .note {
-  border-left: 2px solid var(--warn); background: rgba(255,179,71,.06);
+  border-left: 2px solid var(--warn); background: var(--note-warn-bg);
   padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 14px;
-  color: #f0dcc0; line-height: 1.5; margin-top: 16px;
+  color: var(--note-ink); line-height: 1.5; margin-top: 16px;
 }
-.note.ok { border-color: var(--accent); background: rgba(46,230,168,.06); color: #c9f5e5; }
-.note.bad { border-color: var(--danger); background: rgba(255,107,107,.07); color: #f5cfcf; }
+.note.ok { border-color: var(--ok, var(--accent)); background: var(--note-ok-bg); color: var(--note-ok-ink); }
+.note.bad { border-color: var(--danger); background: var(--note-bad-bg); color: var(--note-bad-ink); }
 
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--border); }
@@ -112,6 +124,84 @@ code.inline { background: var(--surface-2); padding: 2px 6px; border-radius: 5px
   text-transform: uppercase; padding: 4px 9px; border-radius: 99px;
   background: var(--surface-2); color: var(--muted); border: 1px solid var(--border);
 }
-.badge.free { background: rgba(46,230,168,.12); color: var(--accent); border-color: transparent; }
+.badge.free { background: var(--note-ok-bg); color: var(--ok, var(--accent)); border-color: transparent; }
 
 footer.foot { margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * The marketing surface.
+ *
+ * Everything above is one dark theme driven entirely by custom properties, so
+ * the apex does not need a second stylesheet: it needs the same stylesheet with
+ * different values. Redefining the tokens on the body cascades to every rule
+ * here, because custom properties inherit.
+ *
+ * This block exists because /terms, /privacy and /refunds are written once and
+ * served on two hosts. On the apex they were rendering the dark theme's near
+ * white text on the cream ground, which is a heading you cannot read and a
+ * legal document that looks broken to the one visitor who matters most, a Play
+ * reviewer following the privacy link.
+ * ──────────────────────────────────────────────────────────────────────────── */
+[data-surface="marketing"] {
+  --bg: #F7EFE4;
+  --surface: #FDF9F3;
+  --surface-2: #F1E6D7;
+  --border: #E7DAC8;
+  --text: #0B2038;
+  --muted: #3A4C60;
+
+  /* The action colour on cream is ink, not a hue: the darkest thing on the
+     screen is the thing you press. --ok keeps a real "yes" colour available,
+     because with a navy accent the success states would otherwise go navy too
+     and stop meaning anything. */
+  --accent: #0B2038;
+  --accent-dim: #1B3350;
+  --accent-ink: #F7EFE4;
+  --ok: #35857A;
+  --warn: #C87F45;
+  --danger: #B3402F;
+
+  --note-ink: #5C3A1B;
+  --note-ok-ink: #1F4B45;
+  --note-bad-ink: #6B2418;
+  --note-ok-bg: rgba(53, 133, 122, .09);
+  --note-warn-bg: rgba(200, 127, 69, .10);
+  --note-bad-bg: rgba(179, 64, 47, .08);
+
+  --radius: 20px;
+  --max: 1240px;
+
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Long form legal text is read, not scanned, so it gets a measure and a scale
+   rather than inheriting the dashboard's 14px. */
+[data-surface="marketing"] .prose { padding: clamp(40px, 6vw, 76px) 0 clamp(30px, 4vw, 50px); }
+[data-surface="marketing"] .prose .hero h1 {
+  font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(32px, 4.4vw, 52px); font-weight: 600; letter-spacing: -.035em;
+  color: var(--text); margin-bottom: 14px;
+}
+[data-surface="marketing"] .prose .hero p { font-size: 1.06rem; color: var(--muted); }
+[data-surface="marketing"] .card {
+  box-shadow: 0 1px 2px rgba(11, 32, 56, .03), 0 12px 32px rgba(11, 32, 56, .05);
+  padding: clamp(24px, 3vw, 34px);
+}
+[data-surface="marketing"] .card + .card { margin-top: 20px; }
+[data-surface="marketing"] .card h2 {
+  font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.22rem; font-weight: 600; margin-bottom: 12px; letter-spacing: -.02em;
+}
+[data-surface="marketing"] .card p,
+[data-surface="marketing"] .card li { font-size: 1rem; line-height: 1.7; }
+[data-surface="marketing"] .card ul { padding-left: 22px; }
+[data-surface="marketing"] .card li { margin-bottom: 8px; }
+/* Scoped to prose deliberately. An unscoped `a` rule here is 0,1,1 and ties
+   with the shell's own link rules, so the nav and the wordmark were rendering
+   teal. Body links inside a legal document are the only ones that want a
+   colour of their own. */
+[data-surface="marketing"] .prose a { color: var(--ok); text-decoration: underline; text-underline-offset: 3px; }
+[data-surface="marketing"] .prose { max-width: 78ch; margin: 0 auto; padding-inline: 24px; }

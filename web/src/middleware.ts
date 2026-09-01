@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { roleForHost } from "@/lib/hosts";
+import { HOSTS, roleForHost } from "@/lib/hosts";
 
 /**
  * Host routing, and access control for the operator surfaces.
@@ -41,6 +41,17 @@ import { roleForHost } from "@/lib/hosts";
 
 const PROTECTED = ["/ops", "/api/economics"];
 
+/**
+ * Routes that are the product, not the marketing site.
+ *
+ * Reachable on the apex today purely because one deployment serves both names.
+ * Serving them there would mean the same page on two hostnames, which splits
+ * search signals and, worse, means a customer can end up with a session on the
+ * apex and a different one on the app host and never understand why their
+ * balance moved.
+ */
+const PRODUCT = ["/plans", "/esims", "/checkout"];
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const role = roleForHost(req.headers.get("host"));
@@ -63,6 +74,11 @@ export function middleware(req: NextRequest) {
 
   // The landing page has one address. Reaching it directly, or on the product
   // host, sends you to the canonical one instead of serving a duplicate.
+  if (role === "marketing" && PRODUCT.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+    const to = new URL(req.nextUrl.pathname + req.nextUrl.search, `https://${HOSTS.app}`);
+    return NextResponse.redirect(to, 308);
+  }
+
   if (pathname === "/home") {
     return role === "marketing"
       ? NextResponse.redirect(new URL("/", req.url))

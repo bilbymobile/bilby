@@ -26,7 +26,7 @@ export const metadata: Metadata = {
  */
 export default function PrivacyPage() {
   return (
-    <>
+    <div className="prose">
       <section className="hero">
         <h1>Privacy Policy</h1>
         <p>
@@ -38,13 +38,13 @@ export default function PrivacyPage() {
       <div className="card">
         <h2>The short version</h2>
         <p className="sub" style={{ marginBottom: 12 }}>
-          You do not need an account to use {brand.name}. We do not know your
-          name or your email address. We hold a random ID, your country, and a
-          record of the ads you have watched and the data you have claimed.
+          We hold a random ID, the country your handset is in, a record of what
+          you have bought, and the serial number of any eSIM we issue you. We do
+          not know your name and we never see your card number.
         </p>
         <p className="sub" style={{ margin: 0 }}>
-          Google collects your advertising ID to serve the ads, because that is
-          how the free data gets paid for. Everything else below is detail.
+          We show no advertising and we collect no advertising identifier.
+          Everything else below is detail.
         </p>
       </div>
 
@@ -96,27 +96,18 @@ export default function PrivacyPage() {
       </div>
 
       <div className="card">
-        <h2>Ads</h2>
+        <h2>Advertising</h2>
         <p className="sub">
-          {brand.name}&apos;s free data is paid for by rewarded video ads served
-          by Google AdMob. When you watch one, Google collects your advertising
-          ID and standard ad-request information, then tells our servers that a
-          view completed so we can credit you.
-        </p>
-        <p className="sub">
-          Google&apos;s handling of that data is governed by their policies, not
-          ours. See{" "}
-          <a href="https://policies.google.com/technologies/partner-sites">
-            how Google uses information from partner sites and apps
-          </a>
-          .
+          We do not show you ads, and we do not collect an advertising
+          identifier. There is no advertising software development kit in the
+          app.
         </p>
         <p className="sub" style={{ margin: 0 }}>
-          You can reset or delete your advertising ID at any time in{" "}
-          <strong>Android Settings → Privacy → Ads</strong>. Doing so does not
-          stop you using {brand.name}, though it may reduce how much each ad is
-          worth, and since that is what funds your free data it may reduce how
-          much data you earn per ad.
+          If that ever changes we will say so here <strong>before</strong> it
+          ships, not after, and the Google Play Data Safety declaration will be
+          updated in the same release. A privacy policy that disagrees with the
+          store listing is the most common way apps get removed, and it happens
+          because the two are edited months apart.
         </p>
       </div>
 
@@ -138,10 +129,10 @@ export default function PrivacyPage() {
           ask before you uninstall.
         </div>
         <p className="sub" style={{ marginTop: 16, marginBottom: 0 }}>
-          We keep your earning history for seven years even after a deletion
+          We keep your order records for seven years even after a deletion
           request, because Australian tax law requires us to retain financial
-          records. It is detached from your ID at that point, so it is no longer
-          about you. It is a row in an accounting ledger.
+          records. They are detached from your ID at that point, so they are no
+          longer about you. They are rows in an accounting ledger.
         </p>
       </div>
 
@@ -169,6 +160,6 @@ export default function PrivacyPage() {
           </a>
         </p>
       </div>
-    </>
+    </div>
   );
 }

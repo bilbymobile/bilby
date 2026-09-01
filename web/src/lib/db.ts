@@ -1,160 +1,162 @@
-import fs from "node:fs";
-import { dirname } from "node:path";
-
-import { createClient, type Client, type InValue } from "@libsql/client";
+import { Pool, type PoolClient, type QueryResultRow } from "pg";
 
 /**
- * Database access.
+ * Database access. Postgres, on Supabase.
  *
- * ## Why this moved off better-sqlite3
+ * ## Why Postgres and not the SQLite file this used to be
  *
- * The previous version wrote a SQLite file to local disk. That is the right
- * database for this product until roughly your hundred thousandth user, and it
- * was the right choice until the moment it had to run on Vercel.
+ * The previous version ran libSQL, which is SQLite with a remote protocol. That
+ * was a good fit for a single operator product and it had one property worth
+ * mourning: a fresh clone ran with no account anywhere, against a local file.
  *
- * Vercel's filesystem is ephemeral. Every deploy and every cold start discards
- * it. Users are identified by a signed cookie and no email, so a wiped database
- * does not produce a support ticket, it produces an account nobody can recover
- * and a balance that simply stops existing. That is the single worst failure
- * mode this product has, and it was guaranteed to happen on the first deploy.
+ * What it did not have is anything else. Supabase brings Postgres proper, and
+ * with it the things this product is about to need: real constraints and
+ * partial indexes for the discount code rules, `SELECT ... FOR UPDATE` so two
+ * simultaneous redemptions of a single use code cannot both win, a managed
+ * backup story, and a console a non engineer can look at when an order goes
+ * wrong at midnight.
  *
- * libSQL is SQLite. Same engine, same SQL, same semantics, with a remote
- * protocol bolted on. The migration is a driver swap rather than a rewrite, and
- * critically it uses ONE driver for both environments:
+ * The cost is honest and worth writing down: **there is no zero configuration
+ * path any more.** `DATABASE_URL` must be set before anything works, locally
+ * as well as in production. Point it at a free Supabase project for
+ * development, or run `supabase start` if you have Docker. The failure below is
+ * deliberately loud and tells you exactly what to set, because the alternative
+ * is a connection error thrown from inside a request handler that reads like a
+ * bug in the handler.
  *
- *   local dev      url: "file:.data/nesim.db"     no network, no account
- *   production     url: "libsql://...turso.io"    replicated, durable
+ * ## Use the pooler, and know why
  *
- * So there is no second code path that only runs in production and therefore
- * only breaks in production. That property is worth more than the convenience.
+ * Supabase gives you two connection strings. The direct one on port 5432 opens
+ * a real Postgres backend per connection; a serverless deployment will exhaust
+ * those in a traffic spike and start failing in a way that looks like the
+ * database is down. The **transaction pooler on port 6543** exists for exactly
+ * this shape of workload and is the one to use.
  *
- * ## The one real cost
+ * That choice has a consequence that bites silently: a transaction mode pooler
+ * hands your connection to someone else between statements, so **named prepared
+ * statements and session state do not survive**. node-postgres uses unnamed
+ * portals unless you pass a `name`, so we are fine, and this comment exists so
+ * nobody adds one later and spends an afternoon on `prepared statement "S_1"
+ * already exists`.
  *
- * better-sqlite3 is synchronous; a remote database cannot be. Every query in
- * this file and every caller is now async. That was a mechanical change but not
- * a free one, and the place it bites is transactions: see `tx()` below.
+ * ## Placeholders
+ *
+ * Postgres numbers its parameters, `$1` and `$2`, where SQLite used `?`. Every
+ * call site in this codebase was written against `?`, so rather than rewrite
+ * two dozen queries by hand and get one of them subtly wrong, the helpers
+ * translate. The translation is deliberately dumb: it walks the string and
+ * replaces `?` outside of quoted literals. If you ever need a literal question
+ * mark inside a string in SQL, put it in a parameter.
  */
 
-let client: Client | null = null;
-let ready: Promise<Client> | null = null;
+let pool: Pool | null = null;
+let migrated: Promise<void> | null = null;
 
-function makeClient(): Client {
-  const url = process.env.TURSO_DATABASE_URL;
+function connectionString(): string {
+  const url = process.env.DATABASE_URL;
+  if (url) return url;
 
-  if (!url) {
-    // Local file. Same engine, no account, no network. `file:` is a first class
-    // libSQL url, which is what lets development and production share a driver.
-    const path = process.env.DATABASE_PATH ?? ".data/nesim.db";
-
-    // libSQL will not create the parent directory, and the failure it gives is
-    // `ConnectionFailed(... 14)`, which is SQLITE_CANTOPEN and says nothing
-    // about a missing folder. better-sqlite3 used to do this for us, so it went
-    // missing in the driver swap and only reappeared on a clean checkout.
-    fs.mkdirSync(dirname(path), { recursive: true });
-
-    return createClient({ url: `file:${path}` });
-  }
-
-  const authToken = process.env.TURSO_AUTH_TOKEN;
-  if (!authToken) {
-    // Fail loudly at boot rather than on the first write. A missing token
-    // surfaces as an authorisation error deep inside a request handler, which
-    // reads like a bug in the handler.
-    throw new Error(
-      "TURSO_DATABASE_URL is set but TURSO_AUTH_TOKEN is not. " +
-        "Both are required, or neither: with neither, the app uses a local file."
-    );
-  }
-
-  return createClient({ url, authToken });
+  throw new Error(
+    "DATABASE_URL is not set.\n\n" +
+      "Bilby runs on Postgres (Supabase). Set DATABASE_URL to the connection " +
+      "pooler string from your Supabase project: Settings, Database, Connection " +
+      "string, Transaction pooler. It looks like\n" +
+      "  postgresql://postgres.<ref>:<password>@<region>.pooler.supabase.com:6543/postgres\n\n" +
+      "Use the pooler on port 6543, not the direct connection on 5432: a " +
+      "serverless deployment opens far more connections than a direct Postgres " +
+      "will accept.",
+  );
 }
 
-/**
- * The client, with migrations applied exactly once.
- *
- * The promise is cached rather than the client, because several requests can
- * arrive during the same cold start and each would otherwise run the migration
- * concurrently. `CREATE TABLE IF NOT EXISTS` tolerates that; `ALTER TABLE ADD
- * COLUMN` does not, and would throw a duplicate column error on whichever
- * request lost the race.
- */
-export function db(): Promise<Client> {
-  if (client) return Promise.resolve(client);
-  if (ready) return ready;
+function getPool(): Pool {
+  if (pool) return pool;
 
-  ready = (async () => {
-    const c = makeClient();
-    await migrate(c);
-    client = c;
-    return c;
-  })();
-
-  // A failed migration must not poison the cache forever, or every subsequent
-  // request in this instance fails with a stale error from a transient blip.
-  ready.catch(() => {
-    ready = null;
+  pool = new Pool({
+    connectionString: connectionString(),
+    // Supabase terminates TLS with a certificate this client cannot chain to a
+    // root it ships. The connection is still encrypted; what is skipped is
+    // verification of the certificate authority. Acceptable to Supabase's own
+    // documented setup, and the alternative is bundling their CA and rotating
+    // it by hand.
+    ssl: { rejectUnauthorized: false },
+    // Small on purpose. Each serverless instance keeps its own pool, so a large
+    // per instance maximum multiplies across instances and defeats the point of
+    // using a pooler at all.
+    max: 3,
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 10_000,
+    // A query that has not returned in thirty seconds is not going to. Failing
+    // is better than holding a pooled connection open behind it.
+    statement_timeout: 30_000,
   });
 
-  return ready;
+  pool.on("error", (err) => {
+    // An idle client erroring is normal when a pooler recycles a connection.
+    // Left unhandled it takes the process down, which turns a routine recycle
+    // into an outage.
+    console.error("[db] idle client error", err.message);
+  });
+
+  return pool;
 }
 
-async function migrate(d: Client) {
-  // executeMultiple runs a script. Statement by statement is not required here
-  // and this keeps the schema readable as one block.
-  await d.executeMultiple(`
+/** Connects and applies the schema once per process. */
+export function db(): Promise<Pool> {
+  const p = getPool();
+  if (!migrated) {
+    migrated = migrate(p).catch((e) => {
+      // Reset so the next request retries rather than caching the failure for
+      // the life of the instance.
+      migrated = null;
+      throw e;
+    });
+  }
+  return migrated.then(() => p);
+}
+
+async function migrate(p: Pool) {
+  await p.query(`
     CREATE TABLE IF NOT EXISTS users (
       id             TEXT PRIMARY KEY,
       email          TEXT UNIQUE,
-      created_at     TEXT NOT NULL,
-      -- Where the handset is RIGHT NOW. Sets the floor on ad value. Moves when
-      -- they fly.
+      created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+      -- Where the handset is RIGHT NOW. Moves when they fly.
       country        TEXT NOT NULL DEFAULT 'AU',
-      -- Where they signed up. Proxy for the audience an advertiser thinks they
-      -- are buying, and therefore the ceiling on eCPM. Set once, never updated.
-      -- If it moved with the user it would be worthless as a home market
-      -- signal, and it would become spoofable by travelling.
+      -- Where they signed up. Set once, never updated: if it moved with the
+      -- user it would be worthless as a home market signal and would become
+      -- spoofable by travelling.
       home_country   TEXT NOT NULL DEFAULT 'AU',
       -- Where the data will be USED. Chosen by the user, changeable any time.
-      -- Distinct from the country column on purpose: the whole point is that
-      -- someone sitting in Sydney can earn against Tokyo prices in the week
-      -- before they fly. NULL means they have not been through the picker yet.
       destination    TEXT,
-      -- Device scoped anti abuse. One free allowance per device, not per email,
+      -- Device scoped anti abuse. One allowance per device, not per email,
       -- because email is free and devices are not.
       device_hash    TEXT,
-      banned_at      TEXT
+      banned_at      TIMESTAMPTZ
     );
-
     CREATE INDEX IF NOT EXISTS idx_users_device ON users(device_hash);
 
     /*
-     * Append only. Positive entries grant MB, negative entries consume them.
-     * Never UPDATE. Never DELETE. To reverse a grant, insert its negation with
-     * reason='reversal' and the original id in ref.
+     * Append only. Never UPDATE, never DELETE. To reverse an entry, insert its
+     * negation with reason='reversal' and the original id in ref.
      *
-     * This is not fastidiousness. The day somebody finds a way to farm ad
-     * rewards you will need to prove exactly what was granted, when, from which
-     * impression, and reverse precisely that. A mutable users.balance_mb column
-     * cannot answer any of those questions.
+     * This is not fastidiousness. The day somebody finds a way to farm this you
+     * will need to prove exactly what was granted, when, and reverse precisely
+     * that. A mutable balance column cannot answer any of those questions.
      */
     CREATE TABLE IF NOT EXISTS credit_ledger (
-      id             INTEGER PRIMARY KEY AUTOINCREMENT,
+      id             BIGSERIAL PRIMARY KEY,
       user_id        TEXT NOT NULL REFERENCES users(id),
       delta_mb       INTEGER NOT NULL,
       reason         TEXT NOT NULL,
       ref            TEXT,
       -- Economics captured AT GRANT TIME. Rates move; without this you can
       -- never reconstruct whether a historical cohort was profitable.
-      revenue_usd    REAL NOT NULL DEFAULT 0,
-      cost_usd       REAL NOT NULL DEFAULT 0,
+      revenue_usd    NUMERIC(12,6) NOT NULL DEFAULT 0,
+      cost_usd       NUMERIC(12,6) NOT NULL DEFAULT 0,
       region         TEXT,
-      created_at     TEXT NOT NULL
+      created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
     );
-
     CREATE INDEX IF NOT EXISTS idx_ledger_user ON credit_ledger(user_id, created_at);
-    /* Exactly once semantics for ad callbacks. AdMob retries SSV on timeout. */
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_ad_txn
-      ON credit_ledger(ref) WHERE reason = 'ad_reward';
 
     CREATE TABLE IF NOT EXISTS esims (
       iccid            TEXT PRIMARY KEY,
@@ -164,11 +166,10 @@ async function migrate(d: Client) {
       activation_code  TEXT NOT NULL,
       smdp_address     TEXT NOT NULL,
       matching_id      TEXT NOT NULL,
-      is_free_tier     INTEGER NOT NULL DEFAULT 0,
-      created_at       TEXT NOT NULL,
-      installed_at     TEXT
+      is_free_tier     BOOLEAN NOT NULL DEFAULT false,
+      created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+      installed_at     TIMESTAMPTZ
     );
-
     CREATE INDEX IF NOT EXISTS idx_esims_user ON esims(user_id);
 
     CREATE TABLE IF NOT EXISTS orders (
@@ -177,135 +178,258 @@ async function migrate(d: Client) {
       plan_id        TEXT NOT NULL,
       iccid          TEXT,
       kind           TEXT NOT NULL,
-      cost_usd       REAL NOT NULL DEFAULT 0,
-      revenue_usd    REAL NOT NULL DEFAULT 0,
+      -- What we paid the supplier, recorded ON THE ORDER rather than looked up
+      -- later. The rate on the day is a fact about this order; recomputing
+      -- margin from today's rate card makes last month's numbers move, and a
+      -- dashboard whose history changes is one nobody trusts twice.
+      cost_usd       NUMERIC(12,6) NOT NULL DEFAULT 0,
+      revenue_usd    NUMERIC(12,6) NOT NULL DEFAULT 0,
       status         TEXT NOT NULL,
-      created_at     TEXT NOT NULL
+      created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
     );
+    CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id, created_at DESC);
 
-    /*
-     * Global spend guard. One row per UTC day. This is what stops a viral
-     * moment becoming an unpayable supplier invoice: every grant checks it, and
-     * the free tier degrades to a waitlist rather than overspending.
-     */
     CREATE TABLE IF NOT EXISTS daily_budget (
-      day            TEXT PRIMARY KEY,
-      spent_usd      REAL NOT NULL DEFAULT 0,
-      cap_usd        REAL NOT NULL
+      day            DATE PRIMARY KEY,
+      spent_usd      NUMERIC(12,6) NOT NULL DEFAULT 0,
+      cap_usd        NUMERIC(12,6) NOT NULL
     );
   `);
 
-  await addColumn(d, "users", "destination", "TEXT");
+  // Exactly once semantics for ad callbacks, expressed as a partial unique
+  // index. Postgres supports these directly; the SQLite version used the same
+  // shape, so this is a straight port rather than a redesign.
+  await p.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_ad_txn
+      ON credit_ledger(ref) WHERE reason = 'ad_reward'
+  `);
+
+  await migrateDiscounts(p);
+
+  await addColumn(p, "users", "destination", "TEXT");
+}
+
+/**
+ * Discount codes.
+ *
+ * Separated from the block above only because it is new and reads better on its
+ * own, not because it is optional.
+ *
+ * The design point worth defending is `redeemed_count` living on the code row
+ * rather than being counted from the redemptions table. Counting looks cleaner
+ * and is wrong under concurrency: two people submitting the last use of a
+ * single use code both read a count of zero, both decide they are allowed, and
+ * both redeem. Keeping the counter on the row lets the claim be a single
+ * conditional UPDATE, which Postgres serialises for us. See `claimCode`.
+ */
+async function migrateDiscounts(p: Pool) {
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS discount_codes (
+      code             TEXT PRIMARY KEY,
+      -- 'percent' takes value as 1..100. 'fixed' takes value as an amount in
+      -- the currency below. Two kinds only: everything else anyone has ever
+      -- wanted turns out to be one of these two with different limits.
+      kind             TEXT NOT NULL CHECK (kind IN ('percent', 'fixed')),
+      value            NUMERIC(10,2) NOT NULL CHECK (value > 0),
+      currency         TEXT NOT NULL DEFAULT 'AUD',
+
+      -- NULL means unlimited. The count is authoritative; see the note above.
+      max_redemptions  INTEGER CHECK (max_redemptions IS NULL OR max_redemptions > 0),
+      redeemed_count   INTEGER NOT NULL DEFAULT 0,
+      per_user_limit   INTEGER NOT NULL DEFAULT 1 CHECK (per_user_limit > 0),
+
+      min_spend        NUMERIC(10,2),
+      -- NULL means any destination. Otherwise ISO codes the code is valid for.
+      destinations     TEXT[],
+
+      starts_at        TIMESTAMPTZ,
+      expires_at       TIMESTAMPTZ,
+      active           BOOLEAN NOT NULL DEFAULT true,
+
+      -- Why this code exists, for whoever finds it in six months.
+      note             TEXT,
+      created_by       TEXT,
+      created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+      CONSTRAINT percent_in_range
+        CHECK (kind <> 'percent' OR (value > 0 AND value <= 100))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_codes_active
+      ON discount_codes(active, expires_at);
+
+    CREATE TABLE IF NOT EXISTS discount_redemptions (
+      id          BIGSERIAL PRIMARY KEY,
+      code        TEXT NOT NULL REFERENCES discount_codes(code) ON DELETE RESTRICT,
+      user_id     TEXT NOT NULL REFERENCES users(id),
+      order_id    TEXT,
+      -- What the discount was actually worth on this order, captured here
+      -- rather than recomputed, for the same reason wholesale cost is captured
+      -- on the order: the rule may change, the history may not.
+      amount_off  NUMERIC(10,2) NOT NULL,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_redemptions_code ON discount_redemptions(code);
+    CREATE INDEX IF NOT EXISTS idx_redemptions_user ON discount_redemptions(code, user_id);
+  `);
+
+  // One redemption row per order. A retried webhook must not double count a
+  // code, and a partial index lets rows with no order id (a hold that never
+  // completed) coexist without tripping it.
+  await p.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_redemption_order
+      ON discount_redemptions(order_id) WHERE order_id IS NOT NULL
+  `);
 }
 
 /**
  * Idempotent ALTER TABLE.
  *
- * SQLite has no `ADD COLUMN IF NOT EXISTS`, and the CREATE TABLE above only
- * takes effect on a fresh database. Without this, a column added later never
- * reaches a database that already exists, and the failure is silent until a
- * query references the missing column in production.
+ * Postgres does have `ADD COLUMN IF NOT EXISTS`, but the CREATE TABLE above
+ * only takes effect on an empty database, so a column added later still needs
+ * an explicit path to reach one that already exists. Keeping this helper means
+ * the two ways of adding a column stay side by side and nobody adds one to the
+ * CREATE and assumes production got it.
  */
-async function addColumn(d: Client, table: string, column: string, type: string) {
-  const info = await d.execute(`PRAGMA table_info(${table})`);
-  if (info.rows.some((r) => r.name === column)) return;
-  await d.execute(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+async function addColumn(p: Pool, table: string, column: string, type: string) {
+  await p.query(
+    `ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS ${column} ${type}`,
+  );
 }
 
 /* ------------------------------------------------------------------------ *
  * Query helpers
- *
- * libSQL returns rows as objects keyed by column name, which is what we want,
- * but it types values as `InValue` and returns SQLite INTEGERs as `bigint`
- * whenever they exceed the safe integer range. `SUM(delta_mb)` is exactly such
- * a column. A bigint reaching JSON.stringify throws at runtime, so numbers are
- * coerced at the boundary rather than being trusted to behave.
  * ------------------------------------------------------------------------ */
 
-export type Args = InValue[];
+export type Args = unknown[];
 
-function coerce<T>(row: Record<string, unknown>): T {
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(row)) {
-    out[k] = typeof v === "bigint" ? Number(v) : v;
+/**
+ * `?` to `$1`, skipping anything inside a quoted literal.
+ *
+ * Quote awareness is not decoration: `WHERE note = 'why?'` would otherwise get
+ * a parameter injected into the middle of a string and fail with a message that
+ * points at the wrong thing entirely.
+ */
+export function toPg(sql: string): string {
+  let out = "";
+  let n = 0;
+  let quote: "'" | '"' | null = null;
+
+  for (let i = 0; i < sql.length; i++) {
+    const c = sql[i];
+
+    if (quote) {
+      out += c;
+      // Doubled quote is an escaped quote, not a terminator.
+      if (c === quote && sql[i + 1] === quote) {
+        out += sql[++i];
+      } else if (c === quote) {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (c === "'" || c === '"') {
+      quote = c;
+      out += c;
+      continue;
+    }
+
+    out += c === "?" ? `$${++n}` : c;
   }
-  return out as T;
+
+  return out;
+}
+
+async function query<T extends QueryResultRow>(sql: string, args: Args) {
+  const p = await db();
+  return p.query<T>(toPg(sql), args);
 }
 
 /** First row, or undefined. */
-export async function one<T>(sql: string, args: Args = []): Promise<T | undefined> {
-  const d = await db();
-  const res = await d.execute({ sql, args });
-  const row = res.rows[0];
-  return row ? coerce<T>(row as unknown as Record<string, unknown>) : undefined;
+export async function one<T extends QueryResultRow>(
+  sql: string,
+  args: Args = [],
+): Promise<T | undefined> {
+  const r = await query<T>(sql, args);
+  return r.rows[0];
 }
 
 /** Every row. */
-export async function all<T>(sql: string, args: Args = []): Promise<T[]> {
-  const d = await db();
-  const res = await d.execute({ sql, args });
-  return res.rows.map((r) => coerce<T>(r as unknown as Record<string, unknown>));
+export async function all<T extends QueryResultRow>(
+  sql: string,
+  args: Args = [],
+): Promise<T[]> {
+  const r = await query<T>(sql, args);
+  return r.rows;
 }
 
-/** A write. Returns the number of rows actually changed. */
+/** Rows affected. */
 export async function run(sql: string, args: Args = []): Promise<number> {
-  const d = await db();
-  const res = await d.execute({ sql, args });
-  return Number(res.rowsAffected);
+  const r = await query(sql, args);
+  return r.rowCount ?? 0;
 }
 
 /**
- * An interactive transaction.
+ * A real transaction, on one connection.
  *
- * Rolls back on any thrown error, which is the behaviour every caller wants and
- * none of them should have to remember to write.
- *
- * Keep the body short. An interactive transaction holds a connection open for
- * its whole duration, so a network call inside one blocks a database connection
- * on an HTTP round trip. Provisioning an eSIM from inside a transaction is the
- * obvious mistake here: read what you need, commit, then talk to the supplier.
+ * The callback is handed a client and must use it for every statement inside
+ * the transaction. Reaching for the module level `one`/`all`/`run` in here
+ * would take a different connection from the pool and run outside the
+ * transaction, which is the kind of bug that only shows up under load and looks
+ * like data corruption when it does.
  */
-export async function tx<T>(
-  fn: (t: {
-    one: <R>(sql: string, args?: Args) => Promise<R | undefined>;
-    all: <R>(sql: string, args?: Args) => Promise<R[]>;
-    run: (sql: string, args?: Args) => Promise<number>;
-  }) => Promise<T>
-): Promise<T> {
-  const d = await db();
-  const t = await d.transaction("write");
+export async function tx<T>(fn: (c: Tx) => Promise<T>): Promise<T> {
+  const p = await db();
+  const client: PoolClient = await p.connect();
+
   try {
-    const scoped = {
-      one: async <R,>(sql: string, args: Args = []) => {
-        const r = await t.execute({ sql, args });
-        const row = r.rows[0];
-        return row ? coerce<R>(row as unknown as Record<string, unknown>) : undefined;
-      },
-      all: async <R,>(sql: string, args: Args = []) => {
-        const r = await t.execute({ sql, args });
-        return r.rows.map((x) => coerce<R>(x as unknown as Record<string, unknown>));
-      },
-      run: async (sql: string, args: Args = []) => {
-        const r = await t.execute({ sql, args });
-        return Number(r.rowsAffected);
-      },
-    };
-    const out = await fn(scoped);
-    await t.commit();
-    return out;
+    await client.query("BEGIN");
+    const result = await fn(wrap(client));
+    await client.query("COMMIT");
+    return result;
   } catch (e) {
-    await t.rollback().catch(() => {
-      // Rollback can itself fail if the connection dropped. The original error
-      // is the one worth reporting; swallowing this one keeps the stack honest.
-    });
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      // The connection is already broken. Releasing it below with the error
+      // flag tells the pool to discard rather than reuse it.
+    }
     throw e;
+  } finally {
+    client.release();
   }
+}
+
+export interface Tx {
+  one<T extends QueryResultRow>(sql: string, args?: Args): Promise<T | undefined>;
+  all<T extends QueryResultRow>(sql: string, args?: Args): Promise<T[]>;
+  run(sql: string, args?: Args): Promise<number>;
+}
+
+function wrap(client: PoolClient): Tx {
+  return {
+    async one<T extends QueryResultRow>(sql: string, args: Args = []): Promise<T | undefined> {
+      const r = await client.query<T>(toPg(sql), args);
+      return r.rows[0];
+    },
+    async all<T extends QueryResultRow>(sql: string, args: Args = []) {
+      const r = await client.query<T>(toPg(sql), args);
+      return r.rows;
+    },
+    async run(sql: string, args: Args = []) {
+      const r = await client.query(toPg(sql), args);
+      return r.rowCount ?? 0;
+    },
+  };
 }
 
 export function nowIso() {
   return new Date().toISOString();
 }
 
+/** UTC day, as `daily_budget.day` stores it. */
 export function today() {
   return new Date().toISOString().slice(0, 10);
 }

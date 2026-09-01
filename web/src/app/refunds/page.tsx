@@ -27,7 +27,7 @@ export const metadata: Metadata = {
  */
 export default function RefundsPage() {
   return (
-    <>
+    <div className="prose">
       <section className="hero">
         <h1>Refund Policy</h1>
         <p>
@@ -115,17 +115,7 @@ export default function RefundsPage() {
         </div>
       </div>
 
-      <div className="card">
-        <h2>Free-tier data</h2>
-        <p className="sub" style={{ margin: 0 }}>
-          Data earned by watching ads is not a purchase and is not refundable in
-          money, because you did not pay money for it. If credits are lost through a
-          fault of ours, we will restore them. Credits have no cash value and
-          cannot be exchanged for money under any circumstances.
-        </p>
-      </div>
-
-      <div className="card">
+            <div className="card">
         <h2>How to ask</h2>
         <p className="sub">
           Email{" "}
@@ -157,6 +147,6 @@ export default function RefundsPage() {
           can contact the ACCC or your state consumer affairs body.
         </p>
       </div>
-    </>
+    </div>
   );
 }

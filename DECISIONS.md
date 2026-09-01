@@ -78,6 +78,31 @@ lead time. AdSense is recommended off: on a page where someone is about to spend
 twenty dollars, a display unit earns fractions of a cent and can hand the buyer
 to a competitor.
 
+## Database
+
+**Supabase, Postgres.** It replaced libSQL, which is SQLite with a remote
+protocol and was a good fit for a single operator product.
+
+What Postgres buys that mattered enough to move: real constraints and partial
+indexes for the discount rules, `SELECT ... FOR UPDATE` and conditional updates
+so two simultaneous redemptions of a single use code cannot both win, a managed
+backup story, and a console someone who is not an engineer can look at when an
+order goes wrong at midnight.
+
+What it cost, and it is a real cost: **there is no zero configuration path any
+more.** A fresh clone used to run against a local file with no account
+anywhere. Now `DATABASE_URL` has to be set before anything works.
+
+Two operational rules:
+
+- **Use the transaction pooler on port 6543**, never the direct connection on
+  5432. A serverless deployment opens far more connections than direct Postgres
+  accepts, and the failure looks like the database being down.
+- **Never give a query a prepared statement name.** A transaction mode pooler
+  hands your connection to someone else between statements, so named prepared
+  statements do not survive. node-postgres uses unnamed portals unless you pass
+  a `name`, so the default is correct and the mistake is adding one.
+
 ## Design
 
 Single light theme, by decision, not by omission. The hero is a golden hour

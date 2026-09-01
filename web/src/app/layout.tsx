@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { brand } from "@/lib/brand";
+import { MarketingShell } from "./home/shell";
 import { HOSTS, roleForHost } from "@/lib/hosts";
 import { LEGAL_ENTITY } from "@/lib/legal";
 import "./globals.css";
@@ -104,7 +105,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <head>
           <FontLinks />
         </head>
-        <body style={{ margin: 0, background: "#F7EFE4" }}>{children}</body>
+        <body data-surface="marketing" style={{ margin: 0 }}>
+          <MarketingShell>{children}</MarketingShell>
+        </body>
       </html>
     );
   }

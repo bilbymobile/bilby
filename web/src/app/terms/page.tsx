@@ -18,10 +18,11 @@ export const metadata: Metadata = {
  *
  * Two things this deliberately does NOT do:
  *
- *  1. It does not promise unlimited or guaranteed free data. The free tier is
- *     funded by ad revenue and capped by a daily budget; promising otherwise in
- *     the terms while the code enforces a cap is the kind of gap the ACCC reads
- *     as misleading conduct.
+ *  1. It does not stay quiet about the two things that bite people at an
+ *     airport: that validity runs from first use, and that an eSIM profile has
+ *     a lifecycle and can be reclaimed by the network. A gap between what the
+ *     code does and what the terms say is the kind of thing the ACCC reads as
+ *     misleading conduct.
  *  2. It does not attempt to exclude the Australian Consumer Law guarantees.
  *     You cannot, they apply regardless, and a terms document that pretends
  *     otherwise is itself a breach.
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
  */
 export default function TermsPage() {
   return (
-    <>
+    <div className="prose">
       <section className="hero">
         <h1>Terms of Service</h1>
         <p>
@@ -54,67 +55,100 @@ export default function TermsPage() {
       </div>
 
       <div className="card">
-        <h2>2. The free tier, stated precisely</h2>
+        <h2>2. What you are buying</h2>
         <p className="sub">
-          You can earn mobile data by watching rewarded video ads. How much data
-          each ad is worth <strong>varies by country</strong>, because what an ad
-          earns and what data costs both vary by country. The app shows you the
-          current rate before you watch anything.
+          A prepaid data allowance on a roaming eSIM profile, for one country or
+          region, valid for a fixed period. Not a subscription. Nothing renews on
+          its own and there is nothing to cancel.
         </p>
         <p className="sub">Concretely, and without weasel words:</p>
         <ul style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.7, paddingLeft: 20 }}>
-          <li>There is a daily limit on how many ads you can be credited for.</li>
           <li>
-            There is a daily ceiling on how much free data we hand out across all
-            users. When it is reached, earning pauses until the next day. The app
-            will tell you when that happens.
+            The full price, the data included, the validity period and the
+            networks the plan uses are all shown before you pay. There is no
+            activation fee and nothing is added at the final screen.
           </li>
           <li>
-            In some countries we do not offer a free tier at all, because an ad
-            there earns less than a usable amount of data costs. The app says so
-            plainly rather than offering you a token amount.
+            Validity runs from <strong>first use</strong>, not from purchase, so
+            buying early costs you nothing.
           </li>
           <li>
-            Credits are not money, have no cash value, cannot be transferred or
-            sold, and expire 12 months after they are earned.
+            When the data is used or the period ends, the plan stops. We do not
+            bill you again and we do not keep charging you at a higher rate.
           </li>
           <li>
-            We may change the earning rate. We will not retroactively reduce
-            credits you have already earned.
+            Unused data does not roll over into a new plan and has no cash value.
+          </li>
+          <li>
+            You can top up an existing profile rather than installing a new one,
+            subject to what the underlying network allows.
           </li>
         </ul>
         <div className="note">
-          We do not promise unlimited free data and we have not designed the
-          product to imply it. The free tier is funded by advertising, and it is
-          bounded by what advertising actually pays.
+          Your eSIM profile does not last forever. Industry practice is that a
+          profile must be activated within a set window after it is issued, and
+          is reclaimed by the network after a further period of inactivity. If
+          yours lapses before you travel, tell us and we will reissue it at no
+          charge.
         </div>
       </div>
 
       <div className="card">
-        <h2>3. Fair use, and what gets you banned</h2>
+        <h2>3. Discounts and promotional codes</h2>
         <p className="sub">
-          Credits are granted only when Google&apos;s servers confirm you watched
-          an ad. Attempting to manufacture that confirmation is fraud against an
-          advertiser, not just against us.
-        </p>
-        <p className="sub" style={{ marginBottom: 8 }}>
-          We may suspend an account and reverse credits where we have reasonable
-          grounds to believe someone has:
+          We sometimes issue discount codes. Unless the offer says otherwise:
         </p>
         <ul style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.7, paddingLeft: 20 }}>
-          <li>Used emulators, automation or modified apps to generate ad views</li>
-          <li>Created multiple accounts to get around the daily limit</li>
-          <li>Misrepresented their location to obtain a higher earning rate</li>
-          <li>Resold {brand.name} data or eSIM profiles</li>
+          <li>One code per order, and codes do not stack.</li>
+          <li>
+            A code has no cash value, cannot be exchanged for money, and cannot be
+            sold or transferred.
+          </li>
+          <li>
+            Codes have an expiry and may have a usage limit, a minimum spend, or
+            be restricted to particular destinations or plan sizes. Those limits
+            are shown with the code.
+          </li>
+          <li>
+            We may withdraw a code at any time. Withdrawing one does not affect an
+            order you have already placed with it.
+          </li>
+          <li>
+            If a refund is due on a discounted order, we refund what you actually
+            paid, not the undiscounted price.
+          </li>
         </ul>
         <p className="sub" style={{ margin: 0 }}>
-          If we get this wrong, email us and a human will look at it. We would
-          rather reinstate a wrongly-flagged account than keep it banned.
+          We may void a code and cancel the order where it has been obtained or
+          used in a way it was plainly not meant for, such as generating accounts
+          to reuse a single use code.
         </p>
       </div>
 
       <div className="card">
-        <h2>4. Your eSIM</h2>
+        <h2>4. Fair use, and what gets you suspended</h2>
+        <p className="sub" style={{ marginBottom: 8 }}>
+          We may suspend an account, cancel an order or refuse service where we
+          have reasonable grounds to believe someone has:
+        </p>
+        <ul style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.7, paddingLeft: 20 }}>
+          <li>Resold {brand.name} data or eSIM profiles</li>
+          <li>Created multiple accounts to reuse a single use discount code</li>
+          <li>Misrepresented their location to obtain regional pricing</li>
+          <li>Used a payment method they are not entitled to use</li>
+          <li>
+            Used the connection for something that would put our supplier in
+            breach of the law of the country the data is used in
+          </li>
+        </ul>
+        <p className="sub" style={{ margin: 0 }}>
+          If we get this wrong, email us and a human will look at it. We would
+          rather reinstate a wrongly flagged account than keep it suspended.
+        </p>
+      </div>
+
+      <div className="card">
+        <h2>5. Your eSIM</h2>
         <ul style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.7, paddingLeft: 20 }}>
           <li>
             You need an eSIM-capable, carrier-unlocked phone. We cannot tell in
@@ -141,7 +175,7 @@ export default function TermsPage() {
       </div>
 
       <div className="card">
-        <h2>5. Paid plans</h2>
+        <h2>6. Plans and payment</h2>
         <p className="sub">
           Paid plans are prepaid. Prices are shown before you buy and include any
           applicable GST. Data expires at the end of the plan&apos;s validity
@@ -156,7 +190,7 @@ export default function TermsPage() {
       </div>
 
       <div className="card">
-        <h2>6. Australian Consumer Law</h2>
+        <h2>7. Australian Consumer Law</h2>
         <p className="sub" style={{ marginBottom: 12 }}>
           Nothing in these terms excludes, restricts or modifies any guarantee,
           right or remedy you have under the Australian Consumer Law that cannot
@@ -172,7 +206,7 @@ export default function TermsPage() {
       </div>
 
       <div className="card">
-        <h2>7. Liability</h2>
+        <h2>8. Liability</h2>
         <p className="sub" style={{ margin: 0 }}>
           Subject to section 6, and to the extent permitted by law, our total
           liability to you for any claim is limited to the greater of the amount
@@ -185,7 +219,7 @@ export default function TermsPage() {
       </div>
 
       <div className="card">
-        <h2>8. Changes, and contact</h2>
+        <h2>9. Changes, and contact</h2>
         <p className="sub">
           We may change these terms. If a change is material we will notify you
           in the app before it takes effect. Continuing to use {brand.name} after
@@ -198,6 +232,6 @@ export default function TermsPage() {
           </a>
         </p>
       </div>
-    </>
+    </div>
   );
 }
