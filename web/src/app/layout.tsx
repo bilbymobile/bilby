@@ -51,17 +51,42 @@ export const metadata: Metadata = {
   applicationName: brand.name,
   // The product host, not the apex. Relative canonicals in the app resolve
   // here; the legal pages override with an absolute apex URL of their own,
-  // because those are the ones the Play listing and the AdMob crawl point at
-  // and all three have to name the same hostname.
+  // because those are the ones the Play listing points at and both have to
+  // name the same hostname.
   metadataBase: new URL(`https://${HOSTS.app}`),
   openGraph: {
     siteName: brand.name,
     type: "website",
   },
+  manifest: "/site.webmanifest",
+  /*
+   * Declared explicitly rather than relying on Next's app/icon file
+   * convention, because the same files have to serve four different consumers
+   * with four different rules: browsers want a small favicon, iOS ignores
+   * transparency and applies its own corner mask, Android launchers crop a
+   * maskable icon to whatever shape the launcher feels like, and the Play
+   * listing takes a flat 512. One convention file cannot satisfy all four.
+   */
+  icons: {
+    icon: [
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: brand.colors.bg,
+  /*
+   * The ink navy, matching the icon ground rather than `brand.colors.bg`,
+   * which is the abandoned dark palette and left the mobile browser chrome a
+   * colour that appears nowhere else on the site.
+   */
+  themeColor: "#0B2038",
   width: "device-width",
   initialScale: 1,
   // The install flow hands off to the system eSIM UI; letting the page zoom
@@ -99,6 +124,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const mock = usingMockSupplier();
   const role = roleForHost((await headers()).get("host"));
 
+  if (role === "admin") {
+    // Bare document. The console layout supplies its own chrome, and it must
+    // not inherit the product navigation any more than the landing page does.
+    return (
+      <html lang="en">
+        <head>
+          <FontLinks />
+        </head>
+        <body data-surface="console" style={{ margin: 0 }}>{children}</body>
+      </html>
+    );
+  }
+
   if (role === "marketing") {
     return (
       <html lang="en">
@@ -125,7 +163,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {brand.name}
             </Link>
             <nav className="links">
-              <Link href="/">Earn</Link>
               <Link href="/plans">Plans</Link>
               <Link href="/esims">My eSIMs</Link>
             </nav>
@@ -143,8 +180,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               }}
             >
               <strong style={{ color: "var(--warn)" }}>Preview.</strong>{" "}
-              Supplier onboarding is still in progress, so eSIM profiles issued
-              here are simulated and no payment is taken.
+              No supplier account is funded yet, so any eSIM issued here is
+              simulated. Nothing on this deployment can charge a card.
             </div>
           ) : null}
 

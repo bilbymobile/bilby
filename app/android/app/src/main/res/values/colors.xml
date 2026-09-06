@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mirrors Brand.c0 in lib/brand.dart. If one moves, move both. -->
+    <color name="bilby_ground">#F7EFE4</color>
+    <!-- The adaptive icon ground. Mirrors Brand ink. -->
+    <color name="ic_launcher_background">#0B2038</color>
+</resources>

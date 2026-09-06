@@ -69,7 +69,10 @@ rather than by deploying. Two rules keep it honest:
 
 **Catalogue is separate from fulfilment.** A catalogue item is a thing with a
 price; a fulfiller is whoever provisions it. Nothing in that sentence is specific
-to eSIMs, which is what makes a second product category cheap later.
+to eSIMs, which is what makes a second product category cheap later. As of this
+writing the code does not yet do this: the catalogue is fetched from the supplier
+and priced per request. `PLATFORM.md` sets out the refactor and why it belongs
+before the first customer rather than after.
 
 **All three monetisation routes are built behind switches, default off.** Google
 Ads conversion tracking is worth wiring at zero budget, because retrofitting it

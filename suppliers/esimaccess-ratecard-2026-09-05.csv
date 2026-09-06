@@ -1,0 +1,78 @@
+# eSIM Access wholesale rate card, read from the partner console on 5 September 2026.
+# Account: Naveed Saqib, credit balance USD 0.00, no orders placed.
+#
+# Source: POST /allianceApi/v1/manager/hedy/package/list on console.esimaccess.com,
+# which is the same endpoint the dashboard's own plan table calls. Prices in that
+# response are integers in ten thousandths of a USD: 47000 means USD 4.70.
+#
+# COMPLETE for AU CN ID JP SG TH US VN, single country plans.
+# NOT CAPTURED: GB IT AE NZ PK. The list endpoint caps at 1000 rows and its token
+# expires between calls, so the later pages were unreachable. Get these from the
+# console's CSV export before pricing those destinations.
+#
+# dataType   1 = fixed bundle, 2 = daily allowance
+# topUpType  2 = can be topped up in place, 3 = daily plan
+# fup        throttle speed after the daily allowance, on daily plans only
+#
+slug,packageNo,gb,days,wholesaleUsd,dataType,topUpType,fup
+AU_10_30,JC101,10,30,4.70,1,2,
+AU_10_Daily,PWV71AAT5,10,1,5.00,2,3,384Kbps
+AU_1_7,JC018,1,7,0.70,1,2,
+AU_1_Daily,PKAECJYPB,1,1,1.00,2,3,512Kbps
+AU_20_30,JC102,20,30,8.20,1,2,
+AU_3_15,JC019,3,15,1.70,1,2,
+AU_5_30,JC020,5,30,2.70,1,2,
+AU_0.1_7,PGWEQ1CSB,0.1,7,0.30,1,2,
+CN_10_30,JC055,10,30,5.85,1,2,
+CN_1_7,JC052,1,7,0.70,1,2,
+CN_1_Daily,P92TALXP8,1,1,0.65,2,3,384Kbps
+CN_20_30,JC090,20,30,10.25,1,2,
+CN_3_15,JC053,3,15,1.90,1,2,
+CN_5_30,JC054,5,30,2.96,1,2,
+ID_1_7,JC056,1,7,0.70,1,2,
+ID_1_Daily,PGBV9EXGK,1,1,0.90,2,3,512Kbps
+ID_3_15,JC057,3,15,1.70,1,2,
+ID_5_30,JC058,5,30,2.70,1,2,
+JP_10_30,JC066,10,30,4.70,1,2,
+JP_10_Daily,PGURVYHQ1,10,1,5.00,2,3,384Kbps
+JP_1_7,JC063,1,7,0.70,1,2,
+JP_20_30,JC145,20,30,8.20,1,2,
+JP_3_15,JC064,3,15,1.70,1,2,
+JP_5_30,JC065,5,30,2.70,1,2,
+SG_10_30,JC041,10,30,4.70,1,2,
+SG_10_Daily,P3LR5JXFO,10,1,9.00,2,3,384Kbps
+SG_1_7,JC038,1,7,0.55,1,2,
+SG_1_Daily,P7YECLII9,1,1,0.90,2,3,384Kbps
+SG_20_30,JC092,20,30,8.20,1,2,
+SG_5_30,JC040,5,30,2.41,1,2,
+TH_10_30,JC047,10,30,4.70,1,2,
+TH_10_Daily,PZPE5LW98,10,1,5.00,2,3,384Kbps
+TH_1_7,JC045,1,7,0.70,1,2,
+TH_1_Daily,P5V3QF0VA,1,1,0.90,2,3,512Kbps
+TH_20_30,JC080,20,30,8.20,1,2,
+TH_3_15,JC046,3,15,1.70,1,2,
+TH_5_30,JC014,5,30,2.70,1,2,
+US_10_30,PCRKRUHIL,10,30,6.63,1,2,
+US_10_Daily,P0VDH4W3H,10,1,4.95,2,3,384Kbps
+US_1_7,PHAJHEAYP,1,7,0.90,1,2,
+US_1_Daily,P5NHFJKUS,1,1,0.75,2,3,512Kbps
+US_3_15,PGDINBJBY,3,15,2.20,1,2,
+US_5_30,PKJNMJIIU,5,30,3.40,1,2,
+VN_10_30,JC051,10,30,6.88,1,2,
+VN_10_Daily,PUHL77M18,10,1,6.60,2,3,384Kbps
+VN_1_7,JC048,1,7,0.85,1,2,
+VN_1_Daily,PT2J1Y4JX,1,1,0.96,2,3,512Kbps
+VN_20_30,JC088,20,30,12.63,1,2,
+VN_3_15,JC049,3,15,2.26,1,2,
+VN_5_30,JC050,5,30,3.77,1,2,
+# The nonhkip variants, same plan without a Hong Kong IP exit. See the note in
+# SUPPLIER-ESIMACCESS.md: this is a product decision, not a pricing footnote.
+AU_10_30_nonhkip,PN9GT8RR1,10,30,8.49,1,2,
+AU_10_Daily_nonhkip,P1LNPZ0R3,10,1,7.48,2,3,384Kbps
+AU_1_7_nonhkip,PBNG7JU46,1,7,1.02,1,2,
+AU_1_Daily_nonhkip,P5YK1QF0H,1,1,1.06,2,3,512Kbps
+AU_20_30_nonhkip,P1B5ZKL9Y,20,30,15.84,1,2,
+AU_1_Daily_1Mbps,P07T5HKJD,1,1,0.80,2,3,1Mbps
+AU_1_Daily_1Mbps_nonhkip,P6DE13KGM,1,1,0.83,2,3,1Mbps
+AU_2_Daily,PRUQ8T3B2,2,1,2.00,2,3,512Kbps
+AU_2_Daily_nonhkip,P67G2WSBZ,2,1,1.94,2,3,512Kbps

@@ -20,15 +20,14 @@ import { brand } from "./brand";
  * Every entry below was written by reading the code, not by guessing:
  *
  *   - `users` table              → session id, country, home country
- *   - `credit_ledger`            → ad transaction ids, grant history
  *   - `esims`                    → ICCID, activation material
- *   - AdMob SDK                  → advertising ID (Google collects, not us)
+ *   - `orders`, `order_items`    → what was bought, and for how much
  *   - CDN geo header             → country only; we never store the IP
  *
  * Notably absent, and it should stay that way until it isn't: no name, no
- * email, no address, no payment data, no precise location, no contacts, no
- * photos. If you add Stripe, `purchases` becomes collected and this file and
- * both documents must be updated in the same commit.
+ * address, no precise location, no contacts, no photos, and no card number —
+ * Stripe holds the card and we never see it. Email arrives at checkout because
+ * a credential has to be delivered somewhere.
  */
 
 export interface DataItem {

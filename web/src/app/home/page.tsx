@@ -6,7 +6,7 @@ import { DESTINATIONS } from "@/lib/destinations";
 import { url } from "@/lib/hosts";
 import styles from "./home.module.css";
 import { FieldNotes } from "./notes";
-import { HeroParallax, Reveal } from "./motion";
+import { HeroParallax, Motes, Reveal } from "./motion";
 
 /**
  * The marketing landing page, served on the apex.
@@ -85,37 +85,90 @@ export default function HomePage() {
     <>
       <section className={styles.hero} id="top">
         <HeroParallax>
-        <div className={`${styles.art} ${styles.artIn}`}>
-          <Image
-            src="/hero-bilby.jpg"
-            alt="The Bilby mascot above the Earth over Australia, broadcasting a signal"
-            width={1400}
-            height={1484}
-            priority
-            sizes="(max-width: 980px) 100vw, 64vw"
-            className={styles.drift}
-          />
-          <svg className={styles.sig} viewBox="0 0 1400 1484" aria-hidden="true">
-            <g transform="rotate(6 559 308)">
-              <path className={styles.wave} d="M446 131 A 142 142 0 0 1 672 131" />
-              <path className={styles.wave} d="M446 131 A 142 142 0 0 1 672 131" />
-              <path className={styles.wave} d="M446 131 A 142 142 0 0 1 672 131" />
-            </g>
-            <circle className={styles.spark} cx="559" cy="308" r="11" />
-            <ellipse className={styles.orbit} cx="700" cy="1180" rx="560" ry="150" strokeDasharray="26 22" />
-            <ellipse
-              className={`${styles.orbit} ${styles.orbitB}`}
-              cx="700" cy="1244" rx="650" ry="180" strokeDasharray="16 32"
+        {/*
+          Three boxes, and each one exists because of a specific failure.
+
+          `.art` clips and fades. It must NOT be scaled: it is the box whose
+          left edge sits against the flat cream half of the hero, and scaling it
+          moves that edge, leaving a hairline of raw image where the scrim no
+          longer reaches. One pixel wide, running the full height, and only
+          visible once you scroll.
+
+          `.artInner` carries the scroll: parallax and the slow push in. Inside
+          the clip, so it can scale freely.
+
+          `.artIn` carries the entrance. Separate from the scroll box because a
+          fill-mode forwards animation keeps overriding the properties it
+          animated forever, so on one element the entrance silently won and the
+          scroll did nothing at all.
+
+          The scrim is a sibling of the mover, not a child, so it stays put and
+          keeps covering the left edge while everything behind it moves.
+        */}
+        <div className={styles.art}>
+          <div className={styles.artInner}>
+          <div className={styles.artIn}>
+            <Image
+              src="/hero-bilby.jpg"
+              alt="The Bilby mascot above the Earth over Australia, broadcasting a signal"
+              width={1400}
+              height={1484}
+              priority
+              sizes="(max-width: 980px) 100vw, 64vw"
+              className={styles.drift}
             />
-          </svg>
-          <div className={styles.vignette} />
+            <div className={styles.bloom} />
+            {/*
+              The overlay must map its viewBox onto the box the same way the image
+              does. `slice` is object-fit: cover; the default `meet` is contain,
+              and mixing the two is what had the arcs floating over the ear
+              instead of sitting on the antenna.
+            */}
+            <svg
+              className={styles.sig}
+              viewBox="0 0 1400 1484"
+              preserveAspectRatio="xMidYMid slice"
+              aria-hidden="true"
+            >
+              <g transform="rotate(6 559 300)">
+                <path className={styles.wave} d="M446 123 A 142 142 0 0 1 672 123" />
+                <path className={styles.wave} d="M446 123 A 142 142 0 0 1 672 123" />
+                <path className={styles.wave} d="M446 123 A 142 142 0 0 1 672 123" />
+              </g>
+              <circle className={styles.spark} cx="559" cy="300" r="11" />
+              <ellipse className={styles.orbit} cx="700" cy="1180" rx="560" ry="150" strokeDasharray="26 22" />
+              <ellipse
+                className={`${styles.orbit} ${styles.orbitB}`}
+                cx="700" cy="1244" rx="650" ry="180" strokeDasharray="16 32"
+              />
+            </svg>
+            <Motes className={styles.motes} />
+            <div className={styles.vignette} />
+            <div className={styles.grain} />
+            <div className={styles.sweep} />
+          </div>
+          </div>
           <div className={styles.fade} />
         </div>
         </HeroParallax>
 
         <div className={`${styles.shell} ${styles.heroShell}`}>
           <div className={styles.copy}>
-            <h1 className={`${styles.rise} ${styles.rise1}`}>Land connected in {count} destinations.</h1>
+            {/*
+              Split into two lines by hand rather than left to wrap, because
+              each line is clipped and rises from behind its own edge. A browser
+              chosen break would put the mask in a different place at every
+              viewport width, and half the effect is that the breaks are
+              composed.
+            */}
+            <h1>
+              <span className={styles.lineWrap}>
+                <span className={`${styles.line} ${styles.line1}`}>Land connected in</span>
+              </span>
+              <span className={styles.lineWrap}>
+                <span className={`${styles.line} ${styles.line2}`}>{count} destinations.</span>
+              </span>
+            </h1>
             <p className={`${styles.lede} ${styles.rise} ${styles.rise2}`}>
               Set it up on the couch before you fly. Simple. Calm. Australian.
             </p>
@@ -163,7 +216,7 @@ export default function HomePage() {
               eleven at night trying to install something. So Bilby moves all of it earlier.
             </p>
           </div></Reveal>
-          <Reveal delay={80}><div className={styles.steps}>
+          <Reveal delay={80}><div className={`${styles.steps} ${styles.cascade}`}>
             {STEPS.map((s) => (
               <div className={styles.step} key={s.n}>
                 <div className={styles.num}>{s.n}</div>
@@ -185,7 +238,7 @@ export default function HomePage() {
               provision, rather than an aspirational map of the world.
             </p>
           </div></Reveal>
-          <Reveal delay={80}><div className={styles.dests}>
+          <Reveal delay={80}><div className={`${styles.dests} ${styles.cascade}`}>
             {DESTINATIONS.map((d) => (
               <div className={styles.dest} key={d.iso}>
                 <div className={styles.swatch}>{d.iso}</div>
@@ -208,7 +261,7 @@ export default function HomePage() {
               part is not going to change.
             </p>
           </div></Reveal>
-          <Reveal delay={80}><div className={styles.why}>
+          <Reveal delay={80}><div className={`${styles.why} ${styles.cascade}`}>
             <div className={styles.wy}>
               <h3>The whole cost, on one card</h3>
               <p>Data, validity, the networks it uses, and the refund position. Before you pay, not after.</p>
@@ -239,7 +292,7 @@ export default function HomePage() {
               underlying networks. What differs is who picks up when it goes wrong.
             </p>
           </div></Reveal>
-          <Reveal delay={80}><div className={styles.why}>
+          <Reveal delay={80}><div className={`${styles.why} ${styles.cascade}`}>
             {PROMISES.map((w) => (
               <div className={styles.wy} key={w.h}>
                 <div className={styles.ic}>

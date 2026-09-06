@@ -1,0 +1,332 @@
+<title>Bilby Production Path</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F7EFE4; --surface:#FDF9F3; --raised:#F1E6D7; --sunk:#EADCC9;
+  --line:#E1D2BD; --line2:#EFE4D4;
+  --ink:#0B2038; --ink2:#3A4C60; --ink3:#7C8B99;
+  --sand:#EEBF8B; --clay:#B36F3A; --teal:#2F7A6F; --danger:#A93A28;
+  --display:"Outfit",-apple-system,"Segoe UI",sans-serif;
+  --body:"Plus Jakarta Sans",-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --ground:#08131F; --surface:#0E1E2E; --raised:#152A3D; --sunk:#0B1826;
+  --line:#22394E; --line2:#182C3E;
+  --ink:#EAF1F6; --ink2:#9FB3C4; --ink3:#6D8296;
+  --sand:#E6BE8F; --clay:#D89257; --teal:#57BCA9; --danger:#E8806C; } }
+:root[data-theme="dark"]{
+  --ground:#08131F; --surface:#0E1E2E; --raised:#152A3D; --sunk:#0B1826;
+  --line:#22394E; --line2:#182C3E;
+  --ink:#EAF1F6; --ink2:#9FB3C4; --ink3:#6D8296;
+  --sand:#E6BE8F; --clay:#D89257; --teal:#57BCA9; --danger:#E8806C; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);
+  font-size:15.5px;line-height:1.68;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.028em;text-wrap:balance}
+p{margin:0}
+code{font-family:var(--mono);font-size:.86em;background:var(--raised);padding:2px 6px;
+  border-radius:6px;color:var(--ink)}
+.wrap{max-width:1010px;margin:0 auto;padding:0 24px 96px}
+.kicker{font-family:var(--mono);font-size:.68rem;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--ink3);margin-bottom:14px}
+h1{font-size:clamp(30px,4.2vw,45px);line-height:1.06;font-weight:600;margin-bottom:16px}
+.stand{font-size:1.1rem;color:var(--ink2);max-width:64ch}
+h2{font-size:.76rem;font-family:var(--mono);font-weight:500;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink3);margin:60px 0 6px}
+.gh{display:flex;align-items:baseline;gap:14px;margin:0 0 6px;padding-bottom:12px;
+  border-bottom:1px solid var(--line)}
+.gh h3{font-size:1.42rem;font-weight:600}
+.gh .who{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;
+  padding:4px 10px;border-radius:8px;background:var(--sunk);color:var(--ink3);white-space:nowrap}
+.gh .who.me{background:color-mix(in srgb,var(--teal) 16%,transparent);color:var(--teal)}
+.gh .who.you{background:color-mix(in srgb,var(--clay) 18%,transparent);color:var(--clay)}
+.gh .who.them{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}
+.lede{color:var(--ink2);max-width:70ch;margin:16px 0 6px}
+
+.prog{position:sticky;top:0;z-index:10;background:var(--ground);border-bottom:1px solid var(--line);
+  margin:0 -24px 34px;padding:15px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.prog .bar{flex:1;min-width:150px;height:7px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.prog .bar i{display:block;height:100%;width:0;background:var(--teal);border-radius:99px;
+  transition:width .45s cubic-bezier(.22,1,.36,1)}
+.prog .n{font-family:var(--mono);font-size:.74rem;color:var(--ink3);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.board2{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;margin:26px 0 8px}
+.tile{border-radius:18px;padding:18px 20px;border:1px solid var(--line);background:var(--surface)}
+.tile b{display:block;font-family:var(--display);font-size:1.45rem;font-weight:600;line-height:1.1;margin-bottom:6px}
+.tile span{font-size:.84rem;color:var(--ink3)}
+.tile.good b{color:var(--teal)} .tile.hot b{color:var(--danger)} .tile.warm b{color:var(--clay)}
+
+.checks{display:grid;gap:10px;margin:18px 0 8px}
+.chk{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;background:var(--surface);
+  border:1px solid var(--line);border-radius:18px;padding:17px 20px;cursor:pointer;
+  transition:border-color .3s ease,background .3s ease}
+.chk:hover{border-color:var(--teal)}
+.chk input{appearance:none;width:20px;height:20px;margin:3px 0 0;border-radius:7px;
+  border:1.8px solid var(--line);background:var(--ground);cursor:pointer;flex:none;position:relative;
+  transition:background .2s,border-color .2s}
+.chk input:checked{background:var(--teal);border-color:var(--teal)}
+.chk input:checked::after{content:"";position:absolute;left:6px;top:2.5px;width:5px;height:10px;
+  border-right:2.2px solid var(--ground);border-bottom:2.2px solid var(--ground);transform:rotate(42deg)}
+.chk input:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+.chk b{display:block;font-family:var(--display);font-size:1rem;font-weight:600;margin-bottom:5px}
+.chk p{font-size:.91rem;color:var(--ink2)} .chk p + p{margin-top:8px}
+.chk .tag{display:inline-block;font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;
+  text-transform:uppercase;padding:3px 9px;border-radius:7px;margin-left:9px;vertical-align:2px;
+  background:var(--sunk);color:var(--ink3)}
+.chk .tag.block{background:color-mix(in srgb,var(--danger) 16%,transparent);color:var(--danger)}
+.chk .tag.good{background:color-mix(in srgb,var(--teal) 20%,transparent);color:var(--teal)}
+.chk .tag.lead{background:color-mix(in srgb,var(--clay) 18%,transparent);color:var(--clay)}
+.chk.done{border-color:color-mix(in srgb,var(--teal) 40%,var(--line))}
+.chk:has(input:checked){background:color-mix(in srgb,var(--teal) 7%,var(--surface))}
+.chk:has(input:checked) b{text-decoration:line-through;text-decoration-color:var(--ink3)}
+
+.callout{border-radius:20px;padding:23px 25px;margin:22px 0;background:var(--raised)}
+.callout h3{margin:0 0 9px;font-size:1.05rem}
+.callout p{font-size:.95rem;color:var(--ink2)} .callout p + p{margin-top:10px}
+.callout.stop{background:color-mix(in srgb,var(--danger) 11%,var(--surface))}
+.callout.warn{background:color-mix(in srgb,var(--clay) 13%,var(--surface))}
+.callout.done{background:color-mix(in srgb,var(--teal) 10%,var(--surface))}
+
+.scroll{overflow-x:auto;margin:20px 0;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:560px}
+th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line2);vertical-align:top}
+thead th{font-family:var(--mono);font-size:.66rem;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink3);font-weight:500;background:var(--raised)}
+tbody tr:last-child td{border-bottom:0}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+footer{margin-top:70px;padding-top:24px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;
+  gap:8px 26px;font-family:var(--mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<div class="prog">
+  <span class="n" id="lbl">0 done</span>
+  <span class="bar"><i id="fill"></i></span>
+  <span class="n">saved on this device</span>
+</div>
+
+<p class="kicker">Bilby · the path to production · updated 6 September 2026</p>
+<h1>Two gates left, and neither of them is code.</h1>
+<p class="stand">Gates two and four are done and verified. The money path exists end to end, the
+catalogue is seeded from the real rate card, refunds and retries are buttons in the console, and the
+two production basics that did not exist at all now do. What is left is a deploy you have not run and
+a set of approvals that take weeks and are not in your hands. Start the approvals today; they are the
+only things on this page that cannot be hurried.</p>
+
+<div class="board2">
+  <div class="tile good"><b>93</b><span>checks passing against a real Postgres</span></div>
+  <div class="tile hot"><b>0</b><span>of it deployed</span></div>
+  <div class="tile warm"><b>2</b><span>approvals with weeks of lead, neither started</span></div>
+  <div class="tile good"><b>52</b><span>SKUs priced and seeded, all inactive</span></div>
+</div>
+
+<div class="callout done">
+  <h3>What is actually finished</h3>
+  <p>The five platform seams as schema. The platform library: catalogue, source routing, idempotency,
+  entitlements, and a fulfiller contract that knows nothing about eSIMs. Real eSIM Access wholesale
+  prices for eight destinations, seeded as 52 priced SKUs, every one of them inactive. Rate limiting
+  and error tracking, neither of which existed a day ago. Stripe Checkout, a signature verified
+  webhook, the fulfilment pipeline, delivery by email, and a console where an order can be retried,
+  resent or refunded without anybody opening the database.</p>
+  <p>Verified by 93 checks against a real Postgres 16, plus a walk through every screen in a real
+  browser. That walk found a bug the build, the typecheck and all 93 checks had missed: every page a
+  customer could reach returned a 500, because a server component cannot set a cookie and the session
+  was minting one. It is fixed and the session is now minted in middleware.</p>
+  <p>None of it is on the internet, which is now the only gate that is in your hands.</p>
+</div>
+
+<h2>Gate one</h2>
+<div class="gh"><h3>Deploy what already exists</h3><span class="who you">you, one hour</span></div>
+<p class="lede">Thirteen commits sit on your disk. Production still serves 1 September. Every item on
+this page is invisible until this one is done, and the deploy only gets larger while it waits.</p>
+
+<div class="checks">
+  <label class="chk"><input type="checkbox" data-k="push"><span>
+    <b>Commit and push<span class="tag block">blocks everything</span></b>
+    <p>Deploys the staff console, the icons, the Flutter Android host, the cinematic landing page,
+    the platform layer and the margin model. Vercel builds on push; nothing else is needed.</p></span></label>
+  <label class="chk"><input type="checkbox" data-k="env"><span>
+    <b>Four environment variables<span class="tag">Vercel</span></b>
+    <p><code>OWNER_EMAIL</code> as <code>ns@nextwave.au</code>, <code>RESEND_API_KEY</code> and
+    <code>MAIL_FROM</code> with a verified sending domain, and an <code>ADMIN_SESSION_SECRET</code>
+    that is not the same value as <code>SESSION_SECRET</code>. Delete the two dead <code>TURSO_</code>
+    variables while you are there.</p></span></label>
+  <label class="chk"><input type="checkbox" data-k="dns"><span>
+    <b>The console hostname<span class="tag">GoDaddy then Vercel</span></b>
+    <p>Delete the two A records on <code>bilbymobile</code>, add the domain in Vercel, then create the
+    CNAME using the target Vercel shows you. In that order: a CNAME cannot coexist with an A record.</p></span></label>
+  <label class="chk"><input type="checkbox" data-k="pro"><span>
+    <b>Vercel Pro<span class="tag block">terms breach until done</span></b>
+    <p>Hobby is documented as non commercial personal use. A paused account takes the site and the API
+    down together, and it would happen at the exact moment there is revenue to lose.</p></span></label>
+</div>
+
+<h2>Gate two</h2>
+<div class="gh"><h3>The money path</h3><span class="who me">built and verified</span></div>
+<p class="lede">The pipeline from a person choosing a plan to a working eSIM in their phone. All of it
+is written and tested except the one piece that needs something only the supplier can give you.</p>
+
+<div class="callout done">
+  <h3>The three properties worth naming</h3>
+  <p>Eight concurrent fulfilments of one paid order call the supplier exactly once and grant exactly
+  one entitlement. A redelivered Stripe webhook does not pay the same order twice. A request without a
+  valid signature cannot mark anything paid and never reaches the supplier.</p>
+  <p>Nothing retries by itself, deliberately. A timeout against a supplier is indistinguishable from a
+  success you did not hear about, so an automatic retry is how one payment buys two profiles. Retry is
+  a button, pressed by somebody who has checked the supplier's own order list first.</p>
+</div>
+
+<div class="checks">
+  <label class="chk done"><input type="checkbox" data-k="deadcode" checked><span>
+    <b>Remove the free tier<span class="tag good">done</span></b>
+    <p>Gone rather than disabled, along with the ad callback, the ledger, the wholesale rate card module and the operator dashboard. <code>/api/redeem</code> in particular was a POST any anonymous session could call, gated on nothing but an accrued balance, that provisioned from the configured supplier. It would have started spending real money the day a real account was funded.</p></span></label>
+  <label class="chk done"><input type="checkbox" data-k="seed" checked><span>
+    <b>Seed the catalogue from the real rate card<span class="tag good">done</span></b>
+    <p>52 SKUs, home routed, priced in Australian dollars against the ECB reference rate for 4 September, every one of them inactive. Japan 10 GB for 30 days costs USD 4.70 and prices at AUD 17.95 for a 45.4% contribution margin, against Airalo at around AUD 27.</p><p>Still missing: GB, IT, AE, NZ and PK. The console list endpoint caps at a thousand rows and its token expires between calls, so those pages were unreachable. They need the CSV export.</p></span></label>
+  <label class="chk"><input type="checkbox" data-k="adapter"><span>
+    <b>The eSIM Access adapter<span class="tag lead">needs the integration docs</span></b>
+    <p>The only piece of the money path that is not written, and it is blocked on you rather than on
+    me. What I captured from Chrome was the dashboard's internal API. It gave real prices and real plan
+    identifiers, which is what the catalogue needed, but ordering is a different surface and I have not
+    seen it.</p>
+    <p>Everything around it is finished and tested against a fake supplier that counts its calls. When
+    the partner API documentation and a sandbox key exist, this is one file.</p></span></label>
+  <label class="chk done"><input type="checkbox" data-k="stripe" checked><span>
+    <b>Stripe Checkout and the webhook<span class="tag good">done</span></b>
+    <p>Hosted Checkout with Adaptive Pricing, so a buyer in Tokyo sees yen and we still settle in Australian dollars without writing an FX line. Both numbers are recorded on the order. The webhook verifies the signature over the raw bytes before parsing anything, claims the event id, and marks the order paid conditionally in a WHERE clause rather than after a read.</p></span></label>
+  <label class="chk done"><input type="checkbox" data-k="fulfil" checked><span>
+    <b>Wire fulfilment to the seams already built<span class="tag good">done</span></b>
+    <p>Claim the key, call the fulfiller, write the entitlement, record the real cost on the line. The key is claimed before the supplier is called and is not released when the call fails, which is the opposite of the instinct and the reason one payment cannot buy two profiles.</p></span></label>
+  <label class="chk done"><input type="checkbox" data-k="deliver" checked><span>
+    <b>Delivery by email<span class="tag good">done</span></b>
+    <p>The email carries a link, never the activation code. An activation code works exactly once, and email gets forwarded, synced to three devices and read on airport wifi. The install screen already existed and is unchanged.</p></span></label>
+  <label class="chk done"><input type="checkbox" data-k="refund" checked><span>
+    <b>Refund, retry and resend in the console<span class="tag good">done</span></b>
+    <p>All three are buttons on the order page, all audited. The refund panel names what pressing it really costs before you press it: the customer gets the sale price back, the supplier keeps the wholesale because no cancellation window is agreed in writing, and Stripe keeps its percentage and its fixed charge.</p></span></label>
+</div>
+
+<h2>Gate three</h2>
+<div class="gh"><h3>Approvals nobody can hurry</h3><span class="who them">weeks, start now</span></div>
+<p class="lede">These are now the long poles, and with the pipeline built they are the only thing
+between you and a first sale. None is code, none is in your control, and two of them can stop the
+business rather than delay it. Nothing on this page is worth doing before these are started, because
+everything else is finished and waiting on them.</p>
+
+<div class="checks">
+  <label class="chk"><input type="checkbox" data-k="csp"><span>
+    <b>Carriage service provider registration<span class="tag block">gates supply itself</span></b>
+    <p>Under the 2025 amendments wholesale providers are prohibited from supplying an unregistered CSP.
+    This is not a launch formality that sits at the end; it sits in front of the supplier agreement.</p></span></label>
+  <label class="chk"><input type="checkbox" data-k="stripeacct"><span>
+    <b>Stripe underwriting<span class="tag lead">weeks, can be declined</span></b>
+    <p>Travel and telecommunications are both elevated risk categories. Apply now so that a decline
+    arrives while there is still time to arrange something else.</p></span></label>
+  <label class="chk"><input type="checkbox" data-k="supplier"><span>
+    <b>The eSIM Access agreement, funded, with the cancellation window in writing<span class="tag lead">long lead</span></b>
+    <p>The account exists with a zero balance. Before funding it, get the cancellation window in
+    writing: whether an unactivated profile can be handed back and for how long is the largest single
+    input to net margin and nothing on the dashboard answers it.</p></span></label>
+  <label class="chk"><input type="checkbox" data-k="abn"><span>
+    <b>ABN and GST registration<span class="tag">accountant</span></b>
+    <p>You cannot issue a compliant tax invoice without an ABN, and GST registration is required past
+    A$75,000 turnover. The margin model already carries GST as one eleventh of a tax inclusive sale,
+    so the arithmetic is ready; the registration is not.</p></span></label>
+  <label class="chk"><input type="checkbox" data-k="lawyer"><span>
+    <b>The telecommunications lawyer<span class="tag">one conversation</span></b>
+    <p>Written only support under the TCP Code, the refunds page against the consumer guarantees, and
+    the wording on any daily plan. The rate card's daily plans throttle to 384 or 512 Kbps, and the
+    ACCC has penalised Australian telcos over exactly that kind of claim.</p></span></label>
+</div>
+
+<h2>Gate four</h2>
+<div class="gh"><h3>Production basics</h3><span class="who me">two done, four small</span></div>
+<p class="lede">This gate came out of auditing the API surface rather than listing it from memory. The
+audit found two things that were not thin or partial but entirely absent. Both are now built.</p>
+
+<div class="callout done">
+  <h3>What the audit found, and what it cost to fix</h3>
+  <p>Nothing reported a failed fulfilment. If a supplier call threw at two in the morning, the customer
+  saw an error and you found out when they emailed you, if they emailed you. For a product whose entire
+  claim is that somebody answers, discovering your own failures second is the wrong way round.</p>
+  <p>And no endpoint had a rate limit, including the one that spends supplier money. A new store with
+  card payments attracts card testing within days of going live, and the cost of that is not the fraud,
+  it is the dispute fees and the Stripe risk review that follows.</p>
+  <p>Both are done, and getting the error grouping right took two attempts, both of which produced a
+  function that looked correct and did nothing. Fifty failures differing only in an order id produced
+  fifty groups, because an underscore is a word character and there is therefore no word boundary
+  between it and the digits after it. Neither attempt would have been caught by reading the code.</p>
+</div>
+
+<div class="checks">
+  <label class="chk done"><input type="checkbox" data-k="sentry" checked><span>
+    <b>Error tracking<span class="tag good">done</span></b>
+    <p>Two sinks: the database always, Sentry when a DSN is set. The database is primary on purpose, because if Sentry were the only sink and the DSN were unset by mistake you would be back to nothing and would not find out. Failures are grouped by fingerprint, so a supplier outage is one row with a count of four thousand rather than four thousand rows. Nothing that could be a credential reaches the store.</p></span></label>
+  <label class="chk done"><input type="checkbox" data-k="ratelimit" checked><span>
+    <b>Rate limiting<span class="tag good">done</span></b>
+    <p>Postgres backed and sliding window, because a limiter that does not share state across serverless instances is not a limiter and a fixed window doubles the real limit at every boundary. Fails open when the limiter itself errors, except on anything that spends money or sends mail, which fails closed.</p></span></label>
+  <label class="chk"><input type="checkbox" data-k="alerts"><span>
+    <b>An alert on the stuck order queue<span class="tag">me</span></b>
+    <p>Anything in <code>order_items</code> still pending or failed after a few minutes means somebody
+    paid and did not receive. The index exists; the alarm does not.</p></span></label>
+  <label class="chk"><input type="checkbox" data-k="region"><span>
+    <b>Supabase region and backups<span class="tag">before there is data</span></b>
+    <p>Sydney, <code>ap-southeast-2</code>. A Free plan project cannot be moved between regions, so the
+    fix is recreating it, which is free today and a migration later.</p></span></label>
+  <label class="chk"><input type="checkbox" data-k="status"><span>
+    <b>The status page, not on Vercel<span class="tag">you</span></b>
+    <p>A status page hosted on the platform it reports on has failed at the only moment it exists for.</p></span></label>
+  <label class="chk"><input type="checkbox" data-k="support"><span>
+    <b>An inbox a person actually watches, in Australian hours<span class="tag">you</span></b>
+    <p>This is the product, not an operational detail. Category review methodologies weight support at
+    forty to fifty percent and price at ten to twenty, which is the whole reason this business has a
+    position at all.</p></span></label>
+</div>
+
+<h2>Done means</h2>
+<div class="callout">
+  <h3>One sentence, and it is a test rather than a feeling</h3>
+  <p>A real card charges a real dollar, a real profile installs on a real handset in another country,
+  and a refund can be issued from the console without anybody opening the database.</p>
+  <p>The third is now true. The first needs Stripe to approve you and the deploy to happen. The second
+  needs a funded supplier account, the integration documentation, and somebody standing in another
+  country with a phone. Until all three are true on the same day it is not production, whatever the
+  deployment log says.</p>
+</div>
+
+<footer>
+  <span>Bilby · telecommunications division of Nextwave.au</span>
+  <span>93 checks passing · 6 Sep 2026</span>
+  <span>Ticks saved in this browser only</span>
+</footer>
+</div>
+
+<script>
+(function(){
+  var KEY="bilby-production-v1";
+  var boxes=[].slice.call(document.querySelectorAll(".chk input[type=checkbox]"));
+  var fill=document.getElementById("fill"), lbl=document.getElementById("lbl");
+  function load(){ try { return JSON.parse(localStorage.getItem(KEY)||"{}")||{}; } catch(e){ return {}; } }
+  function save(s){ try { localStorage.setItem(KEY, JSON.stringify(s)); } catch(e){} }
+  function paint(){
+    var d=boxes.filter(function(b){return b.checked;}).length;
+    fill.style.width = boxes.length ? (d/boxes.length*100)+"%" : "0%";
+    lbl.textContent = d+" of "+boxes.length+" done";
+  }
+  var st=load();
+  boxes.forEach(function(b){
+    // Storage is authoritative when it has an opinion, so unticking something
+    // that ships pre ticked survives a reload. Without the hasOwnProperty check
+    // the markup's own checked attribute would silently win every time.
+    if(Object.prototype.hasOwnProperty.call(st, b.dataset.k)) b.checked = !!st[b.dataset.k];
+    b.addEventListener("change",function(){ var s=load(); s[b.dataset.k]=b.checked; save(s); paint(); });
+  });
+  paint();
+})();
+</script>

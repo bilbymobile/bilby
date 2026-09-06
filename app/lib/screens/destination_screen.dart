@@ -181,9 +181,9 @@ class _DestinationScreenState extends State<DestinationScreen>
           ),
           const SizedBox(height: 10),
           const Text(
-            'We price a free ad against where you will be using the data, not '
-            'where you are standing now. Pick a destination and we will show '
-            'you exactly what one ad is worth there.',
+            'Plans are priced for where you will be using the data, not where '
+            'you are standing now. Pick a destination and we will show you what '
+            'is available there.',
             style: TextStyle(fontSize: 15, color: Brand.muted, height: 1.5),
           ),
           const SizedBox(height: 18),
@@ -193,14 +193,14 @@ class _DestinationScreenState extends State<DestinationScreen>
         ...List.generate(options.length, (i) => _row(options[i], i)),
         const SizedBox(height: 16),
         const Note(
-          'You can change this any time from the Earn screen. Nothing is locked '
-          'to where you first opened the app.',
+          'You can change this any time from the compass in the top corner. '
+          'Nothing is locked to where you first opened the app.',
         ),
       ],
     );
   }
 
-  /// eSIM compatibility, checked before anyone invests a week of ad-watching.
+  /// eSIM compatibility, checked before anyone pays for a profile.
   ///
   /// Deliberately not a blocking dialog. The check is a best-effort platform
   /// query and a false negative — an unusual OEM, a locked-down enterprise
@@ -208,14 +208,14 @@ class _DestinationScreenState extends State<DestinationScreen>
   /// an unsupported result informs and warns; it never bars the door.
   Widget _esimBanner() => switch (_esimSupport) {
         EsimSupport.supported => const Note(
-            'This phone supports eSIM. We check first, so nobody spends a week '
-            'earning toward a profile their handset cannot install.',
+            'This phone supports eSIM. We check before you pay, so nobody buys '
+            'a profile their handset cannot install.',
             tone: NoteTone.good,
           ),
         EsimSupport.unsupported => const Note(
             "We couldn't confirm this phone supports eSIM. You can still look "
             'around, but check your device settings for an "Add eSIM" option '
-            'before you start earning — without it the data has nowhere to go.',
+            'before you buy — without it the data has nowhere to go.',
             tone: NoteTone.warn,
           ),
         EsimSupport.unknown => const SizedBox.shrink(),
@@ -229,7 +229,7 @@ class _DestinationScreenState extends State<DestinationScreen>
     // Stagger the entrance, capped so a thirteen-item list does not take a
     // second and a half to finish arriving.
     final start = (index * 0.05).clamp(0.0, 0.6);
-    // drive() rather than CurvedAnimation — see the note in earn_screen. This
+    // drive() rather than CurvedAnimation. This
     // list is thirteen rows, so the leak would be proportionally worse here.
     final end = (start + 0.4).clamp(0.0, 1.0);
 

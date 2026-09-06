@@ -132,6 +132,32 @@ export function roleForHost(host: string | null | undefined): HostRole {
   return "app";
 }
 
+/**
+ * Is this one of the five real names, or a preview?
+ *
+ * Preview deployments arrive on `*.vercel.app` and local work on `localhost`.
+ * Both answer `app` from roleForHost, which is right for choosing what to serve
+ * but wrong for the canonical rules built on top of it: a preview is not the
+ * duplicate of anything and has nothing to redirect away to.
+ *
+ * The specific thing this exists to fix: `/home` used to redirect on any host
+ * that was not marketing, which on a preview URL meant redirecting to `/` on the
+ * same host, which serves the product. The landing page, the most visually
+ * intricate surface in this codebase and the one that most needs looking at
+ * before it goes live, could not be looked at before it went live.
+ */
+export function isRealHost(host: string | null | undefined): boolean {
+  const h = (host ?? "").toLowerCase().split(":")[0];
+  return (
+    h === HOSTS.admin ||
+    h === HOSTS.marketing ||
+    h === `www.${HOSTS.marketing}` ||
+    h === HOSTS.app ||
+    h === HOSTS.api ||
+    h === HOSTS.status
+  );
+}
+
 /** True when this request arrived on the staff console host. */
 export function isAdminHost(host: string | null | undefined): boolean {
   return roleForHost(host) === "admin";

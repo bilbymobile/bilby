@@ -9,34 +9,24 @@ import 'package:flutter/material.dart';
 /// The domain is bilbymobile.com. The app is "Bilby" everywhere a user sees
 /// it; "Bilby Mobile" is only the domain and the legal trading name.
 ///
-/// ## What changed in v2, and why
+/// ## The palette is light, and that is a decision
 ///
-/// v1 was a competent dark theme. v2 is a position. It came out of a study of
-/// Firsty, Airalo, Holafly, Trip.com, Hopper, Revolut, Wise and the 2026 Apple
-/// Design Award winners, and it rests on six decisions:
+///  1. **One warm cream ground, four tonal steps, no shadows.** Depth comes
+///     from luminance, not from elevation. Nothing in the app casts a shadow.
 ///
-///  1. **Four tonal surfaces, no shadows.** Depth comes from luminance steps.
-///     This is how Revolut builds dark hierarchy and it is the difference
-///     between a dark mode that reads as engineered and one that reads as an
-///     inverted light theme.
+///  2. **The darkest thing on screen is the thing you press.** [accent] is ink
+///     navy. On cream that has more presence than any saturated colour, and it
+///     frees [teal] and [sky] to mean something.
 ///
-///  2. **One loud accent, never two.** Firsty owns acid lime and Wise owns leaf
-///     green, so [accent] takes the adjacent slot nobody has claimed. Every
-///     additional brand colour weakens the meaning of the first one, which is
-///     visible in Trip.com and increasingly in Revolut.
+///  3. **Teal means confirmed. Sky means signal.** Neither is ever decorative.
+///     The moment either becomes an accent the palette collapses into generic
+///     warm minimalism.
 ///
-///  3. **A living graphite field behind everything.** Four blurred masses drift
-///     on prime numbered cycles so they never resynchronise. See
-///     `widgets/living_field.dart`.
+///  4. **Two springs and one curve.** Nothing else. See [Motion].
 ///
-///  4. **The balance is the hero object.** Set at [numeral] size, rolled per
-///     digit, locked to tabular figures. Wise retuned the numerals in their own
-///     typeface because a giant number is their hero; same principle here.
-///
-///  5. **One continuous touchable data object** in place of a progress bar.
-///     A utility that can be dragged is what won design awards in 2026.
-///
-///  6. **Two springs and one curve.** Nothing else. See [Motion].
+/// These values mirror `web/src/app/globals.css` and
+/// `android/app/src/main/res/values/colors.xml`. Three files, one palette; if
+/// one moves, move all three.
 class Brand {
   static const name = 'Bilby';
   static const slug = 'bilby';
@@ -104,44 +94,68 @@ class Brand {
   );
 
   // ── Surfaces ─────────────────────────────────────────────────────────────
-  // Four steps, each a luminance change. Nothing in the app casts a shadow.
-  // Dark first is also a competitive position: no eSIM app on the store is,
-  // and on an OLED handset it looks deeper and costs less battery.
+  // A single LIGHT theme, by decision, matching the web surface exactly. The
+  // hero art is a golden hour render and a dark inversion fights the
+  // photograph; the reader is usually mid worry rather than nocturnal.
+  //
+  // These five values are the same ones in web/src/app/globals.css. If one
+  // moves, move both, and move android/app/src/main/res/values/colors.xml too,
+  // because the launch background has to match or cold start flashes.
 
   /// Canvas. The floor everything sits on.
-  static const c0 = Color(0xFF07080B);
+  static const c0 = Color(0xFFF7EFE4);
 
   /// Standard surface. Cards.
-  static const c1 = Color(0xFF0F1216);
+  static const c1 = Color(0xFFFFFAF3);
 
   /// Raised surface. Anything sitting on a card.
-  static const c2 = Color(0xFF171B21);
+  static const c2 = Color(0xFFF1E6D6);
 
   /// Control surface. Secondary buttons, chips, tracks.
-  static const c3 = Color(0xFF20252C);
+  static const c3 = Color(0xFFEADCC7);
 
-  static const line = Color(0x1AFFFFFF);
-  static const line2 = Color(0x0FFFFFFF);
+  static const line = Color(0x24000000);
+  static const line2 = Color(0x12000000);
 
-  static const text = Color(0xFFF5F7FA);
-  static const text2 = Color(0xA3F5F7FA);
-  static const text3 = Color(0x66F5F7FA);
+  static const text = Color(0xFF0B2038);
+  static const text2 = Color(0xB30B2038);
+  static const text3 = Color(0x800B2038);
 
   // ── Accent ───────────────────────────────────────────────────────────────
 
-  /// Luminous aqua. Reads as signal and network rather than as money, which is
-  /// the association this product wants and the one the category lacks.
-  static const accent = Color(0xFF2BE8C8);
+  /// Ink navy, and this is the whole point of the palette: **the darkest thing
+  /// on screen is the thing you press.** On a warm cream ground a dark control
+  /// has more presence than any saturated colour could, and it leaves teal and
+  /// sky free to carry meaning instead of decoration.
+  static const accent = Color(0xFF0B2038);
 
-  /// Text and icons drawn ON the accent. Never white: white on aqua is 1.9 to 1
-  /// and unreadable outdoors, which is where a travel app gets used.
-  static const accentInk = Color(0xFF04241E);
+  /// Text and icons drawn ON the accent. Cream, not white: white on this navy
+  /// is harsher than the rest of the page and reads as a different design.
+  static const accentInk = Color(0xFFF7EFE4);
 
-  /// Deeper accent for gradient ends and pressed states.
-  static const accentDeep = Color(0xFF17B9A0);
+  /// Pressed and gradient end.
+  static const accentDeep = Color(0xFF16324F);
 
-  static const warn = Color(0xFFFFB454);
-  static const danger = Color(0xFFFF5C6E);
+  /// Sand. Secondary action, and the only action colour legible on navy.
+  static const sand = Color(0xFFEEBF8B);
+  static const sandInk = Color(0xFF4A2E12);
+
+  /// **Confirmation only. Never decoration.** The moment teal becomes an
+  /// accent the palette collapses into generic warm minimalism, because ink
+  /// and sand cannot carry meaning on their own.
+  static const teal = Color(0xFF35857A);
+
+  /// **Signal only.** The connection animation, and nothing else.
+  static const sky = Color(0xFF5EA9CE);
+
+  static const warn = Color(0xFFC98F53);
+  static const danger = Color(0xFFA6503C);
+
+  // Inks for the three note tones, drawn on a tinted card rather than on the
+  // tone colour itself, so each one is a darkened relative of its tone.
+  static const noteGoodInk = Color(0xFF1E4F48);
+  static const noteWarnInk = Color(0xFF6B4A21);
+  static const noteBadInk = Color(0xFF5E2C20);
 
   // ── Radius ladder ────────────────────────────────────────────────────────
   // Nesting rule: a child radius equals its parent radius minus the inset

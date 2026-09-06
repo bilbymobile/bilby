@@ -102,9 +102,9 @@ class _PlansScreenState extends State<PlansScreen> {
           const SectionTitle(
             'Plans',
             subtitle:
-                'Full speed, no ads, hotspot included. Buy one only for the days '
-                'you actually need it. The free tier covers maps and messages '
-                'the rest of the time.',
+                'Set it up before you fly and land already connected. Buy one '
+                'only for the days you are away, and a person answers in '
+                'Australian hours if it goes wrong.',
           ),
           const SizedBox(height: 20),
           SizedBox(
@@ -137,7 +137,7 @@ class _PlansScreenState extends State<PlansScreen> {
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,
-                        color: selected ? const Color(0xFF04120C) : Brand.muted,
+                        color: selected ? Brand.accentInk : Brand.muted,
                       ),
                     ),
                   ),
@@ -215,7 +215,7 @@ class _PlansScreenState extends State<PlansScreen> {
                     style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
-                        color: Color(0xFF04120C)),
+                        color: Brand.accentInk),
                   ),
                 ),
               ),

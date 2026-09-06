@@ -1,0 +1,95 @@
+/* Console chrome. Denser than the marketing surface: this is a tool, scanned
+   and operated rather than read. */
+.wrap { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
+
+.bar {
+  display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+  padding: 0 24px; height: 62px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 20;
+}
+.brand {
+  display: flex; align-items: center; gap: 9px; text-decoration: none; color: var(--text);
+  font-family: "Outfit", sans-serif; font-weight: 700; letter-spacing: -.04em; font-size: 1.1rem;
+}
+.tag {
+  font-family: "IBM Plex Mono", monospace; font-size: .58rem; letter-spacing: .14em;
+  text-transform: uppercase; background: var(--accent); color: var(--accent-ink);
+  padding: 3px 8px; border-radius: 6px;
+}
+.tabs { display: flex; gap: 4px; margin-left: 12px; flex-wrap: wrap; }
+.tabs a {
+  font-size: .89rem; color: var(--muted); text-decoration: none;
+  padding: 7px 13px; border-radius: 9px;
+}
+.tabs a:hover { background: var(--surface-2); color: var(--text); }
+.tabs a[data-on="1"] { background: var(--accent); color: var(--accent-ink); }
+.who { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: .84rem; color: var(--muted); }
+.role {
+  font-family: "IBM Plex Mono", monospace; font-size: .62rem; letter-spacing: .1em;
+  text-transform: uppercase; background: var(--surface-2); padding: 3px 8px; border-radius: 6px;
+}
+.out { background: none; border: 0; padding: 0; color: var(--muted); cursor: pointer; font: inherit; text-decoration: underline; }
+.out:hover { color: var(--danger); }
+
+.main { padding: 30px 24px 80px; max-width: var(--max); margin: 0 auto; width: 100%; }
+.h1 { font-family: "Outfit", sans-serif; font-size: 1.75rem; font-weight: 600; letter-spacing: -.03em; margin: 0 0 6px; }
+.lede { color: var(--muted); font-size: .96rem; margin: 0 0 28px; max-width: 70ch; }
+
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+.panel + .panel { margin-top: 16px; }
+.panel h2 { font-family: "Outfit", sans-serif; font-size: 1.02rem; font-weight: 600; margin: 0 0 4px; }
+.panel .sub { color: var(--muted); font-size: .87rem; margin: 0 0 18px; }
+
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
+.stat b { display: block; font-family: "Outfit", sans-serif; font-size: 1.8rem; font-weight: 600; line-height: 1; margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+.stat span { font-size: .82rem; color: var(--muted); }
+
+.form { display: grid; gap: 14px; }
+.row2 { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.field { display: grid; gap: 6px; }
+.field label { font-size: .78rem; color: var(--muted); font-weight: 600; }
+.field input, .field select, .field textarea {
+  font: inherit; font-size: .93rem; padding: 11px 13px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--text);
+}
+.field input:focus, .field select:focus { outline: 2px solid var(--ok); outline-offset: 1px; }
+.field .hint { font-size: .76rem; color: var(--muted); }
+
+.btn {
+  font: inherit; font-weight: 600; font-size: .92rem; padding: 11px 20px; border-radius: 10px;
+  border: 1px solid transparent; cursor: pointer; background: var(--accent); color: var(--accent-ink);
+}
+.btn:hover { filter: brightness(1.12); }
+.btn.ghost { background: var(--surface-2); color: var(--text); border-color: var(--border); }
+.btn.small { padding: 7px 13px; font-size: .82rem; }
+
+.tableWrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+/* Every selector is scoped to .tableWrap. CSS modules reject a bare element
+   selector, and rightly: a global `td` rule from a component stylesheet is how
+   one screen quietly restyles another. */
+.tableWrap table { width: 100%; border-collapse: collapse; font-size: .88rem; min-width: 720px; }
+.tableWrap th,
+.tableWrap td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.tableWrap th { font-family: "IBM Plex Mono", monospace; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--surface-2); }
+.tableWrap tbody tr:last-child td { border-bottom: 0; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.code { font-family: "IBM Plex Mono", monospace; font-weight: 500; letter-spacing: .04em; }
+
+.pill { display: inline-block; font-family: "IBM Plex Mono", monospace; font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+.pill.on { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+.pill.off { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+
+.note { border-left: 3px solid var(--warn); background: color-mix(in srgb, var(--warn) 9%, transparent); padding: 13px 16px; border-radius: 0 10px 10px 0; font-size: .88rem; margin: 16px 0; }
+.note.ok { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 9%, transparent); }
+.note.bad { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 9%, transparent); }
+.note code { word-break: break-all; }
+
+.empty { text-align: center; padding: 44px 20px; color: var(--muted); }
+
+/* Sign in */
+.signin { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.signinCard { width: min(430px, 100%); background: var(--surface); border: 1px solid var(--border); border-radius: 22px; padding: 34px; }
+.signinCard h1 { font-family: "Outfit", sans-serif; font-size: 1.4rem; font-weight: 600; margin: 18px 0 8px; }
+.signinCard p { color: var(--muted); font-size: .9rem; margin: 0 0 22px; }

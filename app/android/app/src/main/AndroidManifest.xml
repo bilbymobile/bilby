@@ -1,0 +1,64 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- The app is a pure API client. Without this, nothing loads. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+      Declared so the Play listing can say the app works on handsets without an
+      eUICC (it still shows plans and account state), rather than being filtered
+      out of the store for devices the capability check handles at runtime.
+    -->
+    <uses-feature
+        android:name="android.hardware.telephony.euicc"
+        android:required="false" />
+
+    <application
+        android:label="Bilby"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:enableOnBackInvokedCallback="true">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+
+            <!--
+              Swaps the launch theme for the app theme the moment Flutter has a
+              first frame. Without it the launch background stays on screen for
+              a beat after the UI is ready, which reads as jank.
+            -->
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme" />
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+
+    <!--
+      Required from Android 11 to see whether a browser exists before handing
+      checkout off to it. Without this block `canLaunchUrl` returns false on
+      API 30+ and the buy button silently does nothing.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
+</manifest>

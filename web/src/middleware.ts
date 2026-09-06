@@ -1,45 +1,28 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { HOSTS, roleForHost } from "@/lib/hosts";
+import { HOSTS, roleForHost, isRealHost } from "@/lib/hosts";
+import { brand } from "@/lib/brand";
+
+const UID_COOKIE = `${brand.slug}_uid`;
+const UID_HEADER = "x-bilby-uid";
 
 /**
- * Host routing, and access control for the operator surfaces.
+ * Host routing.
  *
- * ## Why this exists
+ * Five hostnames, one deployment. This decides which of them a request arrived
+ * on and what that host is allowed to serve. It does not decide who anybody is:
+ * middleware runs on the edge runtime where the Postgres driver cannot, so the
+ * only auth question it can answer is "is there a cookie at all". The
+ * authoritative check lives in the console layout, which is a server component
+ * with a database connection.
  *
- * `/ops` and `/api/economics` were publicly readable on the live site. Between
- * them they publish, to anyone who types the URL:
- *
- *   * wholesale cost per megabyte for every region
- *   * realised contribution per ad view
- *   * the target contribution margin
- *   * supplier wallet balances
- *   * the daily free tier budget and how much of it is spent
- *
- * That is the commercial core of the business. `pricing.ts` opens with the
- * observation that a competitor should have to guess at the rate card rather
- * than read it out of a response, and then the dashboard rendering that same
- * rate card shipped without a lock on it. A competitor could have read the
- * entire model in ten seconds, and so could a supplier during a rate
- * negotiation, which is worse.
- *
- * ## Why HTTP Basic and not a login screen
- *
- * There is exactly one operator and no user accounts anywhere in this product.
- * A login page would mean a users table, a password hash, a session, a reset
- * flow and a forgot password email, all to protect one dashboard. Basic auth is
- * a browser native prompt, it works from curl for scripting, and over HTTPS the
- * credentials are inside the TLS session like any other header.
- *
- * ## Fail closed
- *
- * If `OPS_PASSWORD` is unset the routes return 404 rather than opening. An
- * unset secret is far more likely to be a misconfigured deploy than a
- * deliberate decision to publish your margins, and a 404 also declines to
- * confirm the route exists at all.
+ * The operator dashboard that used to be protected here is gone. It published
+ * wholesale cost per megabyte, contribution per ad view and supplier wallet
+ * balances, all of which belonged to the free tier, and it was guarded with
+ * HTTP Basic against an environment variable. Costing now lives inside the
+ * staff console behind a real session, so there is no second auth scheme to
+ * keep honest.
  */
-
-const PROTECTED = ["/ops", "/api/economics"];
 
 /**
  * Routes that are the product, not the marketing site.
@@ -52,9 +35,54 @@ const PROTECTED = ["/ops", "/api/economics"];
  */
 const PRODUCT = ["/plans", "/esims", "/checkout"];
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const role = roleForHost(req.headers.get("host"));
+
+  /*
+   * The staff console owns the whole of its host.
+   *
+   * The check here is cookie presence only, not validity: middleware runs on
+   * the edge runtime where the Postgres driver cannot, so it cannot ask the
+   * database whether a session is real. The authoritative check is in the
+   * console layout, which is a server component with a database connection and
+   * redirects to the sign in page when the session does not resolve.
+   *
+   * That split is fine and is the normal shape for this framework, but it is
+   * worth being precise about what each half buys: this one turns away anyone
+   * with no cookie at all, cheaply and before any rendering; the layout is what
+   * actually decides who you are.
+   */
+  if (role === "admin") {
+    const open = pathname.startsWith("/console/login") || pathname.startsWith("/console/auth");
+    // Built from nextUrl rather than req.url so the browser's own host survives.
+    // See the note in console/auth/route.ts: redirecting to the server's
+    // internal URL lands people on an origin their cookie does not belong to,
+    // and the symptom is a sign in loop.
+    const here = (path: string, param?: [string, string]) => {
+      const u = req.nextUrl.clone();
+      u.pathname = path;
+      u.search = "";
+      if (param) u.searchParams.set(param[0], param[1]);
+      return u;
+    };
+
+    if (pathname === "/") return NextResponse.rewrite(here("/console"));
+    if (!pathname.startsWith("/console")) {
+      // Nothing customer facing is ever served from this host.
+      return NextResponse.redirect(here("/console"));
+    }
+    if (!open && !req.cookies.has("bilby_staff")) {
+      return NextResponse.redirect(here("/console/login", ["next", pathname]));
+    }
+    return NextResponse.next();
+  }
+
+  // The console exists on one host only. Reaching it anywhere else is either a
+  // mistake or somebody probing, and both get the same answer.
+  if (pathname.startsWith("/console")) {
+    return new NextResponse("Not found", { status: 404 });
+  }
 
   /*
    * The apex is the marketing face; the product lives on `app.`. Both want to
@@ -63,10 +91,8 @@ export function middleware(req: NextRequest) {
    * canonical tag, the Play listing and every link anyone shares should all
    * agree on.
    *
-   * Deliberately only the root. Everything else on the apex, including
-   * /app-ads.txt and the legal pages, is served untouched, because the
-   * app-ads.txt crawl must resolve at the root with no redirect or AdMob drops
-   * into limited serving and never explains why.
+   * Deliberately only the root. Everything else on the apex, including the
+   * legal pages, is served untouched.
    */
   if (role === "marketing" && pathname === "/") {
     return NextResponse.rewrite(new URL("/home", req.url));
@@ -79,84 +105,105 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(to, 308);
   }
 
-  if (pathname === "/home") {
+  /*
+   * The landing page has one address, except on a preview.
+   *
+   * On the real hosts /home is a duplicate of the apex root and redirects, so
+   * search engines and shared links agree on one URL. On a preview deployment
+   * or localhost it renders, because a preview is not a duplicate of anything
+   * and Vercel marks it noindex regardless.
+   *
+   * Without this a preview URL could not show the landing page at all: it is
+   * not the marketing host, so /home redirected to / on the same host, which
+   * serves the product. The one surface that most needs reviewing before it
+   * ships was the one surface a preview could not show.
+   */
+  if (pathname === "/home" && isRealHost(req.headers.get("host"))) {
     return role === "marketing"
       ? NextResponse.redirect(new URL("/", req.url))
       : NextResponse.redirect(new URL("https://" + req.headers.get("host")?.replace(/^app\./, "") + "/"));
   }
 
-  if (!PROTECTED.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
-    return NextResponse.next();
-  }
-
-  const expected = process.env.OPS_PASSWORD;
-  const user = process.env.OPS_USER ?? "ops";
-
-  // Not configured. Behave as though the route does not exist.
-  if (!expected) {
-    return new NextResponse("Not found", { status: 404 });
-  }
-
-  const header = req.headers.get("authorization") ?? "";
-  const [scheme, encoded] = header.split(" ");
-
-  if (scheme === "Basic" && encoded) {
-    // atob rather than Buffer: middleware runs on the edge runtime, which has
-    // no Node globals.
-    let decoded = "";
-    try {
-      decoded = atob(encoded);
-    } catch {
-      decoded = "";
-    }
-
-    // Split on the FIRST colon only. A password containing a colon is legal
-    // and splitting naively would silently truncate it, producing an auth
-    // failure that looks like a wrong password.
-    const idx = decoded.indexOf(":");
-    const suppliedUser = idx === -1 ? "" : decoded.slice(0, idx);
-    const suppliedPass = idx === -1 ? "" : decoded.slice(idx + 1);
-
-    if (suppliedUser === user && timingSafeEqual(suppliedPass, expected)) {
-      return NextResponse.next();
-    }
-  }
-
-  return new NextResponse("Authentication required", {
-    status: 401,
-    headers: {
-      "WWW-Authenticate": 'Basic realm="Bilby ops", charset="UTF-8"',
-      // Never let a proxy or the browser keep a copy of an operator page.
-      "Cache-Control": "no-store",
-    },
-  });
+  return withIdentity(req);
 }
 
 /**
- * Constant time string comparison.
+ * Mint the anonymous session, here and nowhere else.
  *
- * `===` on secrets returns as soon as two characters differ, so the time taken
- * leaks how much of the prefix was correct, and a patient attacker recovers the
- * password one character at a time. The edge runtime has no `crypto.timingSafeEqual`,
- * so this compares every character regardless of mismatches.
+ * ## Why this moved
+ *
+ * The session used to be created by the first thing that needed it, which was
+ * fine while that was always a route handler. The moment a server component
+ * asked for a user, every product page returned a 500: the framework will not
+ * let a component set a cookie, because rendering can be replayed, streamed and
+ * cached, so there is no well defined moment for a Set-Cookie to happen at.
+ *
+ * A build that compiled and typechecked cleanly served a 500 on every page a
+ * customer could reach. It was found by starting the thing and asking for a
+ * page, which is the only way it was ever going to be found.
+ *
+ * ## The forward header
+ *
+ * A cookie set on this response does not come back until the NEXT request, so
+ * the render immediately following would still see no identity and create a
+ * second one. The id is therefore also forwarded on a request header for this
+ * one render. It is signed either way, so the header is not a trust boundary:
+ * the render verifies the signature exactly as it would from a cookie.
+ *
+ * ## Web Crypto
+ *
+ * Middleware runs on the edge runtime, which has no node:crypto. The HMAC below
+ * is the same construction as the one in session.ts, expressed against
+ * SubtleCrypto so both sides agree on the bytes.
  */
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return diff === 0;
+async function withIdentity(req: NextRequest): Promise<NextResponse> {
+  const existing = req.cookies.get(UID_COOKIE)?.value;
+  if (existing) return NextResponse.next();
+
+  const id = crypto.randomUUID();
+  const value = `${id}.${await hmac(id)}`;
+
+  const headers = new Headers(req.headers);
+  headers.set(UID_HEADER, value);
+
+  const res = NextResponse.next({ request: { headers } });
+  res.cookies.set(UID_COOKIE, value, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365 * 2,
+  });
+  return res;
+}
+
+async function hmac(id: string): Promise<string> {
+  const secret = process.env.SESSION_SECRET ?? "dev-only-insecure-secret-change-me";
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(id));
+  // base64url, to match the node side byte for byte. A trailing "=" or a "+"
+  // here would produce a signature that never verifies and a sign in loop
+  // nobody could explain.
+  return btoa(String.fromCharCode(...new Uint8Array(sig)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 /*
- * Broad matcher, because the host rewrite has to see "/" as well as the
- * protected paths. Static assets and the well known text routes are excluded:
- * app-ads.txt and assetlinks.json are fetched by crawlers that are unforgiving
- * about redirects, and there is no reason for them to pass through here at all.
+ * Broad matcher, because the host rewrite has to see "/". Static assets and the
+ * well known text routes are excluded: assetlinks.json is fetched by a crawler
+ * that is unforgiving about redirects, and there is no reason for it to pass
+ * through here at all.
  */
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|app-ads.txt|.well-known|.*\\.(?:png|jpg|jpeg|svg|ico|webp|txt|xml|json)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.well-known|.*\\.(?:png|jpg|jpeg|svg|ico|webp|txt|xml|json)$).*)",
   ],
 };

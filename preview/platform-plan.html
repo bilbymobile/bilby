@@ -1,0 +1,534 @@
+<title>Bilby Platform Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+:root{
+  --ground:#F7EFE4;
+  --surface:#FFFAF3;
+  --surface-2:#F1E6D6;
+  --ink:#0B2038;
+  --ink-2:#3B4F67;
+  --ink-3:#6E7E92;
+  --line:#DFD0BB;
+  --line-strong:#C6B49B;
+  --teal:#35857A;
+  --teal-soft:#E0EFEB;
+  --sky:#5EA9CE;
+  --sand:#EEBF8B;
+  --sand-deep:#C98F53;
+  --brick:#A6503C;
+  --brick-soft:#F5E3DC;
+  --code-bg:#0B2038;
+  --code-ink:#E4EDF5;
+  --code-dim:#7E93AC;
+  --shadow:0 1px 0 rgba(11,32,56,.05), 0 12px 28px -22px rgba(11,32,56,.5);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0A1A2C;
+    --surface:#0F2438;
+    --surface-2:#152C42;
+    --ink:#EFE6D8;
+    --ink-2:#B9C6D4;
+    --ink-3:#8496A9;
+    --line:#1E3A53;
+    --line-strong:#2C4E6B;
+    --teal:#63B7A9;
+    --teal-soft:#123832;
+    --sky:#7FC0E0;
+    --sand:#EEBF8B;
+    --sand-deep:#E0A968;
+    --brick:#DD8B72;
+    --brick-soft:#3A2019;
+    --code-bg:#061523;
+    --code-ink:#DCE7F1;
+    --code-dim:#6E869E;
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 14px 30px -22px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0A1A2C;
+  --surface:#0F2438;
+  --surface-2:#152C42;
+  --ink:#EFE6D8;
+  --ink-2:#B9C6D4;
+  --ink-3:#8496A9;
+  --line:#1E3A53;
+  --line-strong:#2C4E6B;
+  --teal:#63B7A9;
+  --teal-soft:#123832;
+  --sky:#7FC0E0;
+  --sand:#EEBF8B;
+  --sand-deep:#E0A968;
+  --brick:#DD8B72;
+  --brick-soft:#3A2019;
+  --code-bg:#061523;
+  --code-ink:#DCE7F1;
+  --code-dim:#6E869E;
+  --shadow:0 1px 0 rgba(0,0,0,.3), 0 14px 30px -22px rgba(0,0,0,.9);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px;
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px 120px}
+
+/* ---------- type ---------- */
+h1,h2,h3,h4{font-family:"Outfit",-apple-system,sans-serif;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.4rem,5.2vw,3.6rem);font-weight:600;letter-spacing:-.025em;line-height:1.04}
+h2{font-size:clamp(1.5rem,2.6vw,1.95rem);font-weight:600;letter-spacing:-.018em;line-height:1.14}
+h3{font-size:1.13rem;font-weight:600;letter-spacing:-.008em}
+h4{font-size:.95rem;font-weight:600}
+p{margin:0}
+.lede{font-size:1.14rem;color:var(--ink-2);max-width:62ch}
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:.7rem;font-weight:500;text-transform:uppercase;letter-spacing:.16em;
+  color:var(--ink-3);
+}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,monospace}
+:not(pre)>code{
+  font-size:.86em;background:var(--surface-2);color:var(--ink);
+  padding:.1em .38em;border-radius:3px;border:1px solid var(--line);
+}
+
+/* ---------- rhythm ---------- */
+section{padding-top:74px}
+.stack{display:flex;flex-direction:column;gap:22px}
+.stack-sm{display:flex;flex-direction:column;gap:12px}
+.head{display:flex;flex-direction:column;gap:10px;margin-bottom:30px;max-width:66ch}
+
+/* ---------- masthead ---------- */
+.masthead{padding:76px 0 8px;display:flex;flex-direction:column;gap:22px}
+.rule{height:1px;background:var(--line-strong);border:0;margin:0}
+.meta{
+  display:flex;flex-wrap:wrap;gap:8px 26px;
+  font-family:"IBM Plex Mono",monospace;font-size:.74rem;
+  text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);
+}
+.thesis{
+  background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--teal);
+  border-radius:2px;padding:24px 26px;box-shadow:var(--shadow);
+}
+.thesis p{font-family:"Outfit",sans-serif;font-size:1.28rem;line-height:1.42;letter-spacing:-.012em}
+.thesis .after{margin-top:12px;font-family:"Plus Jakarta Sans",sans-serif;font-size:.95rem;color:var(--ink-2);letter-spacing:0}
+
+/* ---------- layer stack ---------- */
+.layers{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden;background:var(--surface)}
+.layer{display:grid;grid-template-columns:150px 1fr 1fr;gap:0;border-bottom:1px solid var(--line)}
+.layer:last-child{border-bottom:0}
+.layer > *{padding:15px 18px}
+.layer-name{
+  font-family:"Outfit",sans-serif;font-weight:600;font-size:.98rem;
+  background:var(--surface-2);border-right:1px solid var(--line);
+  display:flex;align-items:center;gap:9px;
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--teal);flex:none}
+.layer.cat .dot{background:var(--sand-deep)}
+.knows{color:var(--ink-2);font-size:.9rem;border-right:1px solid var(--line)}
+.knows-not{color:var(--ink-3);font-size:.9rem;font-style:italic}
+.layer-hd{background:var(--surface-2)}
+.layer-hd > *{padding:9px 18px;font-family:"IBM Plex Mono",monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.13em;color:var(--ink-3)}
+.boundary{
+  display:flex;align-items:center;gap:14px;
+  background:var(--teal-soft);border-bottom:1px solid var(--line);
+  padding:11px 18px;
+}
+.boundary span{
+  font-family:"IBM Plex Mono",monospace;font-size:.72rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.13em;color:var(--teal);
+}
+.boundary .bar{flex:1;height:1px;background:var(--teal);opacity:.45}
+
+/* ---------- audit table ---------- */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:3px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.91rem}
+thead th{
+  text-align:left;padding:11px 18px;background:var(--surface-2);
+  font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.68rem;
+  text-transform:uppercase;letter-spacing:.13em;color:var(--ink-3);
+  border-bottom:1px solid var(--line);
+}
+tbody td{padding:12px 18px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+tbody tr:last-child td{border-bottom:0}
+tbody td:first-child{color:var(--ink);white-space:nowrap}
+.flag{
+  display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:.68rem;
+  text-transform:uppercase;letter-spacing:.09em;padding:2px 7px;border-radius:2px;
+  background:var(--brick-soft);color:var(--brick);border:1px solid color-mix(in srgb,var(--brick) 30%,transparent);
+}
+
+/* ---------- seams ---------- */
+.seams{display:flex;flex-direction:column;gap:16px}
+.seam{
+  background:var(--surface);border:1px solid var(--line);border-radius:3px;
+  box-shadow:var(--shadow);overflow:hidden;
+}
+.seam-hd{display:flex;align-items:baseline;gap:15px;padding:20px 24px 6px}
+.seam-n{
+  font-family:"IBM Plex Mono",monospace;font-size:.78rem;font-weight:600;
+  color:var(--sky);letter-spacing:.08em;flex:none;padding-top:3px;
+}
+.seam-body{padding:0 24px 22px;display:flex;flex-direction:column;gap:12px}
+.seam-body p{color:var(--ink-2);font-size:.95rem;max-width:70ch}
+.cost{
+  display:flex;gap:10px;align-items:baseline;padding:10px 14px;border-radius:2px;
+  background:var(--surface-2);border:1px solid var(--line);font-size:.88rem;color:var(--ink-2);
+}
+.cost b{font-family:"IBM Plex Mono",monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);flex:none}
+pre{
+  margin:0;background:var(--code-bg);color:var(--code-ink);
+  padding:16px 18px;border-radius:2px;overflow-x:auto;
+  font-family:"IBM Plex Mono",monospace;font-size:.79rem;line-height:1.62;
+}
+pre .c{color:var(--code-dim)}
+pre .k{color:var(--sand)}
+
+/* ---------- non goals ---------- */
+.nogoals{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:14px}
+.nogoal{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:17px 19px;display:flex;flex-direction:column;gap:6px}
+.nogoal h4{color:var(--ink)}
+.nogoal p{font-size:.87rem;color:var(--ink-3)}
+.nogoal .x{font-family:"IBM Plex Mono",monospace;color:var(--brick);font-size:.8rem;font-weight:600}
+
+/* ---------- phases ---------- */
+.phases{display:flex;flex-direction:column;gap:0;border-left:2px solid var(--sand);padding-left:0;margin-left:8px}
+.phase{display:grid;grid-template-columns:118px 1fr;gap:22px;padding:18px 0 18px 26px;border-bottom:1px solid var(--line);position:relative}
+.phase:last-child{border-bottom:0}
+.phase::before{
+  content:"";position:absolute;left:-6px;top:26px;width:10px;height:10px;
+  border-radius:50%;background:var(--ground);border:2px solid var(--sand-deep);
+}
+.phase.now::before{background:var(--sand-deep)}
+.phase-n{font-family:"IBM Plex Mono",monospace;font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-3);padding-top:4px}
+.phase.now .phase-n{color:var(--sand-deep);font-weight:600}
+.phase-body{display:flex;flex-direction:column;gap:5px}
+.phase-body p{font-size:.92rem;color:var(--ink-2);max-width:66ch}
+
+/* ---------- verdict ---------- */
+.verdict{
+  border:1px solid var(--line);border-radius:3px;overflow:hidden;background:var(--surface);
+}
+.verdict-row{display:grid;grid-template-columns:1fr 92px;border-bottom:1px solid var(--line);align-items:center}
+.verdict-row:last-child{border-bottom:0}
+.verdict-row > span{padding:11px 18px;font-size:.92rem;color:var(--ink-2)}
+.verdict-row .v{
+  font-family:"IBM Plex Mono",monospace;font-size:.72rem;text-transform:uppercase;
+  letter-spacing:.1em;text-align:right;color:var(--teal);font-weight:600;
+}
+.verdict-row .v.no{color:var(--ink-3)}
+.verdict-row .v.fail{color:var(--brick)}
+.callout{
+  margin-top:18px;background:var(--brick-soft);border:1px solid color-mix(in srgb,var(--brick) 28%,transparent);
+  border-left:3px solid var(--brick);border-radius:2px;padding:20px 22px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.callout h3{color:var(--ink)}
+.callout p{font-size:.94rem;color:var(--ink-2);max-width:70ch}
+
+footer{margin-top:80px;padding-top:26px;border-top:1px solid var(--line-strong);display:flex;flex-wrap:wrap;gap:8px 26px;font-family:"IBM Plex Mono",monospace;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3)}
+
+@media (max-width:720px){
+  .layer{grid-template-columns:1fr}
+  .layer-name{border-right:0;border-bottom:1px solid var(--line)}
+  .knows{border-right:0}
+  .layer-hd{display:none}
+  .phase{grid-template-columns:1fr;gap:6px}
+  .verdict-row{grid-template-columns:1fr 84px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Bilby · Nextwave.au · architecture</p>
+    <h1>Building for the second product before there is a first customer</h1>
+    <p class="lede">eSIM is category one. This is the plan that lets category two arrive later without a data migration on a live ledger, and the short list of things that have to change now because they stop being free the day someone pays.</p>
+    <hr class="rule">
+    <div class="meta">
+      <span>Companion to PLATFORM.md</span>
+      <span>Status: proposed</span>
+      <span>Phase 0 not yet started</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="thesis">
+      <p>Take money in AUD, buy an entitlement from a supplier in USD, deliver a credential to a traveller, support them when it fails, and account for the difference.</p>
+      <p class="after">That sentence is true of an eSIM, a data top up, a VPN config and a gift card. None of it mentions an ICCID. The part that never mentions an ICCID is the platform. Everything that does is a category.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <p class="eyebrow">01 · The boundary</p>
+      <h2>Six layers, and one rule worth taping to the wall</h2>
+      <p class="lede">Each layer is defined as much by what it is forbidden to know as by what it holds. The forbidden column is the one that gets violated, and it gets violated quietly, because everything still works afterwards.</p>
+    </div>
+
+    <div class="layers">
+      <div class="layer layer-hd"><div>Layer</div><div>Knows about</div><div>Must never know about</div></div>
+      <div class="layer"><div class="layer-name"><span class="dot"></span>Identity</div><div class="knows">Users, staff, sessions, roles</div><div class="knows-not">Anything that is for sale</div></div>
+      <div class="layer"><div class="layer-name"><span class="dot"></span>Catalogue</div><div class="knows">SKUs, prices, availability, attributes</div><div class="knows-not">How a thing is delivered</div></div>
+      <div class="layer"><div class="layer-name"><span class="dot"></span>Commerce</div><div class="knows">Discount, tax, payment, order, refund</div><div class="knows-not">What an eSIM is</div></div>
+      <div class="layer"><div class="layer-name"><span class="dot"></span>Fulfilment</div><div class="knows">Suppliers, adapters, provisioning, retries</div><div class="knows-not">Prices, tax, sessions</div></div>
+      <div class="layer"><div class="layer-name"><span class="dot"></span>Entitlement</div><div class="knows">What a customer owns and its state</div><div class="knows-not">How it was paid for</div></div>
+      <div class="boundary"><span>Platform above · category below</span><span class="bar"></span></div>
+      <div class="layer cat"><div class="layer-name"><span class="dot"></span>eSIM</div><div class="knows">ICCIDs, SM DP+ addresses, data allowances, install state</div><div class="knows-not">Any of the five above</div></div>
+    </div>
+
+    <div class="thesis" style="margin-top:22px">
+      <p>Commerce must never learn what an eSIM is.</p>
+      <p class="after">The moment the orders table grows a column called <code>iccid</code>, the separation is gone. It has that column today.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <p class="eyebrow">02 · Where we are</p>
+      <h2>What the shortest path to a working eSIM assumed</h2>
+      <p class="lede">Not a criticism of the code. Building the direct path first was correct. This is simply the inventory of what it took for granted.</p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Place</th><th>Assumption baked in</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><code>orders.plan_id</code>, <code>orders.iccid</code></td><td>One order is one eSIM</td><td><span class="flag">Seam 1</span></td></tr>
+          <tr><td><code>credit_ledger.delta_mb</code></td><td>The unit of value is a megabyte</td><td><span class="flag">Dead</span></td></tr>
+          <tr><td><code>esims.is_free_tier</code></td><td>The free tier exists</td><td><span class="flag">Dead</span></td></tr>
+          <tr><td><code>lib/suppliers/types.ts</code></td><td>A supplier lists plans with data and validity in days</td><td><span class="flag">Seam 4</span></td></tr>
+          <tr><td><code>lib/suppliers/index.ts</code></td><td>There are exactly two lanes, paid and free</td><td><span class="flag">Dead</span></td></tr>
+          <tr><td><code>api/catalog/route.ts</code></td><td>The catalogue is the supplier plan list, priced live per request</td><td><span class="flag">Seam 3</span></td></tr>
+          <tr><td><code>lib/pricing.ts</code></td><td>The whole module is the ad to data exchange engine</td><td><span class="flag">Quarantine</span></td></tr>
+          <tr><td><code>app/checkout/page.tsx</code></td><td>A stub, with the Stripe flow written in a comment</td><td><span class="flag">Phase 1</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <h3>Two of these are worse than they look</h3>
+      <p><b>The catalogue is not stored.</b> It is fetched from the supplier on every request and priced on the fly from wholesale times a margin constant. So the price can change between the plans page and checkout, there is no stable SKU to write on an order, everything is in USD, and GST appears nowhere. It blocks the second product, and it blocks the first one harder.</p>
+      <p><b>The pricing module is a liability, not just dead code.</b> It carries regional wholesale figures seeded from published estimates rather than from a signed rate card. Those numbers must not quietly become the basis of retail pricing. Quarantine it, do not repurpose it.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <p class="eyebrow">03 · The work</p>
+      <h2>Five seams that cost a day now and a migration later</h2>
+      <p class="lede">Nothing else in this plan is urgent. These are, and they are urgent precisely because there are no customers yet.</p>
+    </div>
+
+    <div class="seams">
+
+      <article class="seam">
+        <div class="seam-hd"><span class="seam-n">Seam 1</span><h3>An order is money. An order item is a thing.</h3></div>
+        <div class="seam-body">
+          <p>Today every order has exactly one item, so splitting the table costs nothing. It is the row shape that makes a bundle possible later, and the row shape that makes a partly failed order describable now. If provisioning fails after Stripe has captured, there is currently nowhere to write that down.</p>
+<pre><span class="c">-- money, product agnostic, never grows a category column</span>
+<span class="k">orders</span>       id · user_id · status · sell_currency · sell_amount
+             tax_code · tax_amount · discount_code · discount_amount · stripe_ref
+
+<span class="c">-- what was bought. category lives here, never above.</span>
+<span class="k">order_items</span>  id · order_id · sku · category · fulfiller_id · supplier_ref
+             cost_currency · cost_amount · fx_rate · status · attempts · last_error</pre>
+          <div class="cost"><b>Cost now</b><span>One migration on an empty table.</span></div>
+        </div>
+      </article>
+
+      <article class="seam">
+        <div class="seam-hd"><span class="seam-n">Seam 2</span><h3>Money is four currencies, a rate, and a tax code</h3></div>
+        <div class="seam-body">
+          <p>You sell in AUD and buy in USD, so margin is unknowable unless the rate used that day sits on the order. GST is roughly one eleventh of an Australian retail sale, larger than the payment fee and the FX spread combined. Whether a particular sale is GST free is your accountant's answer rather than the code's, so a tax code sits on each order. And the customer may see and pay a different currency again, which has to be recorded or support cannot answer someone who writes in saying they paid EUR 18.40 against an order that reads AUD 29.00.</p>
+<pre><span class="k">orders</span> <span class="c">+</span> presentment_currency · presentment_amount <span class="c">(what they actually saw)</span>
+         tax_country · tax_evidence <span class="c">(two non contradictory signals, collected at sale)</span></pre>
+          <div class="cost"><b>Cost later</b><span>Adding the tax column after real sales means restating figures already reported. Location evidence cannot be collected retrospectively at all.</span></div>
+        </div>
+      </article>
+
+      <article class="seam">
+        <div class="seam-hd"><span class="seam-n">Seam 3</span><h3>A stored catalogue with SKUs that are yours</h3></div>
+        <div class="seam-body">
+          <p>This turns "suppliers are a registry, not a choice" from a sentence in the decisions file into something that exists. A SKU is yours and permanent. A source is theirs and swappable. Changing supplier for Japan becomes an update to one row, and last month's orders still point at whoever actually served them.</p>
+<pre><span class="k">catalog_items</span>    sku · category · title · tax_code · active
+                 attributes <span class="c">(category specific shape, as JSON)</span>
+
+<span class="k">catalog_prices</span>   sku · currency · sell_amount · is_default
+                 <span class="c">one row per pricing currency. today exactly one, in AUD.</span>
+
+<span class="k">catalog_sources</span>  sku · fulfiller_id · external_id · cost_amount · priority · enabled</pre>
+          <div class="cost"><b>Side effect</b><span>The plans page and checkout finally read the same number from the same place.</span></div>
+        </div>
+      </article>
+
+      <article class="seam">
+        <div class="seam-hd"><span class="seam-n">Seam 4</span><h3>Entitlements, so the dashboard lists things you have</h3></div>
+        <div class="seam-body">
+          <p>The eSIM table stays exactly where it is. It is the right home for ICCID, activation code and install state. An entitlement points at it. What this buys is a customer dashboard that lists <em>things you own</em> rather than <em>your eSIMs</em>, and it buys it while the list has only one kind of thing in it, which is the only moment the change is free.</p>
+          <div class="cost"><b>Also</b><span>The supplier interface gains a cancel method and declared capabilities, because whether an unactivated profile can be handed back is the largest single input to net margin.</span></div>
+        </div>
+      </article>
+
+      <article class="seam">
+        <div class="seam-hd"><span class="seam-n">Seam 5</span><h3>Idempotency, the one that costs real money if skipped</h3></div>
+        <div class="seam-body">
+          <p>There is none today. Stripe retries webhooks. Suppliers time out after doing the work. Users double click. Every one of those paths currently ends at "provision an eSIM", and two of them can run twice. The failure it prevents is provisioning two profiles against one payment, and you cannot get the second one back, because it is activated.</p>
+<pre><span class="k">idempotency_keys</span>  key <span class="c">('fulfil:' || order_item_id)</span> · scope · result · created_at</pre>
+          <div class="cost"><b>Related</b><span>This is why supplier idempotency support is question eight on the eSIM Access list.</span></div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <p class="eyebrow">04 · Kits</p>
+      <h2>A bundle is a join table, once seam one exists</h2>
+      <p class="lede">A kit is a catalogue item whose fulfilment fans out to more than one fulfiller. One SKU, one price, one tax line, two order items, two entitlements. Nothing else changes, because an order is already a list of items.</p>
+    </div>
+    <div class="callout" style="background:var(--surface);border-color:var(--line);border-left-color:var(--sand-deep)">
+      <h3>Do not build the bundle table yet</h3>
+      <p>Build seam one so that the bundle table is possible. That distinction is the entire discipline of this plan: create the shape, not the feature. Bundling is worth making trivial because it is the only defensible commercial position available, since competing on the price of a commodity data plan against better funded companies is a losing game. It is not worth building while there is nothing to bundle.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <p class="eyebrow">05 · Reach</p>
+      <h2>Currency is four decisions, and only one of them is expensive</h2>
+      <p class="lede">Nothing here locks Bilby to Australian customers. The word currency collapses four separate things, and keeping them apart is what makes serving a second market a tax question rather than a rebuild.</p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Decision</th><th>What it is</th><th>Who decides</th><th>Cost to change</th></tr></thead>
+        <tbody>
+          <tr><td>Settlement</td><td>What lands in the bank</td><td>Your bank and your entity</td><td>High</td></tr>
+          <tr><td>Pricing</td><td>The currency a price is set in</td><td>A person, per market</td><td>A price list somebody maintains</td></tr>
+          <tr><td>Presentment</td><td>What the customer sees and is charged</td><td>Detected at checkout</td><td>Near zero. A setting.</td></tr>
+          <tr><td>Market</td><td>Whose customers you serve</td><td>Tax registration and law</td><td><span class="flag">The real one</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="stack" style="margin-top:22px">
+      <div class="seam">
+        <div class="seam-hd"><span class="seam-n">Free</span><h3>Local currency costs you nothing, so it is not an architecture problem</h3></div>
+        <div class="seam-body">
+          <p>Stripe Adaptive Pricing presents and charges in the customer's local currency across more than 150 countries, with Australia supported as a merchant country. It picks the currency, converts at a rate guaranteed through settlement, and unlocks local payment methods that only work in local currency.</p>
+          <p>Per Stripe's own documentation, <strong>you pay nothing</strong>. The customer pays a 2 to 4 percent conversion fee built into the rate they are shown, and avoids it entirely by choosing to pay in your currency instead. Refunds go back at the original rate, so a refund costs you nothing extra either.</p>
+          <div class="cost"><b>Schema</b><span>The session still reports your currency. What the customer saw arrives in a presentment details hash, which is the source for the two new columns in seam two.</span></div>
+          <div class="cost"><b>Constraint</b><span>It does not work with Elements on the Payment Intents API. Phase 1 must use Checkout, or this option quietly closes.</span></div>
+        </div>
+      </div>
+
+      <div class="seam">
+        <div class="seam-hd"><span class="seam-n">Rule</span><h3>Detect once, pin it, and never re price</h3></div>
+        <div class="seam-body">
+          <p>Detect location at the start of the checkout session and hold it. A detected location must never change a price the customer has already been shown. Use detection for currency and language only, never to gate access, and never as tax evidence on its own, because one signal is not two.</p>
+        </div>
+      </div>
+
+      <div class="seam">
+        <div class="seam-hd"><span class="seam-n">Gate</span><h3>What actually stops you selling into a second country</h3></div>
+        <div class="seam-body">
+          <p>Not the currency and not the code. Tax registration and consumer law, country by country. The EU requires two pieces of non contradictory evidence of where a consumer is before you can treat the sale correctly, and the United Kingdom, New Zealand, Singapore and Japan each run their own scheme with their own thresholds and registration.</p>
+          <p>There is a quieter consequence too. Australian GST treatment is not the same for a sale to a non resident as for a sale to an Australian. That is exactly why the tax code sits on the order instead of being a constant, and it is a question for the accountant before the first sale abroad rather than after it.</p>
+          <div class="cost"><b>What is actually Australian about Bilby</b><span>The support hours, the trust story and the page copy. All marketing, none of it in the schema.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <p class="eyebrow">06 · Restraint</p>
+      <h2>Written down so it can be pointed at later</h2>
+    </div>
+    <div class="nogoals">
+      <div class="nogoal"><span class="x">not now</span><h4>A second category</h4><p>Until eSIM has paying customers, a signed supplier, and a refund process that has survived a real refund.</p></div>
+      <div class="nogoal"><span class="x">not now</span><h4>A cart</h4><p>One item per order until somebody actually asks for two.</p></div>
+      <div class="nogoal"><span class="x">not yet</span><h4>A second pricing currency</h4><p>One pricing and one settlement currency, both AUD, until a second market is tax registered. Showing local currency is not covered by this and can be switched on whenever it helps.</p></div>
+      <div class="nogoal"><span class="x">not now</span><h4>Microservices</h4><p>One Next.js application, one Postgres. The complexity budget belongs to fulfilment.</p></div>
+      <div class="nogoal"><span class="x">not now</span><h4>Automatic supplier failover</h4><p>A person flips a row in the console. Automatic failover on a half working supplier provisions half a catalogue at the wrong rate.</p></div>
+      <div class="nogoal"><span class="x">never</span><h4>A wallet or stored value</h4><p>Issuing stored value is a regulated activity in Australia. Discounts and refunds only.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <p class="eyebrow">07 · Sequence</p>
+      <h2>What happens in what order</h2>
+      <p class="lede">The numbering is real. Each phase depends on the one before it, and only the first one is urgent.</p>
+    </div>
+    <div class="phases">
+      <div class="phase now">
+        <div class="phase-n">Phase 0 · now</div>
+        <div class="phase-body"><h3>The five seams</h3><p>No new features, nothing a customer can see, no second product. Two to three working sessions. Happens before supplier credentials arrive, so the adapter has somewhere correct to land.</p></div>
+      </div>
+      <div class="phase">
+        <div class="phase-n">Phase 1</div>
+        <div class="phase-body"><h3>eSIM end to end</h3><p>Supplier adapter against a sandbox, catalogue seeded by hand for the launch destinations, Stripe Checkout rather than Elements so local currency stays available later, webhook driven fulfilment, credential delivered. Done means a real card charging a real dollar and a real profile installing on a real handset.</p></div>
+      </div>
+      <div class="phase">
+        <div class="phase-n">Phase 2</div>
+        <div class="phase-body"><h3>Operations</h3><p>Refund and cancel in the console, failed order retry, usage view, and a margin calculator that takes the rate card, the Stripe fee, an FX buffer, GST and a refund reserve. This phase decides whether the business survives contact with customers.</p></div>
+      </div>
+      <div class="phase">
+        <div class="phase-n">Phase 3</div>
+        <div class="phase-body"><h3>The Android app</h3><p>Against the API origin already frozen into the binary. The R8 crash bisect is still open.</p></div>
+      </div>
+      <div class="phase">
+        <div class="phase-n">Phase 4</div>
+        <div class="phase-body"><h3>A second supplier</h3><p>One more row in the sources table. This phase exists to prove the registry works while the stakes are low, not because a second supplier is needed.</p></div>
+      </div>
+      <div class="phase">
+        <div class="phase-n">Phase 5 · gated</div>
+        <div class="phase-body"><h3>A second category, and only with revenue</h3><p>Data top ups first, on the reasoning already recorded: same customer, no new regulator.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <p class="eyebrow">08 · Proof</p>
+      <h2>An architecture claim that cannot fail is worth nothing</h2>
+      <p class="lede">So here is one that can. Adding a second category must touch exactly four kinds of file: one fulfiller adapter, one attributes shape, one detail panel, one console tab. If it touches commerce, tax, authentication, the order pipeline or the entitlement table, the abstraction failed.</p>
+    </div>
+
+    <div class="verdict">
+      <div class="verdict-row"><span>A new fulfiller adapter</span><span class="v">expected</span></div>
+      <div class="verdict-row"><span>An attributes shape: operator, country, face value</span><span class="v">expected</span></div>
+      <div class="verdict-row"><span>A detail panel showing the receipt and confirmation code</span><span class="v">expected</span></div>
+      <div class="verdict-row"><span>A console tab</span><span class="v">expected</span></div>
+      <div class="verdict-row"><span>Commerce, tax, authentication</span><span class="v no">untouched</span></div>
+      <div class="verdict-row"><span>The entitlement table</span><span class="v no">untouched</span></div>
+      <div class="verdict-row"><span>Carrying a customer supplied value from checkout to the fulfiller</span><span class="v fail">failed</span></div>
+    </div>
+
+    <div class="callout">
+      <h3>The test found one thing, which is why it exists</h3>
+      <p>A data top up needs something from the customer at purchase time: the phone number being topped up. An eSIM needs nothing. Nothing in the model carried a customer supplied value from the checkout form through to the fulfiller, so a second category would have had to bolt one on, and would most likely have bolted it onto the order.</p>
+      <p>The fix is two columns, added in Phase 0 while they are still free: an input schema on the catalogue item describing what to ask for, and an input record on the order item holding what the customer actually gave. Frozen on the item, because "you sent it to the wrong number" is a support conversation that needs evidence.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>Bilby · telecommunications division of Nextwave.au</span>
+    <span>bilbymobile.com</span>
+    <span>Full detail in PLATFORM.md</span>
+  </footer>
+
+</div>

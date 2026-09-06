@@ -1,105 +1,154 @@
 import Link from "next/link";
-import { paidSupplier } from "@/lib/suppliers";
-import { brand } from "@/lib/brand";
+
+import { currentUser } from "@/lib/session";
+import { getItem, priceOf } from "@/lib/platform";
+import { paymentsConfigured } from "@/lib/stripe";
+import { GST_DIVISOR } from "@/lib/money";
+import { BuyButton } from "./buy";
 
 export const dynamic = "force-dynamic";
 
-const TARGET_MARGIN = Number(process.env.RETAIL_TARGET_MARGIN ?? "0.45");
-
 /**
- * Checkout — deliberately still a stub, and honest about it.
+ * The last page before the money.
  *
- * The Android app links here rather than taking payment in-app. That structure
- * is the point: Google Play's Payments policy exempts purchases consumed
- * outside a Play-distributed app, and keeping the transaction on the web is
- * what makes that argument defensible rather than convenient.
+ * Everything here is read from the catalogue on the server. No price, no title
+ * and no SKU detail comes from the query string except the SKU itself, and that
+ * is looked up rather than trusted. A checkout page that renders a price handed
+ * to it in a URL is a checkout page that can be told what to charge.
  *
- * What is missing is Stripe. Wiring it is roughly:
- *
- *   1. `npm i stripe @stripe/stripe-js`
- *   2. POST /api/checkout → stripe.checkout.sessions.create({
- *        mode: "payment", line_items: [...], metadata: { planId, userId },
- *        success_url, cancel_url })
- *   3. POST /api/webhooks/stripe → on `checkout.session.completed`, verify the
- *      signature with the webhook secret, then call paidSupplier().order()
- *      and insert into `esims`.
- *
- * Order matters in step 3: provision only after the webhook, never after the
- * browser redirect. A user who closes the tab between payment and redirect has
- * still paid, and a redirect is not proof of anything — it is a URL they can
- * type themselves.
+ * The card form is not here. Pressing the button creates the order, asks Stripe
+ * for a hosted session and sends the browser to Stripe's own domain. No card
+ * number ever reaches this application, which is what keeps the PCI obligation
+ * at the smallest tier rather than the one with an auditor.
  */
 export default async function CheckoutPage({
   searchParams,
 }: {
-  searchParams: Promise<{ plan?: string }>;
+  searchParams: Promise<{ sku?: string; cancelled?: string }>;
 }) {
-  const { plan: planId } = await searchParams;
+  const { sku, cancelled } = await searchParams;
+  await currentUser();
 
-  let planName: string | null = null;
-  let retail: number | null = null;
+  const item = sku ? await getItem(sku) : null;
+  const price = item?.active ? await priceOf(item.sku, "AUD") : null;
+  const live = paymentsConfigured();
 
-  if (planId) {
-    try {
-      const plans = await paidSupplier().listPlans();
-      const p = plans.find((x) => x.planId === planId);
-      if (p) {
-        planName = p.name;
-        retail =
-          Math.round(
-            Math.max(p.wholesaleUsd / (1 - TARGET_MARGIN), p.minSellUsd ?? 0) * 100
-          ) / 100;
-      }
-    } catch {
-      // Supplier down — still render the page rather than a 500. The user
-      // came here from the app and a stack trace is a lost customer.
-    }
+  if (!item || !item.active || price === null) {
+    return (
+      <>
+        <section className="hero">
+          <h1>Checkout</h1>
+          <p>
+            {sku
+              ? "That plan is not on sale."
+              : "Pick a plan first and this page will have something to charge for."}
+          </p>
+        </section>
+        <div className="card">
+          <Link className="btn" href="/plans">
+            See plans
+          </Link>
+        </div>
+      </>
+    );
   }
+
+  const gst = Math.round((price / GST_DIVISOR) * 100) / 100;
+  const mb = Number(item.attributes.dataMb ?? 0);
+  const days = Number(item.attributes.days ?? 0);
+  const daily = item.attributes.daily === true;
+  const routing = String(item.attributes.routing ?? "");
 
   return (
     <>
       <section className="hero">
         <h1>Checkout</h1>
-        <p>
-          {planName
-            ? `You picked ${planName}.`
-            : "Pick a plan from the app or the plans page to get started."}
-        </p>
+        <p>One payment, no account needed, no subscription.</p>
       </section>
 
+      {cancelled ? (
+        <div className="card">
+          <div className="note">
+            You closed the payment page, so nothing was charged. Your plan is
+            still here if you want it.
+          </div>
+        </div>
+      ) : null}
+
       <div className="card">
-        <h2>Payments aren&apos;t live yet</h2>
-        <p className="sub">
-          {retail !== null
-            ? `This plan will be $${retail.toFixed(2)}. `
-            : ""}
-          Card payments are the last thing standing between {brand.name} and its
-          first dollar, and they are not built yet. Nothing has been charged.
-        </p>
-        <div className="note">
-          If you got here from the app: the free tier works today. Watch ads,
-          earn data, load it onto your eSIM. Paid day passes are coming.
+        <h2>{item.title}</h2>
+        {item.subtitle ? <p className="sub">{item.subtitle}</p> : null}
+
+        <table>
+          <tbody>
+            <tr>
+              <td>Data</td>
+              <td className="num">
+                {mb >= 1024 ? `${(mb / 1024).toFixed(mb % 1024 ? 1 : 0)} GB` : `${mb} MB`}
+                {daily ? " a day" : ""}
+              </td>
+            </tr>
+            <tr>
+              <td>Valid for</td>
+              <td className="num">{daily ? "Per day" : `${days} days`}</td>
+            </tr>
+            <tr>
+              <td>Price</td>
+              <td className="num">
+                <strong>${price.toFixed(2)} AUD</strong>
+              </td>
+            </tr>
+            <tr>
+              <td style={{ color: "var(--muted)" }}>Includes GST</td>
+              <td className="num" style={{ color: "var(--muted)" }}>
+                ${gst.toFixed(2)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {routing === "home" ? (
+        <div className="card">
+          <div className="note">
+            <strong>Read this before you pay.</strong> This plan connects through
+            an exit point outside the country you are visiting. Most things work
+            normally. Some banking apps, some streaming services and some
+            government sites check where your connection appears to come from,
+            and those may refuse to work. If you need your bank to work while you
+            are away, this is not the plan to buy.
+          </div>
         </div>
-        <div className="row" style={{ marginTop: 18 }}>
-          <Link className="btn" href="/">
-            Back to earning
-          </Link>
-          <Link className="btn ghost" href="/plans">
-            See all plans
-          </Link>
-        </div>
+      ) : null}
+
+      <div className="card">
+        {live ? (
+          <>
+            <BuyButton sku={item.sku} price={price} />
+            <p className="sub" style={{ marginTop: 14, marginBottom: 0 }}>
+              You will be taken to Stripe to pay. We never see your card number.
+              If you are outside Australia, Stripe will show you the price in
+              your own currency at checkout.
+            </p>
+          </>
+        ) : (
+          <>
+            <h2>Payments are not connected yet</h2>
+            <p className="sub" style={{ margin: 0 }}>
+              This deployment has no payment key set, so nothing can be charged.
+              Nothing has been charged.
+            </p>
+          </>
+        )}
       </div>
 
       <div className="card">
-        <h2>For whoever wires up Stripe</h2>
-        <p className="sub" style={{ marginBottom: 12 }}>
-          The one rule that matters: <strong>provision the eSIM on the webhook,
-          never on the success redirect.</strong> A redirect URL is something a
-          user can type; a signed <code className="inline">checkout.session.completed</code>{" "}
-          event is proof they paid.
-        </p>
-        <p className="sub" style={{ margin: 0 }}>
-          Full notes are in the comment at the top of this file.
+        <h2>What happens next</h2>
+        <p className="sub" style={{ marginBottom: 0 }}>
+          The plan is bought from the network the moment your payment clears, and
+          it appears on your account with install instructions. We email you a
+          link rather than the install code itself, because an install code works
+          once and email gets forwarded. Install it before you fly, on wifi.
         </p>
       </div>
     </>

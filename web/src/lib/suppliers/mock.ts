@@ -6,16 +6,15 @@ import {
   Supplier,
   UsageSnapshot,
 } from "./types";
-import { costPerMb, regionForCountry } from "../pricing";
 
 /**
  * Mock supplier.
  *
- * Exists so the entire product — signup, ads, ledger, redemption, install
- * page, QR, usage polling — runs end to end today with zero credentials and
- * zero dollars in anybody's wallet. That matters more than it sounds: it lets
- * you build, demo and even soft-launch a waitlist before you have signed a
- * single supply agreement, which is exactly the order you want to do it in.
+ * Exists so the entire product — checkout, fulfilment, delivery, install page,
+ * QR, usage polling — runs end to end today with zero credentials and zero
+ * dollars in anybody's wallet. That matters more than it sounds: it lets you
+ * build, demo and even soft launch before you have signed a single supply
+ * agreement, which is exactly the order you want to do it in.
  *
  * It deliberately simulates the two failure modes that will actually hurt you
  * in production and that no vendor sandbox reproduces:
@@ -28,8 +27,20 @@ import { costPerMb, regionForCountry } from "../pricing";
  * handset, which is correct — nothing here should ever burn a real profile.
  */
 
-const MICRO_PLANS: CatalogPlan[] = [];
-const REGULAR_PLANS: CatalogPlan[] = [];
+const PLANS: CatalogPlan[] = [];
+
+/**
+ * Indicative wholesale, US dollars per gigabyte, by destination.
+ *
+ * These are made up and they are meant to look made up. The real numbers live
+ * in the catalogue tables, seeded from the supplier rate card, and nothing in
+ * production reads this file. It exists so a fresh clone renders a plausible
+ * shop with no credentials anywhere.
+ */
+const USD_PER_GB: Record<string, number> = {
+  JP: 1.6, TH: 1.1, ID: 1.2, US: 2.4, GB: 1.8,
+  IT: 1.7, VN: 1.0, SG: 1.3, AE: 3.2, NZ: 2.1,
+};
 
 const DESTINATIONS: Array<{ iso: string; label: string }> = [
   { iso: "JP", label: "Japan" },
@@ -45,32 +56,17 @@ const DESTINATIONS: Array<{ iso: string; label: string }> = [
 ];
 
 for (const d of DESTINATIONS) {
-  const region = regionForCountry(d.iso);
-  const perMb = costPerMb(region, "starter");
+  const perGb = USD_PER_GB[d.iso] ?? 2;
 
-  // Micro top-ups: the unit the ad-funded free tier actually consumes.
-  for (const mb of [50, 100, 250]) {
-    MICRO_PLANS.push({
-      planId: `mock-micro-${d.iso}-${mb}`,
-      name: `${d.label} ${mb} MB · 7 days`,
-      countries: [d.iso],
-      dataMb: mb,
-      validityDays: 7,
-      wholesaleUsd: round(mb * perMb * 1.15, 4), // micro units carry a premium
-      topUpSupported: true,
-    });
-  }
-
-  // Retail bundles: what you actually sell for money.
   for (const [gb, days] of [[1, 7], [3, 15], [5, 30], [10, 30]] as const) {
-    REGULAR_PLANS.push({
+    PLANS.push({
       planId: `mock-${d.iso}-${gb}gb-${days}d`,
       name: `${d.label} ${gb} GB · ${days} days`,
       countries: [d.iso],
       dataMb: gb * 1024,
       validityDays: days,
-      wholesaleUsd: round(gb * 1024 * perMb, 2),
-      minSellUsd: round(gb * 1024 * perMb * 2.2, 2),
+      wholesaleUsd: round(gb * perGb, 2),
+      minSellUsd: round(gb * perGb * 2.2, 2),
       topUpSupported: true,
     });
   }
@@ -87,14 +83,14 @@ export class MockSupplier implements Supplier {
   private issued = new Map<string, UsageSnapshot>();
 
   async listPlans(opts?: { country?: string }): Promise<CatalogPlan[]> {
-    const all = [...MICRO_PLANS, ...REGULAR_PLANS];
+    const all = PLANS;
     if (!opts?.country) return all;
     const iso = opts.country.toUpperCase();
     return all.filter((p) => p.countries.includes(iso));
   }
 
   async order(planId: string, _ref: string): Promise<OrderResult> {
-    const plan = [...MICRO_PLANS, ...REGULAR_PLANS].find((p) => p.planId === planId);
+    const plan = PLANS.find((p) => p.planId === planId);
     if (!plan) throw new Error(`Unknown plan ${planId}`);
 
     if (this.walletUsd < plan.wholesaleUsd) {
@@ -133,7 +129,7 @@ export class MockSupplier implements Supplier {
   }
 
   async topUp(iccid: string, planId: string, _ref: string) {
-    const plan = [...MICRO_PLANS, ...REGULAR_PLANS].find((p) => p.planId === planId);
+    const plan = PLANS.find((p) => p.planId === planId);
     if (!plan) throw new Error(`Unknown plan ${planId}`);
     const snap = this.issued.get(iccid);
     if (!snap) throw new Error(`Unknown ICCID ${iccid}`);

@@ -257,7 +257,7 @@ $gradle = Get-ChildItem "$root\android\app" -Filter "build.gradle*" | Select-Obj
 $g = Get-Content $gradle.FullName -Raw
 if ($g -notmatch "key\.properties") {
     Warn "build.gradle has no signingConfig block."
-    Warn "Add the release signingConfig from android-config/build-gradle-notes.md,"
+    Warn "Create android/key.properties; app/build.gradle.kts already reads it,"
     Warn "or the bundle is signed with the debug key and Play will reject it."
 } else {
     Ok "build.gradle reads key.properties"

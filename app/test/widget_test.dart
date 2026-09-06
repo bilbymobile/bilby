@@ -1,12 +1,11 @@
-// Replaces the stub `flutter create` generates, which referenced a `MyApp`
-// class this project does not have — that was the last analyzer error.
+// Tests against the seam that matters: `ApiClient` takes an injectable
+// `http.Client`, so the whole app can be driven from canned responses with no
+// backend, no network and no emulator.
 //
-// This is a real test rather than a smoke test, and it exercises the seam that
-// matters most: `ApiClient` takes an injectable `http.Client`, so the whole app
-// can be driven against canned responses with no backend, no network and no
-// emulator. If you add one habit to this project, make it this one — the
-// pricing and reward logic is where the money is, and it is all reachable from
-// here.
+// These replaced the earn screen tests when the free tier was dropped. The old
+// ones were good tests of a product that no longer exists; several of them
+// pinned user facing copy about ad rewards, which is exactly the copy that had
+// to go.
 
 import 'dart:convert';
 
@@ -17,49 +16,33 @@ import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:bilby/api/client.dart';
-import 'package:bilby/screens/earn_screen.dart';
-import 'package:bilby/services/ads_service.dart';
+import 'package:bilby/screens/plans_screen.dart';
 
-/// A `/api/me` payload shaped exactly like the real endpoint returns.
-Map<String, dynamic> meJson({
-  int balanceMb = 24,
-  int mbPerAd = 8,
-  bool freeTier = true,
-  bool regionSupported = true,
-  bool budgetExhausted = false,
-  String destination = 'GB',
-  String destinationName = 'United Kingdom',
+/// One plan, shaped exactly as `/api/catalog` returns it.
+Map<String, dynamic> plan({
+  String planId = 'jp-5gb-15d',
+  String name = 'Japan 5 GB',
+  int dataMb = 5120,
+  int validityDays = 15,
+  double retailUsd = 18.0,
+  double? perGbUsd = 3.6,
 }) =>
     {
-      'ssvUserId': 'test-user.signature',
-      'country': 'GB',
-      'homeCountry': 'AU',
-      'destination': destination,
-      'destinationName': destinationName,
-      'needsDestination': false,
-      'atHome': false,
-      'atHomeMbPerAd': 9,
-      'onArrivalMbPerAd': mbPerAd,
-      'bankBeforeYouFly': false,
-      'regionSupported': regionSupported,
-      'balanceMb': balanceMb,
-      'mbPerAd': mbPerAd,
-      'naiveMbPerAd': mbPerAd,
-      'adsWatchedToday': 3,
-      'dailyAdCap': 10,
-      'adsRemainingToday': 7,
-      'redemptionThresholdMb': 50,
-      'canRedeem': balanceMb >= 50,
-      'freeTierAvailable': freeTier,
-      'budgetExhausted': budgetExhausted,
-      'esims': <dynamic>[],
+      'planId': planId,
+      'name': name,
+      'countries': ['JP'],
+      'dataMb': dataMb,
+      'validityDays': validityDays,
+      'retailUsd': retailUsd,
+      'perGbUsd': perGbUsd,
     };
 
-ApiClient clientReturning(Map<String, dynamic> payload) => ApiClient(
+ApiClient clientReturning(Map<String, dynamic> payload, {int status = 200}) =>
+    ApiClient(
       baseUrl: 'https://test.invalid',
       inner: MockClient((req) async => http.Response(
             jsonEncode(payload),
-            200,
+            status,
             headers: {'content-type': 'application/json'},
           )),
     );
@@ -71,120 +54,84 @@ void main() {
 
   // ApiClient reads its session cookie from SharedPreferences BEFORE it touches
   // the injected http client, so without this every test below would get a
-  // MissingPluginException, fall into the error branch, and render the
-  // full-screen ErrorState instead of the earn screen — quietly asserting
-  // nothing. Per-test, because setMockInitialValues also resets the cached
-  // instance.
+  // MissingPluginException, fall into the error branch, and render the full
+  // screen ErrorState instead of the plans list, quietly asserting nothing.
+  // Per test, because setMockInitialValues also resets the cached instance.
   setUp(() => SharedPreferences.setMockInitialValues(<String, Object>{}));
-
-  // AdsService.init() fails soft when the platform channel is absent, which is
-  // exactly the case in a widget test — so no mocking of the ads SDK is needed.
-  final ads = AdsService(rewardedAdUnitId: AdsService.testRewardedUnit);
 
   testWidgets('shows a spinner before the first response lands',
       (tester) async {
     await tester.pumpWidget(
-      wrap(EarnScreen(api: clientReturning(meJson()), ads: ads)),
+      wrap(PlansScreen(api: clientReturning({'plans': [plan()]}))),
     );
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
-  testWidgets('renders the balance and the per-ad grant', (tester) async {
+  testWidgets('renders a plan with its size, validity and price',
+      (tester) async {
     await tester.pumpWidget(
-      wrap(EarnScreen(api: clientReturning(meJson()), ads: ads)),
+      wrap(PlansScreen(api: clientReturning({'plans': [plan()]}))),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('24'), findsOneWidget);
-    expect(find.text('MB'), findsOneWidget);
-    // The grant rate is destination-dependent and shown up front on purpose.
-    // Note it names the DESTINATION, not the current location — conflating
-    // those is what told pre-departure users their country was unsupported.
-    expect(find.textContaining('8 MB per ad'), findsOneWidget);
-    expect(find.textContaining('United Kingdom'), findsWidgets);
+    expect(find.text('5 GB'), findsOneWidget);
+    expect(find.text('15 days'), findsOneWidget);
+    expect(find.text('\$18.00'), findsOneWidget);
   });
 
-  testWidgets('tells the user plainly when the destination is not served',
+  testWidgets('hides micro packets, which are not retail products',
       (tester) async {
+    // A 50 MB packet beside a 5 GB plan makes the catalogue look broken. The
+    // filter lives in ApiClient.catalog, so it is worth a test: it is the kind
+    // of line that gets deleted during a refactor because it looks arbitrary.
     await tester.pumpWidget(
-      wrap(EarnScreen(
-        api: clientReturning(
-            meJson(freeTier: false, regionSupported: false)),
-        ads: ads,
+      wrap(PlansScreen(
+        api: clientReturning({
+          'plans': [
+            plan(),
+            plan(planId: 'jp-50mb', name: 'Japan 50 MB', dataMb: 50),
+          ],
+        }),
       )),
     );
     await tester.pumpAndSettle();
 
-    // The honest-refusal copy is a deliberate product decision, not filler.
-    // If someone softens it into "temporarily unavailable", this fails.
-    expect(
-        find.textContaining('not offered for United Kingdom'), findsOneWidget);
+    expect(find.text('5 GB'), findsOneWidget);
+    expect(find.text('50 MB'), findsNothing);
   });
 
-  testWidgets('never leaves the earn button dead without saying why',
+  testWidgets('says so plainly when a destination has no plans yet',
       (tester) async {
-    // The gap this closes: freeTierAvailable gated the button, but every
-    // explanatory branch keyed off other fields — so an ordinary combination
-    // produced an inert button reading "Watch ad · earn 8 MB" and no reason
-    // anywhere on screen.
     await tester.pumpWidget(
-      wrap(EarnScreen(
-        api: clientReturning(meJson(freeTier: false)),
-        ads: ads,
-      )),
+      wrap(PlansScreen(api: clientReturning({'plans': <dynamic>[]}))),
     );
     await tester.pumpAndSettle();
 
+    expect(find.textContaining('No plans for this destination'), findsOneWidget);
+  });
+
+  testWidgets('never advertises a free tier', (tester) async {
+    // The free tier is dropped. This pins that: the word must not reappear in
+    // this screen's copy through a careless revert.
+    await tester.pumpWidget(
+      wrap(PlansScreen(api: clientReturning({'plans': [plan()]}))),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('free tier'), findsNothing);
     expect(find.textContaining('Watch ad'), findsNothing);
-    expect(find.text('Free data unavailable'), findsOneWidget);
-    expect(find.textContaining('Earning is paused'), findsOneWidget);
   });
 
-  testWidgets('a spent daily pool is never reported as an unsupported region',
-      (tester) async {
-    // These were one boolean once. When the global cap tripped, an
-    // honesty-branded app told every user in every country that their
-    // destination was unsupported.
+  testWidgets('surfaces a backend failure instead of hanging', (tester) async {
     await tester.pumpWidget(
-      wrap(EarnScreen(
-        api: clientReturning(meJson(freeTier: false, budgetExhausted: true)),
-        ads: ads,
+      wrap(PlansScreen(
+        api: clientReturning({'error': 'nope'}, status: 500),
       )),
     );
     await tester.pumpAndSettle();
 
-    // Matched against the exact string in earn_screen.dart. It read
-    // "free-data" here and "free data" there, so this assertion failed on a
-    // build that was working correctly. A test that pins user facing copy is
-    // worth keeping, but only if it is pinned to the copy that ships.
-    expect(find.textContaining("Today's free data pool is used up"),
-        findsOneWidget);
-    expect(find.textContaining('not offered for'), findsNothing);
-  });
-
-  testWidgets('shows how far off redemption the user is', (tester) async {
-    await tester.pumpWidget(
-      wrap(EarnScreen(api: clientReturning(meJson(balanceMb: 24)), ads: ads)),
-    );
-    await tester.pumpAndSettle();
-
-    // 50 threshold - 24 balance = 26 to go.
-    expect(find.textContaining('26 MB to go'), findsOneWidget);
-  });
-
-  testWidgets('surfaces a network failure instead of hanging', (tester) async {
-    final broken = ApiClient(
-      baseUrl: 'https://test.invalid',
-      inner: MockClient((_) async => http.Response('nope', 500)),
-    );
-
-    await tester.pumpWidget(wrap(EarnScreen(api: broken, ads: ads)));
-    await tester.pumpAndSettle();
-
-    // The full-screen ErrorState, not the inline status line: with no `Me` at
-    // all there is no list to render a status line into. This is the airport
-    // captive-portal case, and the only requirement is that it is escapable.
-    expect(find.textContaining("Can't reach us right now"), findsOneWidget);
+    // The full screen ErrorState, and the only real requirement is that it is
+    // escapable. This is the airport captive portal case.
     expect(find.text('Try again'), findsOneWidget);
   });
 }

@@ -1,195 +1,330 @@
-# Deploy — what's ready, what isn't, and the exact order
+# Going to production
 
-## The honest status
+The order below is the order. Each step makes the next one possible, and doing
+them out of order mostly means doing them twice.
 
-| | Ready? | |
+This replaces a document that described an ad funded free tier and an AdMob
+sequencing constraint. Both are gone. Nothing in this file mentions ads.
+
+---
+
+## 0 · Two things to start today because they take weeks
+
+Neither is code and neither is in your hands, so they run in parallel with
+everything below. Start them before you read further.
+
+**Stripe.** Apply at dashboard.stripe.com. Travel and telecommunications are
+both elevated risk categories, so underwriting takes real time and can be
+declined. Applying now means a decline arrives while there is still time to
+arrange something else, rather than the week you planned to launch.
+
+**Carriage service provider registration.** Under the 2025 amendments a
+wholesale provider is prohibited from supplying an unregistered CSP. This is not
+a launch formality that sits at the end. It sits in front of the supplier
+agreement, which sits in front of selling anything at all.
+
+---
+
+## 1 · The database
+
+Supabase, a new project, region **Sydney, `ap-southeast-2`**.
+
+The region matters more than it looks: a Free plan project cannot be moved
+between regions, so getting it wrong means recreating the project. That is free
+today and a migration once there is data in it.
+
+Take the connection string from **Settings, Database, Connection string,
+Transaction pooler**. Port **6543**, not 5432.
+
+```
+postgresql://postgres.<ref>:<password>@<region>.pooler.supabase.com:6543/postgres
+```
+
+The direct connection on 5432 will fail under a serverless deployment, because
+each instance opens its own pool and there are more instances than that port
+will accept. The failure looks like the database being down.
+
+### Percent encode the password, always
+
+If the password contains `@ : / ? # % [ ]` the string has to be encoded, and the
+reason to do it even when you think you have got away with it is that different
+tools disagree about the same string. Tested against a real Postgres with a
+password of `@abcdefgh`:
+
+| Parser | Raw `:@abcdefgh@host` | Encoded `:%40abcdefgh@host` |
 |---|---|---|
-| **Web app** | **Yes, today** | Builds clean, deploys to Vercel free tier in one command. |
-| **Android project** | **Configured, not compiled** | Capacitor project generated, AdMob wired, targets API 36. Needs Android Studio on your machine — no Android SDK in this environment. |
-| **Brand assets** | **Yes** | Full icon set, palette, store listing copy. Wordmark + screenshots still manual. |
-| **Ad revenue** | **Blocked until you're live on Play** | See the sequencing constraint below. It's the thing that reorders your plan. |
-| **Payments** | **No** | Stripe checkout is not built. `/plans` lists and prices; there is no buy button. |
-| **Legal pages** | **No** | Privacy policy and terms are required before Play submission. |
-| **Accounts / email** | **No** | Anonymous cookie sessions only. Fine to launch; you'll want recovery before you sell anything. |
+| `pg`, the driver this app uses | connects | connects |
+| the WHATWG URL parser | parses | parses |
+| **`psql` and anything else on libpq** | **fails** | connects |
+
+`pg` splits the authority on the LAST `@` and libpq splits it on the FIRST, so
+an unencoded password produces an application that works and a `psql` session
+that reports `could not translate host name "abcdefgh@host"`. That is the worst
+shape a bug can take: it works until the moment you are trying to debug
+something else.
+
+The characters that matter:
+
+```
+@ → %40    : → %3A    / → %2F    ? → %3F
+# → %23    % → %25    [ → %5B    ] → %5D
+```
+
+The better answer, while the project is new and empty, is to reset the database
+password to letters and digits only. It costs a minute now and removes the whole
+class of problem permanently.
+
+Nothing else needs doing in Supabase. No SQL to run, no extensions to enable,
+no row level security to configure, and you will never need the anon key or the
+service role key: this application connects to Postgres directly as a normal
+client rather than through PostgREST.
+
+The schema builds itself on the first request. `migrate()` runs once per process
+and every statement in it is idempotent, which matters more than it sounds under
+serverless: a cold start storm means a dozen instances run it at the same
+moment against the same database.
+
+That path is tested rather than assumed. `scripts/firstrun.test.ts` runs the
+migration against a genuinely empty database and checks all seventeen tables,
+the four partial indexes carrying real invariants, that no extension is
+required, and that a second run changes nothing. Every other check in this
+repository runs against a database that has been migrated before, which hides
+the one failure that matters here: a statement that only works because an older
+version of the schema was already there.
+
+### If an older build reached the database first
+
+It will heal itself. The build that was live before this one creates an older
+shape: a `credit_ledger` table, a `daily_budget` table, `esims.is_free_tier`, and
+`orders.plan_id` and `orders.kind` as NOT NULL columns. That last pair is the
+dangerous one, because the current code inserts an order without them and every
+checkout would fail.
+
+The current migration drops all of it. Verified by building the old schema on an
+empty database, running the new migration over it, and then running the full
+first run check against the result: legacy tables gone, legacy columns gone,
+`rate_limits` and `error_events` created, 23 checks passing. Nothing to do by
+hand.
+
+**Leave "Enforce SSL on incoming connections" alone until the first deploy
+works.** The application already connects over TLS. Turning it on at the same
+time as everything else just means a connection failure with two possible
+causes instead of one.
 
 ---
 
-## The sequencing constraint that changes everything
+## 2 · Two secrets, generated by you
 
-> **AdMob will not serve ads on an app that isn't published to a store.**
-
-Apps stay in "Getting ready" until the account has payment details, and cannot
-be reviewed until they're linked to a live store listing. Approval then takes
-2–3 days, during which serving is limited.
-
-Your entire free tier is funded by ad revenue. So **you cannot earn a cent until
-the app is live on Play** — which makes the affiliate bridge in the master plan
-load-bearing rather than optional.
-
-**Good news:** you have an organisation Play account with a D-U-N-S number,
-which exempts you from the 12-testers-for-14-days requirement that applies to
-personal accounts created after 13 November 2023. That saves roughly three
-weeks. Upload → review → production is days, not weeks.
-
-**Realistic first-ad-dollar timeline:**
-
-```
-Day 0    Deploy web, submit Play listing
-Day 2-5  Play review → production
-Day 5    Link app in AdMob, submit for review
-Day 7-8  AdMob approved, limited serving begins
-Day 8    Publish app-ads.txt → wait 24h for crawl
-Day 9+   Full serving. First revenue.
-Day ~40  First AdMob payout lands (net-30 after month end)
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 ```
 
-**You fund roughly 40 days of free-tier data before a single ad dollar arrives.**
-That is exactly why `DAILY_BUDGET_USD` defaults to $5, and why you should not
-raise it until money is actually in the account.
+Run it twice. The first value is `SESSION_SECRET`, the second is
+`ADMIN_SESSION_SECRET`. **They must be different.** A shared key would let a
+customer session be replayed against the staff console, which is the exact thing
+the separate admin domain exists to prevent.
+
+`SESSION_SECRET` in particular cannot be rotated casually once there are
+customers: it signs the cookie that identifies an anonymous buyer, so changing
+it orphans everybody's order history.
 
 ---
 
-## 1 · Web (30 minutes)
+## 3 · Deploy
+
+Push the repository. Vercel is already connected to
+`github.com/bilbymobile/bilby` and builds `main`.
+
+Set these in **Vercel, Settings, Environment Variables**, for Production:
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | the pooler string from step 1 |
+| `SESSION_SECRET` | first value from step 2 |
+| `ADMIN_SESSION_SECRET` | second value from step 2 |
+| `OWNER_EMAIL` | a mailbox only you control |
+
+`OWNER_EMAIL` creates the first staff account the first time somebody asks for a
+sign in link at that address. Treat it as a control, not a label: it decides who
+owns the console.
+
+That is the minimum. With exactly those four the site serves, the console signs
+you in, and the shop renders an empty catalogue. Nothing can be charged, which
+is correct: the buy button says so in plain words rather than throwing.
+
+Everything else in `.env.example` is optional and each one is off by default,
+including Stripe. Add them as they become real.
+
+---
+
+## 4 · Hostnames
+
+Five names, one deployment. The apex is the brand and the canonical; the product
+lives on `app.`; the staff console lives on a **different registrable domain** so
+that a cross site scripting bug in the customer app has no path to a staff
+session.
+
+Add all five names as domains in the Vercel project **first**, then copy the
+records it gives you into GoDaddy. Do it in that order, because the CNAME value
+is no longer a shared hostname: Vercel now issues a per project one that looks
+like `d1d4fc829fe7bc7c.vercel-dns-017.com`, and the old generic
+`cname.vercel-dns.com` that half the internet still repeats will not work.
+
+The shape you are aiming for, with the CNAME value being whatever Vercel hands
+you rather than what is written here:
+
+| Domain | Type | Name | Value |
+|---|---|---|---|
+| bilbymobile.com | A | `@` | `76.76.21.21` |
+| bilbymobile.com | CNAME | `www` | *from Vercel* |
+| bilbymobile.com | CNAME | `app` | *from Vercel* |
+| bilbymobile.com | CNAME | `api` | *from Vercel* |
+| nextwave.au | CNAME | `bilby` | *from Vercel* |
+
+The apex A record is the one value Vercel still publishes as a constant, and it
+shows you that too. Trust the dashboard over this file in every case: these
+change, and a markdown file does not find out.
+
+`status.bilbymobile.com` is deliberately **not** in that list. A status page
+hosted on the platform it reports on has already failed at the only moment it
+exists for. Point it at anything else.
+
+---
+
+## 5 · Seed the catalogue
+
+Once `DATABASE_URL` points at the real database:
 
 ```bash
 cd web
-npm install
-cp .env.example .env.local
+DATABASE_URL="<the pooler string>" npx tsx scripts/seed-catalog.ts
 ```
 
-Set `SESSION_SECRET` to real entropy — the cookie HMAC depends on it, and a
-predictable secret means forgeable user ids, which means forgeable ad credits:
+That is a dry run and writes nothing. It prints all 52 SKUs with cost, retail,
+margin and contribution per sale. Read it. Then:
 
 ```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+DATABASE_URL="<the pooler string>" npx tsx scripts/seed-catalog.ts --apply
 ```
 
-Deploy:
+Everything lands **inactive**. Nothing is for sale until a person puts it on
+sale, one plan at a time, at `/console/catalog`. That is not caution for its own
+sake: no supplier account is funded, nothing has been installed on a handset,
+and the routing decision is still open.
 
-```bash
-npx vercel --prod
-```
+Flags worth knowing:
 
-Then in the Vercel dashboard set every var from `.env.example`. **`SESSION_SECRET`
-must match across all deployments** or every user is logged out on each deploy.
+- `--margin 0.40` targets a different contribution margin
+- `--fx 1.42` prices against a different USD to AUD rate
+- `--routing local` seeds the local breakout variants instead
 
-Point your domain at it. Verify:
-
-- `https://yourdomain/` loads
-- `https://yourdomain/app-ads.txt` returns the google.com line
-- `https://yourdomain/.well-known/assetlinks.json` returns JSON
+Re running it updates future prices and never touches past orders, because an
+order carries the price it was sold at.
 
 ---
 
-## 2 · AdMob (do this AFTER Play, not before)
+## 6 · Stripe, once you are approved
 
-1. Create an AdMob account and **add payment details** — apps sit in "Getting
-   ready" indefinitely without them.
-2. Add your app. Link it to the live Play listing.
-3. Create a **Rewarded** ad unit. Copy the ad unit id and the app id.
-4. Set them:
-   - `NEXT_PUBLIC_ADMOB_REWARDED_ID` in Vercel
-   - `admob_app_id` in `android/app/src/main/res/values/strings.xml`
-   - `ADMOB_PUBLISHER_ID` in Vercel (drives `/app-ads.txt`)
-5. **Enable server-side verification.** AdMob → your rewarded ad unit →
-   Server-side verification → callback URL:
-   ```
-   https://yourdomain/api/ads/ssv
-   ```
-   This is the only path in the app that can create credits. Without it,
-   `/api/ads/ssv` never fires and nobody ever earns anything.
-6. Confirm `app-ads.txt` is verified in the AdMob console. Allow 24 hours for
-   the crawl. **The developer website on your Play listing must match your
-   domain exactly** — www vs apex, or http vs https, and AdMob never finds it.
+Two values, both from the Stripe dashboard:
 
-⚠️ Keep test ad ids in debug builds. Pointing a debug build at production
-inventory is the fastest way to get an AdMob account suspended for invalid
-traffic, and suspension is not easily reversed.
+- `STRIPE_SECRET_KEY` — Developers, API keys
+- `STRIPE_WEBHOOK_SECRET` — Developers, Webhooks, after adding the endpoint
+
+Add the endpoint first:
+
+```
+https://app.bilbymobile.com/api/webhooks/stripe
+```
+
+Subscribe it to exactly these events:
+
+```
+checkout.session.completed
+checkout.session.async_payment_succeeded
+checkout.session.async_payment_failed
+checkout.session.expired
+charge.dispute.created
+```
+
+**The webhook secret is not optional.** With a secret key set and no webhook
+secret, every event is refused rather than trusted. That is deliberate: an
+endpoint that skips signature verification is an endpoint where anybody who
+finds the URL can mint paid orders, and the way that ships to production is a
+development shortcut nobody remembered to remove.
+
+Test with a real card in test mode before switching to live keys. The one thing
+to watch: the order should become `paid` in `/console/orders` within a second or
+two of the payment. If it stays `draft`, the webhook is not arriving, and
+Stripe's own event log will say why.
 
 ---
 
-## 3 · Android
+## 7 · The supplier
 
-Built as a **Capacitor** app, not a Trusted Web Activity. A TWA renders
-fullscreen under Chrome's control, so native views can't be overlaid on it —
-there's no supported way to show AdMob rewarded ads in a TWA, and injecting web
-ads into the wrapped page risks a policy violation. Since the rewarded ad *is*
-the product, TWA is out.
+The eSIM Access account exists with a zero balance. Before funding it, get one
+thing in writing:
 
-The shell loads your live deployment and adds what only native code can: the
-AdMob rewarded SDK and the eSIM install handoff.
+> Can an unactivated profile be cancelled, and within what window?
+
+Whether an issued but uninstalled eSIM can be handed back is the single largest
+input to net margin on refunds, and nothing in their dashboard answers it. Until
+there is a number, `esimFulfiller.capabilities.cancelWindowMinutes` stays `null`
+and the console tells an operator plainly that a refund means moving money in
+Stripe and writing off the profile.
+
+You also need the **partner integration API** documentation and a sandbox key.
+What was captured from the dashboard is its own internal API: real prices and
+real plan identifiers, which is what the catalogue needed, but ordering is a
+different surface. The adapter is one file once those exist.
+
+---
+
+## 8 · Before the first real dollar
+
+- `RESEND_API_KEY` and `MAIL_FROM`, or nobody gets their eSIM link. Set this
+  **on the first day**, not before the first sale. Until it is set, the console
+  cannot email a sign in link, so it shows the link on screen instead. That is
+  the only way into a console on the day it goes up, and it closes by itself the
+  moment somebody signs in once. Sign in, then set the key. If you are locked
+  out later with still no mail provider, deleting every row from
+  `staff_sessions` reopens the window, and needing database access to do that is
+  the point.
+- `SENTRY_DSN` if you want failures somewhere other than `/console/health`
+- An inbox a person actually watches, in Australian hours. This is the product,
+  not an operational detail.
+- ABN and GST registration. You cannot issue a compliant tax invoice without an
+  ABN, and the pricing model already treats GST as one eleventh of every sale.
+
+---
+
+## Checks
 
 ```bash
 cd web
-CAP_SERVER_URL=https://yourdomain npx cap sync android
-npx cap open android          # opens Android Studio
+DATABASE_URL="<a database you can write to>" ./scripts/check.sh
 ```
 
-Already configured:
+Types, the first run migration, the rate limiter and error store, the console
+bootstrap window, the money path, the webhook, and the build. 124 checks. Run it
+before every deploy.
 
-- `compileSdk` / `targetSdk` **36** — required for new apps from **31 August
-  2026**, which is *17 days away*. Do not ship at 35.
-- AdMob app id meta-data in the manifest
-- `com.google.android.gms.permission.AD_ID` — required from Android 13. Without
-  it every request looks non-personalised and eCPM collapses.
-- Adaptive launcher icons at all densities
-- `usesCleartextTraffic="false"`
+The first run check is skipped unless you also set `VIRGIN_DATABASE_URL` to a
+database that is genuinely empty, because that is the only way to test it:
 
-In Android Studio: **Build → Generate Signed Bundle** → Android App Bundle.
-Keep the keystore somewhere you will still have it in five years — lose it and
-you cannot update the app, ever.
+```bash
+VIRGIN_DATABASE_URL="postgresql://.../empty" \
+DATABASE_URL="<a database you can write to>" ./scripts/check.sh
+```
 
-### Minimum-functionality risk, stated plainly
-
-Play applies a bar to apps that are "just a website in a wrapper." This one
-clears it — native rewarded ads plus the system eSIM install handoff — but
-describe those native capabilities in your listing rather than presenting the
-app as a web wrapper. Also ship the offline screen (`capacitor-shell/index.html`)
-properly: an app that needs connectivity to open is an awkward look for a
-connectivity product.
+**Do not point it at production.** It writes and deletes rows.
 
 ---
 
-## 4 · Play Console
+## Done means
 
-1. Create the app. Category **Travel & Local**.
-2. Upload the AAB to **Internal testing** first. Install it on a real phone.
-   Confirm the rewarded ad shows *and that the balance actually moves* — that
-   proves the SSV loop end to end, which nothing else does.
-3. Store listing — copy is in `brand/BRAND.md`.
-4. Upload `brand/assets/play/icon-512.png` and the feature graphic.
-5. **Data safety** — declare honestly:
-   - Device or other IDs: **collected**, for advertising
-   - Approximate location: **collected** (country, for pricing)
-   - Data encrypted in transit: yes
-   - A mismatch between declaration and behaviour is a removal, not a warning.
-6. **Contains ads: Yes.** Not declaring is a removable offence.
-7. Privacy policy URL — must be live and reachable before you submit.
-8. Promote to production.
+A real card charges a real dollar, a real profile installs on a real handset in
+another country, and a refund can be issued from the console without anybody
+opening the database.
 
----
-
-## 5 · Before you take a single dollar
-
-- [ ] **Telco law consult.** Australia's 2025 registration scheme; penalties up
-      to ~$10M. Whether reselling foreign roaming data makes you a registrable
-      carriage service provider is unsettled. One hour of a comms lawyer's time.
-- [ ] Trade mark search, IP Australia, classes 38 and 42.
-- [ ] Privacy policy and terms actually written.
-- [ ] Stripe account, and checkout built (not yet done).
-- [ ] Refund policy — Australian Consumer Law applies regardless of your terms.
-
----
-
-## What I'd do next, in order
-
-1. **Legal pages + Stripe checkout.** Without these there's no revenue and no
-   Play submission. This is the real blocker.
-2. **Get on Play.** Everything downstream — ads, revenue, the free tier — is
-   gated on being published. It costs nothing and starts a clock you can't
-   start any other way.
-3. **Exercise the supplier adapters against real sandboxes.** `airalo.ts` and
-   `esimaccess.ts` are written from published docs and have never seen live
-   credentials. Expect field-name fixes.
-4. **Measure `HOME_MARKET_RETENTION`** as soon as ads are serving. It's the
-   single biggest assumption in the model and one week of real data settles it.
+Until all three are true on the same day it is not production, whatever the
+deployment log says.

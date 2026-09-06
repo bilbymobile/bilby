@@ -42,19 +42,19 @@ export const brand = {
    */
   androidPackage: "com.bilbymobile.bilby",
 
-  tagline: "Big ears. Free data.",
+  tagline: "Big ears. Small bills.",
 
   /** One-liner for the Play Store short description (80 char limit). */
-  shortDescription: "Free data abroad. Watch an ad, get online. Pay only for the days you need speed.",
+  shortDescription: "Travel data for Australians. Set it up before you fly, land connected, pay once.",
 
   /**
-   * Voice. Written down because an ad-funded free tier lives or dies on
-   * trust — the moment the copy sounds like it is hiding something, users
-   * assume the free data is the bait in a trap.
+   * Voice. Written down because a travel product lives or dies on trust: the
+   * moment the copy sounds like it is hiding something, a buyer assumes the
+   * price on the page is not the price they will pay.
    */
   voice: {
     is: ["plain", "specific", "unhurried", "honest about limits"],
-    isNot: ["breathless", "salesy", "emoji-laden", "vague about what free means"],
+    isNot: ["breathless", "salesy", "emoji-laden", "vague about what a plan includes"],
   },
 
   colors: {
@@ -77,7 +77,7 @@ export const brand = {
     /**
      * Required by Play, and it must be reachable before you submit. These point
      * at the apex rather than at the app subdomain deliberately: the Play
-     * listing, the app-ads.txt crawl and the legal pages should all agree on
+     * listing and the legal pages should all agree on
      * one hostname, because every mismatch between them is a support ticket or
      * a rejection that arrives without an explanation.
      */

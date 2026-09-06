@@ -104,25 +104,24 @@ shipping a generated folder is how you get version conflicts. The script builds
 it and applies the four patches that are easy to get wrong by hand.
 
 ```powershell
-cd "C:\Nav\Nextwave\Products\n eSim\bilby-app\app"
-powershell -ExecutionPolicy Bypass -File .\setup-windows.ps1
+cd "C:\Nav\Nextwave\Products\n eSim\bilby-repo\app"
+flutter pub get
+flutter run --dart-define=API_BASE=http://10.0.2.2:3000 `
+            --dart-define=APP_BASE=http://10.0.2.2:3000
 ```
 
-It will:
+**There is no setup step any more.** `app/android/` is a committed project, so a
+clone builds. `setup-windows.ps1` now refuses to run and says so: the old script
+ran `flutter create .`, which today would overwrite the committed host project
+with a generated stub, revert the applicationId, replace MainActivity with one
+that has no eSIM capability check, and put Flutter's default launcher icon back.
 
-1. Run `flutter create .` to generate `android\`
-2. Install the network security config
-3. Patch `AndroidManifest.xml` — INTERNET and AD_ID permissions, AdMob app id
-4. Force `compileSdk`/`targetSdk` to 36
-5. Copy the launcher icons and run `flutter pub get`
-6. Run `flutter analyze` so you see every Dart error at once
-
-Safe to re-run — every step checks before it writes.
-
-**Step 2 is not optional.** Android blocks cleartext HTTP from API 28 on. Skip
-it and every call to your dev server fails with a `SocketException` that reads
-exactly like "the backend is down", and you will spend an hour on the wrong
-problem.
+**The network security config is not optional**, and it is already committed at
+`android/app/src/main/res/xml/network_security_config.xml`. Android blocks
+cleartext HTTP from API 28 on, so without it every call to your dev server fails
+with a `SocketException` that reads exactly like "the backend is down". It
+permits cleartext for the emulator loopback and localhost only; add your LAN
+address to it if you run on a physical handset.
 
 ---
 

@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Flutter's debug and profile builds talk to the tooling over a local
+      socket, so the debug variant needs INTERNET even though the main manifest
+      already declares it. Kept as its own file because Flutter's own templates
+      do, and a future manifest merge conflict is easier to read this way.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>

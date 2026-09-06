@@ -4,6 +4,10 @@ Four surfaces, one API, two registrable domains. Written down because the
 decisions below are the expensive ones to reverse and every one of them is
 cheap to make now.
 
+This file covers hosts, surfaces and deployment. For how the product layers are
+separated so that eSIM is the first category rather than the only one, see
+`PLATFORM.md`.
+
 ---
 
 ## 1. The host map

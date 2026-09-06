@@ -1,10 +1,24 @@
-import { paidSupplier } from "@/lib/suppliers";
+import Link from "next/link";
 import { currentUser } from "@/lib/session";
+import { listCatalog } from "@/lib/platform";
+import { DESTINATIONS, destinationName } from "@/lib/destinations";
 
 export const dynamic = "force-dynamic";
 
-const TARGET_MARGIN = Number(process.env.RETAIL_TARGET_MARGIN ?? "0.45");
-
+/**
+ * The shop.
+ *
+ * Reads the catalogue, not a supplier. The previous version called
+ * `listPlans()` on every render and priced the result on the fly from wholesale
+ * times a margin constant, which had three problems: the price could move
+ * between this page and checkout, there was no stable identifier to write onto
+ * an order, and a supplier outage took the shop down. A catalogue row is a
+ * decision somebody made and it stays made until somebody changes it.
+ *
+ * Prices are in Australian dollars, GST inclusive, because that is what an
+ * Australian consumer is entitled to see. Presentment in another currency is
+ * Stripe's job at checkout and does not change what is printed here.
+ */
 export default async function PlansPage({
   searchParams,
 }: {
@@ -12,73 +26,49 @@ export default async function PlansPage({
 }) {
   const { country } = await searchParams;
   const user = await currentUser();
-  const iso = (country ?? "JP").toUpperCase();
+  const iso = (country ?? user.destination ?? "JP").toUpperCase();
 
-  let plans: Array<{
-    planId: string;
-    name: string;
-    dataMb: number;
-    validityDays: number;
-    retailUsd: number;
-    perGbUsd: number | null;
-  }> = [];
-  let error: string | null = null;
-
-  try {
-    const raw = await paidSupplier().listPlans({ country: iso });
-    plans = raw
-      .filter((p) => p.dataMb >= 1024) // micro packets are free-tier plumbing, not retail
-      .map((p) => {
-        const retail = Math.max(p.wholesaleUsd / (1 - TARGET_MARGIN), p.minSellUsd ?? 0);
-        return {
-          planId: p.planId,
-          name: p.name,
-          dataMb: p.dataMb,
-          validityDays: p.validityDays,
-          retailUsd: Math.round(retail * 100) / 100,
-          perGbUsd: p.dataMb ? Math.round((retail / (p.dataMb / 1024)) * 100) / 100 : null,
-        };
-      })
-      .sort((a, b) => a.retailUsd - b.retailUsd);
-  } catch (e) {
-    error = (e as Error).message;
-  }
-
-  const popular = ["JP", "TH", "ID", "US", "GB", "IT", "VN", "SG", "AE", "NZ"];
+  const items = await listCatalog("esim", "AUD", { attribute: ["country", iso] });
 
   return (
     <>
       <section className="hero">
         <h1>Plans</h1>
         <p>
-          Full speed, no ads, hotspot included. Buy one only for the days you
-          actually need it. The free tier covers maps and messaging the rest of
-          the time.
+          Full speed, hotspot included, no contract. Pick the days you are
+          actually away rather than a month you will not use.
         </p>
       </section>
 
       <div className="card">
         <h2>Destination</h2>
-        <p className="sub">Showing {iso}. Detected home market: {user.country}.</p>
+        <p className="sub">Showing {destinationName(iso)}.</p>
         <div className="row">
-          {popular.map((c) => (
-            <a key={c} className={`btn ${c === iso ? "" : "ghost"}`} href={`/plans?country=${c}`}>
-              {c}
+          {DESTINATIONS.map((d) => (
+            <a
+              key={d.iso}
+              className={`btn ${d.iso === iso ? "" : "ghost"}`}
+              href={`/plans?country=${d.iso}`}
+            >
+              {d.flag} {d.iso}
             </a>
           ))}
         </div>
       </div>
 
       <div className="card">
-        {error ? (
-          <div className="note bad">
-            Catalogue unavailable: {error}
-            <br />
-            With no supplier configured the app falls back to the mock, so check
-            <code className="inline"> PAID_SUPPLIER</code> in your env.
-          </div>
-        ) : plans.length === 0 ? (
-          <p className="sub" style={{ margin: 0 }}>No plans for {iso}.</p>
+        {items.length === 0 ? (
+          <>
+            <h2>Nothing on sale for {destinationName(iso)} yet</h2>
+            <p className="sub" style={{ margin: 0 }}>
+              The catalogue is seeded but every item starts inactive, and an
+              inactive item is not for sale. Activate the ones you have checked
+              on a handset from the staff console. Nothing here is a fallback to
+              a live supplier lookup on purpose: a shop that invents a price
+              when the catalogue is empty is a shop that will one day sell at a
+              loss.
+            </p>
+          </>
         ) : (
           <table>
             <thead>
@@ -87,39 +77,54 @@ export default async function PlansPage({
                 <th className="num">Data</th>
                 <th className="num">Days</th>
                 <th className="num">Price</th>
-                <th className="num">Per GB</th>
+                <th />
               </tr>
             </thead>
             <tbody>
-              {plans.map((p) => (
-                <tr key={p.planId}>
-                  <td>{p.name}</td>
-                  <td className="num">{(p.dataMb / 1024).toFixed(0)} GB</td>
-                  <td className="num">{p.validityDays}</td>
-                  <td className="num">
-                    <strong>${p.retailUsd.toFixed(2)}</strong>
-                  </td>
-                  <td className="num" style={{ color: "var(--muted)" }}>
-                    ${p.perGbUsd?.toFixed(2)}
-                  </td>
-                </tr>
-              ))}
+              {items.map((p) => {
+                const mb = Number(p.attributes.dataMb ?? 0);
+                const days = Number(p.attributes.days ?? 0);
+                return (
+                  <tr key={p.sku}>
+                    <td>
+                      {p.title}
+                      {p.subtitle ? (
+                        <div style={{ color: "var(--muted)", fontSize: ".86em" }}>
+                          {p.subtitle}
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="num">
+                      {mb >= 1024 ? `${(mb / 1024).toFixed(mb % 1024 ? 1 : 0)} GB` : `${mb} MB`}
+                    </td>
+                    <td className="num">{days || "—"}</td>
+                    <td className="num">
+                      <strong>${p.sellAmount.toFixed(2)}</strong>
+                    </td>
+                    <td className="num">
+                      <Link className="btn" href={`/checkout?sku=${encodeURIComponent(p.sku)}`}>
+                        Buy
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
       </div>
 
       <div className="card">
-        <h2>A note on where you take payment</h2>
+        <h2>Where payment happens</h2>
         <p className="sub" style={{ marginBottom: 0 }}>
           Google Play&apos;s Payments policy exempts purchases consumed outside a
-          Play-distributed app, and mobile connectivity is consumed by the
+          Play distributed app, and mobile connectivity is consumed by the
           handset&apos;s modem rather than inside this app, which is the basis on
           which eSIM apps take card payments directly. It is an interpretation,
-          not a written carve-out for eSIMs, so keep checkout on the web, link to
-          it rather than embedding it, and never gate app features behind the
-          purchase. That last part is what turns a data plan into an in-app
-          digital good.
+          not a written carve out for eSIMs, so checkout stays on the web, the
+          app links to it rather than embedding it, and no app feature is ever
+          gated behind the purchase. That last part is what would turn a data
+          plan into an in app digital good.
         </p>
       </div>
     </>

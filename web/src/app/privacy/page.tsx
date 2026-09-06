@@ -139,11 +139,22 @@ export default function PrivacyPage() {
       <div className="card">
         <h2>Where your data lives</h2>
         <p className="sub" style={{ marginBottom: 0 }}>
-          On servers operated by our hosting provider, and with our connectivity
-          supplier for the parts they need to run your eSIM. Some of those
-          servers are outside Australia. We do not sell your data to anyone, and
-          there is no version of this business where we would. The product is
-          funded by ads and data plans, not by you being the product.
+          In a Postgres database operated by Supabase, in Sydney. We chose an
+          Australian region deliberately rather than taking the default, so your
+          account, your orders and your eSIM records stay in the country whose
+          privacy law you can hold us to.
+        </p>
+        <p className="sub" style={{ marginTop: 14, marginBottom: 0 }}>
+          Two things do leave. Your card details go to Stripe, who hold them
+          instead of us and process internationally. The details needed to
+          activate your eSIM go to the network we buy it from, who are overseas,
+          because that is what issuing a profile requires. Both are the minimum
+          the job needs.
+        </p>
+        <p className="sub" style={{ marginTop: 14, marginBottom: 0 }}>
+          We do not sell your data to anyone and there is no version of this
+          business where we would. We are paid for data plans, which means you
+          are the customer rather than the product.
         </p>
       </div>
 

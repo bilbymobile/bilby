@@ -10,7 +10,6 @@ interface EsimRow {
   activation_code: string;
   smdp_address: string;
   matching_id: string;
-  is_free_tier: number;
 }
 
 /**
@@ -43,7 +42,7 @@ export default async function InstallPage({
   const user = await currentUser();
 
   const row = await one<EsimRow>(
-    `SELECT iccid, activation_code, smdp_address, matching_id, is_free_tier
+    `SELECT iccid, activation_code, smdp_address, matching_id
      FROM esims WHERE iccid = ? AND user_id = ?`,
     [iccid, user.id]
   );

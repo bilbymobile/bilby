@@ -59,9 +59,9 @@ class Note extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (colour, fg) = switch (tone) {
-      NoteTone.good => (Brand.accent, const Color(0xFFC9F5E5)),
-      NoteTone.warn => (Brand.warn, const Color(0xFFF0DCC0)),
-      NoteTone.bad => (Brand.danger, const Color(0xFFF5CFCF)),
+      NoteTone.good => (Brand.teal, Brand.noteGoodInk),
+      NoteTone.warn => (Brand.warn, Brand.noteWarnInk),
+      NoteTone.bad => (Brand.danger, Brand.noteBadInk),
       NoteTone.neutral => (Brand.muted, Brand.muted),
     };
     // Built as a clipped Row rather than a BoxDecoration with a one-sided
@@ -244,7 +244,7 @@ class _PrimaryButtonState extends State<PrimaryButton> {
                   height: 18,
                   width: 18,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Color(0xFF04120C)))
+                      strokeWidth: 2, color: Brand.accentInk))
               : Text(
                   widget.label,
                   textAlign: TextAlign.center,
@@ -252,7 +252,7 @@ class _PrimaryButtonState extends State<PrimaryButton> {
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                     color: widget.primary
-                        ? const Color(0xFF04120C)
+                        ? Brand.accentInk
                         : (enabled ? Brand.text : Brand.muted),
                   ),
                 ),

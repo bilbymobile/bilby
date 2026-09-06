@@ -205,3 +205,24 @@ footer.foot { margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--b
    colour of their own. */
 [data-surface="marketing"] .prose a { color: var(--ok); text-decoration: underline; text-underline-offset: 3px; }
 [data-surface="marketing"] .prose { max-width: 78ch; margin: 0 auto; padding-inline: 24px; }
+
+/* The staff console. Same warm system, denser, and it never sees a customer. */
+[data-surface="console"] {
+  --bg: #F4EEE6;
+  --surface: #FDFAF6;
+  --surface-2: #EFE7DC;
+  --border: #E3D7C8;
+  --text: #0B2038;
+  --muted: #56687A;
+  --accent: #0B2038;
+  --accent-dim: #1B3350;
+  --accent-ink: #F7EFE4;
+  --ok: #35857A;
+  --warn: #C87F45;
+  --danger: #B3402F;
+  --radius: 14px;
+  --max: 1180px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}

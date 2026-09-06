@@ -65,8 +65,8 @@ class _EsimsScreenState extends State<EsimsScreen> {
           const SectionTitle(
             'My eSIMs',
             subtitle:
-                'Install once and keep it. Every ad you watch tops up this same '
-                'profile rather than issuing a new one.',
+                'Install it before you fly and land already connected. Top ups '
+                'go onto the same profile rather than issuing a new one.',
           ),
           const SizedBox(height: 20),
           if (_esims!.isEmpty)
@@ -81,9 +81,8 @@ class _EsimsScreenState extends State<EsimsScreen> {
                           color: Brand.text)),
                   SizedBox(height: 8),
                   Text(
-                    'Earn enough data to load onto an eSIM and we will issue '
-                    'your profile then, not before. That way you never install '
-                    'something you have no data for.',
+                    'Buy a plan and your profile is issued then, not before. '
+                    'That way you never install something you have no data for.',
                     style: TextStyle(
                         fontSize: 14, color: Brand.muted, height: 1.5),
                   ),
@@ -131,13 +130,15 @@ class _EsimsScreenState extends State<EsimsScreen> {
                     children: [
                       Row(
                         children: [
-                          Pill(e.isFreeTier ? 'Free tier' : 'Paid',
-                              highlight: e.isFreeTier),
-                          const SizedBox(width: 8),
-                          Text(
+                          // The Free tier / Paid badge is gone. `isFreeTier`
+                          // stays on the model until the schema drops the
+                          // column, but there is one kind of eSIM now, so a
+                          // badge on every row would be noise implying a
+                          // distinction that no longer exists. Install state is
+                          // the thing a traveller actually needs to see.
+                          Pill(
                             e.installedAt == null ? 'Not installed' : 'Installed',
-                            style: const TextStyle(
-                                fontSize: 12.5, color: Brand.muted),
+                            highlight: e.installedAt != null,
                           ),
                         ],
                       ),

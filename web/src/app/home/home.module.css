@@ -127,17 +127,19 @@
   padding: clamp(34px, 5vw, 72px) 0 clamp(46px, 6vw, 86px);
 }
 .heroShell { position: relative; z-index: 2; width: 100%; }
-.copy { max-width: min(560px, 52%); }
+.copy { max-width: min(640px, 54%); }
 .hero h1 {
-  font-size: clamp(40px, 5.6vw, 76px); line-height: 1.02; font-weight: 600;
+  /* Capped at 66 rather than 76 so the two composed lines fit their measure at
+     every width. A headline that rewraps defeats the mask: the clip would sit
+     mid line and the words would rise from nowhere. */
+  font-size: clamp(36px, 4.9vw, 66px); line-height: 1.03; font-weight: 600;
   letter-spacing: -.045em; margin-bottom: 22px;
 }
 .lede { font-size: clamp(17px, 1.5vw, 22px); color: var(--ink2); max-width: 30ch; margin-bottom: 36px; }
 .acts { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 42px; }
 
 .pills {
-  display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px;
-  background: rgba(234, 220, 201, .5); border-radius: 999px; padding: 9px 12px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
 }
 .pill {
   display: inline-flex; align-items: center; gap: 10px; padding: 6px 16px 6px 6px;
@@ -160,12 +162,92 @@
  * ending on a line.
  */
 .art { position: absolute; inset: 0 0 0 auto; width: min(68%, 1080px); z-index: 1; overflow: hidden; }
+/* The mover and the entrance, each on their own box. See the note in page.tsx
+   for the two separate bugs that produced this shape. */
+.artInner { position: absolute; inset: 0; }
+.artIn { position: absolute; inset: 0; }
 .art img { width: 100%; height: 100%; object-fit: cover; object-position: 52% 46%; }
-.drift { animation: drift 11s ease-in-out infinite alternate; }
+.drift { animation: drift 17s ease-in-out infinite alternate; }
 @keyframes drift {
-  from { transform: translateY(8px) scale(1.01); }
-  to   { transform: translateY(-10px) scale(1.035); }
+  from { transform: translateY(9px) scale(1.012); }
+  to   { transform: translateY(-11px) scale(1.038); }
 }
+
+/*
+ * Golden hour bloom.
+ *
+ * The render's light source sits low and left, behind the mascot. This breathes
+ * over it on a cycle deliberately prime against the drift cycle (17s and 13s)
+ * so the two never resynchronise into a visible pulse. That non repetition is
+ * most of what separates ambient motion from a loop.
+ */
+.bloom {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: radial-gradient(52% 46% at 34% 62%,
+    rgba(255, 226, 179, .55) 0%, rgba(255, 214, 152, .22) 42%, transparent 74%);
+  animation: bloom 13s ease-in-out infinite alternate;
+  /* Masked to the right, for the same reason the vignette is: this layer is
+     clipped by the art box, and the page outside that box is untouched cream,
+     so an unmasked edge draws a faint vertical seam down the whole hero. It is
+     invisible in isolation and obvious once you have seen it. */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 22%, #000 54%);
+  mask-image: linear-gradient(90deg, transparent 0%, transparent 22%, #000 54%);
+}
+@keyframes bloom {
+  from { opacity: .58; transform: scale(1); }
+  to   { opacity: .92; transform: scale(1.07); }
+}
+
+/*
+ * The opening light sweep. Fires once, on load, and never again.
+ *
+ * This is the single most film like device on the page: a raking highlight
+ * crossing the frame as it settles. It runs once because a sweep on a loop
+ * stops reading as light and starts reading as a loading shimmer.
+ */
+.sweep {
+  position: absolute; inset: -20% -40%; pointer-events: none; z-index: 2;
+  background: linear-gradient(104deg,
+    transparent 38%, rgba(255, 248, 235, .5) 48%, rgba(255, 252, 245, .72) 52%,
+    rgba(255, 248, 235, .4) 56%, transparent 66%);
+  opacity: 0; transform: translateX(-52%);
+  animation: sweep 1.5s cubic-bezier(.3, .5, .2, 1) .34s forwards;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 26%, #000 52%);
+  mask-image: linear-gradient(90deg, transparent 0%, transparent 26%, #000 52%);
+}
+@keyframes sweep {
+  0%   { opacity: 0;   transform: translateX(-52%); }
+  22%  { opacity: .85; }
+  74%  { opacity: .5; }
+  100% { opacity: 0;   transform: translateX(46%); }
+}
+
+/*
+ * Film grain, scoped to the art rather than the page.
+ *
+ * Grain is what makes a frame read as photographed rather than rendered, and
+ * six percent is the whole budget: past about eight it stops being texture and
+ * starts being dirt on the screen. Kept inside .art on purpose — over the flat
+ * cream half of the hero there is no image for it to sit in, so it would read
+ * as speckle on nothing and give away the boundary between the two halves.
+ */
+.grain {
+  position: absolute; inset: 0; pointer-events: none; z-index: 3; opacity: .06;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  /* Masked to the right, for the same reason the vignette is: this layer is
+     clipped by the art box, and the page outside that box is untouched cream,
+     so an unmasked edge draws a faint vertical seam down the whole hero. It is
+     invisible in isolation and obvious once you have seen it. */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 22%, #000 54%);
+  mask-image: linear-gradient(90deg, transparent 0%, transparent 22%, #000 54%);
+}
+
+/* Dust in the light. Drawn on a canvas rather than as DOM nodes: twenty two
+   animated elements is twenty two things for the compositor to track, and one
+   canvas is one. */
+.motes { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
 /* The scrim. Solid at the left where the headline sits, gone by two thirds
    across so the mascot is untouched, and feathered top and bottom so the frame
    melts into the bands above and below rather than ending on a line. */
@@ -178,7 +260,18 @@
     linear-gradient(0deg, var(--cream) 0%, rgba(247,239,228,.55) 8%, rgba(247,239,228,0) 22%),
     linear-gradient(180deg, var(--cream) 0%, rgba(247,239,228,0) 14%);
 }
-.sig { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+/*
+ * The signal overlay, and the bug that made it look wrong for two weeks.
+ *
+ * The <img> underneath is `object-fit: cover`. This SVG defaulted to
+ * preserveAspectRatio="xMidYMid meet", which is `contain`. Two different
+ * mappings of the same viewBox onto the same box, so the arcs never sat where
+ * the antenna was: they floated up and left of it, over the ear, and no amount
+ * of nudging the coordinates would have fixed it because the error scales with
+ * the viewport. `slice` is cover, and xMid/yMid is within two percent of the
+ * image's 52% / 46% object-position, which is closer than the eye resolves.
+ */
+.sig { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
 .wave {
   fill: none; stroke: #D6F1FF; stroke-width: 12; stroke-linecap: round;
   filter: drop-shadow(0 0 10px rgba(150, 215, 255, .95));
@@ -352,8 +445,6 @@
  * the palette is warm and light in the first place.
  * ────────────────────────────────────────────────────────────────────────── */
 
-.art { transform: translate3d(0, var(--shift, 0px), 0); will-change: transform; }
-
 /* Grade. A touch more contrast and saturation than the source, a warm lift in
    the highlights, and a vignette that pulls the eye back to the mascot. */
 .art img { filter: contrast(1.06) saturate(1.05); }
@@ -371,20 +462,101 @@
   mask-image: linear-gradient(90deg, transparent 0%, transparent 34%, #000 62%);
 }
 
-/* Staged entrance. Each line of the hero arrives a beat after the one above,
-   which is what makes it feel authored rather than loaded. */
-.rise { opacity: 0; transform: translateY(18px); animation: rise .9s cubic-bezier(.22, 1, .36, 1) forwards; }
-.rise1 { animation-delay: .05s; }
-.rise2 { animation-delay: .20s; }
-.rise3 { animation-delay: .34s; }
-.rise4 { animation-delay: .46s; }
+/*
+ * The opening sequence.
+ *
+ * A cut, not a fade in. The order is deliberate and it is the order a title
+ * sequence uses: the frame settles first, light rakes across it, then the words
+ * arrive from behind an edge, then the things you can press, then the small
+ * print. Roughly 1.9 seconds end to end, but legible from about 0.9.
+ *
+ *   0.00  art begins settling from 1.06 and 8px of blur
+ *   0.34  light sweep crosses the frame
+ *   0.52  headline line one rises from behind its mask
+ *   0.66  headline line two
+ *   0.98  lede
+ *   1.14  actions
+ *   1.28  pills
+ *   1.60  ambient loops take over: drift, bloom, signal, dust
+ *
+ * The handover at 1.6 matters. If the ambient loops start while the entrance is
+ * still running they fight it, and the frame looks unstable rather than alive.
+ */
+.artIn { animation: artIn 1.9s cubic-bezier(.16, .84, .24, 1) forwards; }
+@keyframes artIn {
+  from { opacity: 0; transform: scale(1.06); filter: blur(8px); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
+
+/*
+ * Headline lines rise from behind a mask rather than fading up.
+ *
+ * A fade says the text loaded. A masked rise says something moved it, which is
+ * the whole difference between animated and cinematic. The wrapper clips and
+ * the inner span translates; the padding and equal negative margin exist so
+ * descenders are not sliced off by the very clip that makes the effect work.
+ */
+.lineWrap { display: block; overflow: hidden; padding-bottom: .14em; margin-bottom: -.14em; }
+.line {
+  display: block; transform: translateY(112%);
+  animation: lineUp 1.05s cubic-bezier(.16, .84, .24, 1) forwards;
+}
+.line1 { animation-delay: .52s; }
+.line2 { animation-delay: .66s; }
+@keyframes lineUp { to { transform: none; } }
+
+/* Everything under the headline. Still a rise, because these are supporting
+   elements and giving them the same masked entrance as the headline would flatten
+   the hierarchy the sequence exists to build. */
+.rise { opacity: 0; transform: translateY(20px); animation: rise 1s cubic-bezier(.22, 1, .36, 1) forwards; }
+.rise2 { animation-delay: .98s; }
+.rise3 { animation-delay: 1.14s; }
+.rise4 { animation-delay: 1.28s; }
 @keyframes rise { to { opacity: 1; transform: none; } }
 
-.artIn { animation: artIn 1.6s cubic-bezier(.22, 1, .36, 1) forwards; }
-@keyframes artIn {
-  from { opacity: 0; transform: scale(1.06); }
-  to   { opacity: 1; transform: none; }
+/*
+ * The hero leaving.
+ *
+ * Parallax alone reads as a trick once you notice it. Combining the shift with
+ * a slow push in and a fade turns scrolling off the hero into a shot ending
+ * rather than a picture sliding away, and it hands the eye to the next band
+ * instead of competing with it. `--exit` runs 0 to 1 over the first 720px and
+ * is set from the same rAF as `--shift`, so there is one scroll listener on the
+ * page rather than two fighting for frames.
+ */
+/* The clipping box fades but never moves. Moving it exposes its own left edge
+   against the cream half of the hero. */
+.art { opacity: calc(1 - var(--exit, 0) * .45); }
+/* The mover, safely inside the clip. */
+.artInner {
+  transform: translate3d(0, var(--shift, 0px), 0) scale(calc(1 + var(--exit, 0) * .07));
+  will-change: transform;
 }
+
+/*
+ * Cascading children inside a revealed group.
+ *
+ * The Reveal wrapper brings the whole block in as one object. For a grid that
+ * is wrong: twelve cards appearing simultaneously reads as a render, and the
+ * same twelve arriving 70ms apart reads as a camera finding them. Delays stop
+ * mattering past about ten, so the ladder flattens rather than growing forever.
+ */
+.cascade > * {
+  opacity: 0; transform: translateY(26px);
+  transition: opacity .8s ease, transform .8s cubic-bezier(.22, 1, .36, 1);
+}
+:global(.is-revealed) .cascade > * { opacity: 1; transform: none; }
+.cascade > *:nth-child(1)  { transition-delay: .00s; }
+.cascade > *:nth-child(2)  { transition-delay: .07s; }
+.cascade > *:nth-child(3)  { transition-delay: .14s; }
+.cascade > *:nth-child(4)  { transition-delay: .21s; }
+.cascade > *:nth-child(5)  { transition-delay: .28s; }
+.cascade > *:nth-child(6)  { transition-delay: .35s; }
+.cascade > *:nth-child(7)  { transition-delay: .42s; }
+.cascade > *:nth-child(8)  { transition-delay: .49s; }
+.cascade > *:nth-child(9)  { transition-delay: .56s; }
+.cascade > *:nth-child(n+10) { transition-delay: .63s; }
 
 /* Scroll reveals. Global class names because they are applied by a shared
    component that has no access to this module's hashes. */
@@ -398,7 +570,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rise, .artIn { opacity: 1; transform: none; animation: none; }
-  .art { transform: none; }
+  .rise, .artIn, .artInner { opacity: 1; transform: none; animation: none; filter: none; }
+  .art { opacity: 1; }
+  .line { transform: none; animation: none; }
+  .art { transform: none; opacity: 1; }
+  .sweep, .grain, .motes { display: none; }
+  .bloom { animation: none; opacity: .7; }
   :global(.is-hidden) { opacity: 1; transform: none; }
+  .cascade > * { opacity: 1; transform: none; transition: none; }
 }

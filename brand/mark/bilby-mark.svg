@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!--
+    The Bilby mark: the hero character's head, and nothing else.
+
+    Reduced to what still reads at 32 pixels — two ears, a helmet, an antenna
+    and a visor. The body, limbs, side port, signal arcs and planet are all
+    dropped, because at launcher size every extra element costs silhouette and
+    the silhouette is the only thing most people will ever consciously see.
+
+    Two decisions worth keeping:
+
+      * The ears are ellipses, not tapered points. The render's ears are soft
+        and floppy; a pointed ear reads as a fox or a cat and loses the animal
+        entirely. Their lower ends are deliberately buried inside the helmet so
+        there is no join to go wrong at small sizes.
+      * The eyes are rounded rectangles rather than ovals, which is what makes
+        the face read as a friendly machine rather than as an animal.
+
+    Drawn on a 512 grid so every export size is an integer scale. Padding and
+    backgrounds are added by make-brand-icons.py, never here, so this file
+    stays the single geometric source.
+  -->
+  <defs>
+    <linearGradient id="ear" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#F2C795"/>
+      <stop offset="1" stop-color="#DDA061"/>
+    </linearGradient>
+    <linearGradient id="shell" x1="0.22" y1="0.05" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#FCF5EA"/>
+      <stop offset="1" stop-color="#EBD6B8"/>
+    </linearGradient>
+    <radialGradient id="eyeGlow" cx="0.5" cy="0.38" r="0.68">
+      <stop offset="0" stop-color="#CDF0FF"/>
+      <stop offset="0.5" stop-color="#86D0EC"/>
+      <stop offset="1" stop-color="#4C9AC3"/>
+    </radialGradient>
+  </defs>
+
+  <g id="mark">
+    <!-- antenna. The bulb is oversized against the render on purpose: a true
+         to scale bulb disappears below 48 pixels. -->
+    <path d="M256 168 L256 100" stroke="#CBA97D" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <circle cx="256" cy="88" r="20" fill="#E8963C"/>
+    <circle cx="249.5" cy="82" r="6.5" fill="#F8CE9B" opacity="0.9"/>
+
+    <!-- ears -->
+    <g>
+      <ellipse cx="168" cy="168" rx="44" ry="108" transform="rotate(-34 168 168)" fill="url(#ear)"/>
+      <ellipse cx="157" cy="151" rx="19" ry="68" transform="rotate(-34 157 151)" fill="#C88C50" opacity="0.34"/>
+    </g>
+    <g>
+      <ellipse cx="344" cy="168" rx="44" ry="108" transform="rotate(34 344 168)" fill="url(#ear)"/>
+      <ellipse cx="355" cy="151" rx="19" ry="68" transform="rotate(34 355 151)" fill="#C88C50" opacity="0.34"/>
+    </g>
+
+    <!-- helmet -->
+    <path d="M256 148
+             C 341 148, 396 209, 396 288
+             C 396 372, 337 424, 256 424
+             C 175 424, 116 372, 116 288
+             C 116 209, 171 148, 256 148 Z"
+          fill="url(#shell)"/>
+
+    <!-- visor: wider than tall, sitting low, which is what turns the helmet
+         into a face rather than an egg. -->
+    <path d="M256 200
+             C 325 200, 366 236, 366 291
+             C 366 348, 322 382, 256 382
+             C 190 382, 146 348, 146 291
+             C 146 236, 187 200, 256 200 Z"
+          fill="#0B2038"/>
+
+    <!-- eyes -->
+    <rect x="188" y="256" width="50" height="59" rx="21" fill="url(#eyeGlow)"/>
+    <rect x="274" y="256" width="50" height="59" rx="21" fill="url(#eyeGlow)"/>
+
+    <!-- smile -->
+    <path d="M231 340 C 243 355, 269 355, 281 340"
+          stroke="#86D0EC" stroke-width="11" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

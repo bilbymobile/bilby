@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Android 12 and later draw the splash themselves from these attributes and
+      ignore windowBackground. Without this block the system shows the launcher
+      icon on the default system background, which is white on most devices and
+      near black on others: the one screen guaranteed to be seen on every cold
+      start would be the one screen that is off brand.
+    -->
+    <style name="LaunchTheme" parent="@android:style/Theme.DeviceDefault.DayNight">
+        <item name="android:windowSplashScreenBackground">@color/bilby_ground</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+    <style name="NormalTheme" parent="@android:style/Theme.DeviceDefault.DayNight">
+        <item name="android:windowBackground">@color/bilby_ground</item>
+    </style>
+</resources>

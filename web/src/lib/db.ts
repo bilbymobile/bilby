@@ -68,17 +68,35 @@ function connectionString(): string {
   );
 }
 
+/** Loopback, or an explicit sslmode=disable. Nothing else counts as local. */
+function isLocal(conn: string): boolean {
+  try {
+    const u = new URL(conn);
+    if (u.searchParams.get("sslmode") === "disable") return true;
+    return ["localhost", "127.0.0.1", "::1", "0.0.0.0"].includes(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
 function getPool(): Pool {
   if (pool) return pool;
 
+  const conn = connectionString();
+
   pool = new Pool({
-    connectionString: connectionString(),
+    connectionString: conn,
     // Supabase terminates TLS with a certificate this client cannot chain to a
     // root it ships. The connection is still encrypted; what is skipped is
     // verification of the certificate authority. Acceptable to Supabase's own
     // documented setup, and the alternative is bundling their CA and rotating
     // it by hand.
-    ssl: { rejectUnauthorized: false },
+    //
+    // A local Postgres, whether `supabase start` or a bare install, speaks no
+    // TLS at all, and asking for it there fails the connection outright with a
+    // message about the server not supporting SSL. So it is on for anything
+    // remote and off for loopback, which is the only place it is safe to skip.
+    ssl: isLocal(conn) ? false : { rejectUnauthorized: false },
     // Small on purpose. Each serverless instance keeps its own pool, so a large
     // per instance maximum multiplies across instances and defeats the point of
     // using a pooler at all.
@@ -135,29 +153,6 @@ async function migrate(p: Pool) {
     );
     CREATE INDEX IF NOT EXISTS idx_users_device ON users(device_hash);
 
-    /*
-     * Append only. Never UPDATE, never DELETE. To reverse an entry, insert its
-     * negation with reason='reversal' and the original id in ref.
-     *
-     * This is not fastidiousness. The day somebody finds a way to farm this you
-     * will need to prove exactly what was granted, when, and reverse precisely
-     * that. A mutable balance column cannot answer any of those questions.
-     */
-    CREATE TABLE IF NOT EXISTS credit_ledger (
-      id             BIGSERIAL PRIMARY KEY,
-      user_id        TEXT NOT NULL REFERENCES users(id),
-      delta_mb       INTEGER NOT NULL,
-      reason         TEXT NOT NULL,
-      ref            TEXT,
-      -- Economics captured AT GRANT TIME. Rates move; without this you can
-      -- never reconstruct whether a historical cohort was profitable.
-      revenue_usd    NUMERIC(12,6) NOT NULL DEFAULT 0,
-      cost_usd       NUMERIC(12,6) NOT NULL DEFAULT 0,
-      region         TEXT,
-      created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
-    );
-    CREATE INDEX IF NOT EXISTS idx_ledger_user ON credit_ledger(user_id, created_at);
-
     CREATE TABLE IF NOT EXISTS esims (
       iccid            TEXT PRIMARY KEY,
       user_id          TEXT NOT NULL REFERENCES users(id),
@@ -166,47 +161,269 @@ async function migrate(p: Pool) {
       activation_code  TEXT NOT NULL,
       smdp_address     TEXT NOT NULL,
       matching_id      TEXT NOT NULL,
-      is_free_tier     BOOLEAN NOT NULL DEFAULT false,
       created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
       installed_at     TIMESTAMPTZ
     );
     CREATE INDEX IF NOT EXISTS idx_esims_user ON esims(user_id);
 
+    /*
+     * An order is one payment. What was bought lives in order_items, one row
+     * per line, and the split is what lets a single payment carry an eSIM, a
+     * top up and something we have not invented yet.
+     *
+     * The money columns here are the ones migratePlatform adds: sell_currency,
+     * sell_amount, tax and presentment. cost_usd and revenue_usd are neither.
+     * They are what the ad funded tier recorded, they are denominated in the
+     * wrong currency for an Australian business, and they stay only because
+     * nothing is gained by dropping a zeroed column.
+     */
     CREATE TABLE IF NOT EXISTS orders (
       id             TEXT PRIMARY KEY,
       user_id        TEXT NOT NULL REFERENCES users(id),
-      plan_id        TEXT NOT NULL,
-      iccid          TEXT,
-      kind           TEXT NOT NULL,
-      -- What we paid the supplier, recorded ON THE ORDER rather than looked up
-      -- later. The rate on the day is a fact about this order; recomputing
-      -- margin from today's rate card makes last month's numbers move, and a
-      -- dashboard whose history changes is one nobody trusts twice.
       cost_usd       NUMERIC(12,6) NOT NULL DEFAULT 0,
       revenue_usd    NUMERIC(12,6) NOT NULL DEFAULT 0,
       status         TEXT NOT NULL,
       created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
     );
     CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id, created_at DESC);
-
-    CREATE TABLE IF NOT EXISTS daily_budget (
-      day            DATE PRIMARY KEY,
-      spent_usd      NUMERIC(12,6) NOT NULL DEFAULT 0,
-      cap_usd        NUMERIC(12,6) NOT NULL
-    );
   `);
 
-  // Exactly once semantics for ad callbacks, expressed as a partial unique
-  // index. Postgres supports these directly; the SQLite version used the same
-  // shape, so this is a straight port rather than a redesign.
-  await p.query(`
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_ad_txn
-      ON credit_ledger(ref) WHERE reason = 'ad_reward'
-  `);
+  /*
+   * The free tier, removed.
+   *
+   * These are dropped rather than left in place. A dead table is not free: it
+   * is a foreign key that stops you dropping the table it points at, it is a
+   * column somebody writes a report against by accident, and it is the reason
+   * the next person reading this schema asks what an ad reward was. Nothing was
+   * ever deployed against them, so there is no data to preserve.
+   *
+   * The legacy columns on `orders` go the same way. `plan_id` and `kind` were
+   * NOT NULL, which means a platform order that has no supplier plan id — every
+   * order from now on — could not be inserted at all.
+   */
+  /*
+   * Delivery, recorded on the order.
+   *
+   * delivered_count rather than a boolean, because an order can be delivered
+   * more than once and correctly so: a two line order where the second supplier
+   * was down sends one email now and another when the second line lands. The
+   * count is how "we have already told them about this much" is expressed
+   * without a second table.
+   */
+  await addColumn(p, "orders", "delivered_at", "TIMESTAMPTZ");
+  await addColumn(p, "orders", "delivered_count", "INTEGER NOT NULL DEFAULT 0");
+  await addColumn(p, "orders", "refunded_amount", "NUMERIC(12,2) NOT NULL DEFAULT 0");
+  await addColumn(p, "orders", "refund_ref", "TEXT");
+
+  await p.query(`DROP TABLE IF EXISTS credit_ledger`);
+  await p.query(`DROP TABLE IF EXISTS daily_budget`);
+  await p.query(`ALTER TABLE esims  DROP COLUMN IF EXISTS is_free_tier`);
+  await p.query(`ALTER TABLE orders DROP COLUMN IF EXISTS plan_id`);
+  await p.query(`ALTER TABLE orders DROP COLUMN IF EXISTS kind`);
+  await p.query(`ALTER TABLE orders DROP COLUMN IF EXISTS iccid`);
 
   await migrateDiscounts(p);
+  await migrateStaff(p);
+  await migratePlatform(p);
+  await migrateGuards(p);
 
   await addColumn(p, "users", "destination", "TEXT");
+}
+
+/**
+ * The platform layer. See PLATFORM.md for the reasoning; this is the schema.
+ *
+ * The short version: everything above this function is either product agnostic
+ * already (users, staff, audit) or specific to eSIM (esims). What was missing
+ * is the middle — a catalogue of things we sell, a commerce layer that does not
+ * know what it is selling, and a record of what a customer now owns. Without
+ * those, a second product category is a rewrite rather than an adapter.
+ *
+ * Five seams, and every one of them is free to add today and expensive to add
+ * after the first paying customer:
+ *
+ *   1. An order is money. An order item is a thing. Today every order has one
+ *      item, so splitting them costs nothing; it is also the only way to write
+ *      down a partly failed order, which currently has nowhere to go when
+ *      provisioning fails after Stripe has captured.
+ *   2. Money is a currency, an FX rate, a tax code, and what the customer
+ *      actually saw. Recorded, never recomputed.
+ *   3. A stored catalogue whose SKUs are ours and whose sources are theirs.
+ *   4. Entitlements: what a customer owns, whatever kind of thing it is.
+ *   5. Idempotency, so one payment can never provision twice.
+ *
+ * **On `orders`.** The legacy `plan_id`, `iccid` and `kind` columns are gone,
+ * dropped in the migration above. `orders.iccid` in particular was the exact
+ * violation of the boundary this whole layer exists to draw: commerce is not
+ * allowed to know what an eSIM is, and a column named after one is commerce
+ * knowing.
+ */
+async function migratePlatform(p: Pool) {
+  /* ---- Seam 3: the catalogue ------------------------------------------- */
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS catalog_items (
+      -- Ours, and permanent. A supplier's plan id is theirs and changes when
+      -- they reorganise; this is what goes on an order and has to still mean
+      -- something in three years.
+      sku          TEXT PRIMARY KEY,
+      category     TEXT NOT NULL,
+      title        TEXT NOT NULL,
+      subtitle     TEXT,
+      tax_code     TEXT NOT NULL DEFAULT 'GST',
+      active       BOOLEAN NOT NULL DEFAULT false,
+      sort_order   INTEGER NOT NULL DEFAULT 0,
+      -- Category specific shape, as JSON rather than as columns. For an eSIM:
+      -- {"countries":["JP"],"dataMb":5120,"validityDays":15,"topUp":true}
+      -- A second category brings its own keys and no migration.
+      attributes   JSONB NOT NULL DEFAULT '{}'::jsonb,
+      -- What to ask the customer for at purchase time, and how to validate it.
+      -- An eSIM needs nothing. A data top up needs the number being topped up,
+      -- and the acceptance test in PLATFORM.md failed on exactly this gap.
+      input_schema JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS idx_catalog_live
+      ON catalog_items(category, sort_order) WHERE active;
+
+    /*
+     * One row per SKU per PRICING currency.
+     *
+     * A second row is a price a person decided on for a market. It is never an
+     * FX conversion of the first, because a converted price moves with the
+     * market and produces tags like $19.37. Today there is exactly one row per
+     * SKU, in AUD.
+     */
+    CREATE TABLE IF NOT EXISTS catalog_prices (
+      sku          TEXT NOT NULL REFERENCES catalog_items(sku) ON DELETE CASCADE,
+      currency     TEXT NOT NULL,
+      -- Tax inclusive, because that is how it is displayed to an Australian.
+      sell_amount  NUMERIC(12,2) NOT NULL CHECK (sell_amount >= 0),
+      is_default   BOOLEAN NOT NULL DEFAULT false,
+      PRIMARY KEY (sku, currency)
+    );
+    -- Exactly one default per SKU, enforced rather than hoped for.
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_price_default
+      ON catalog_prices(sku) WHERE is_default;
+
+    /*
+     * Who can serve this SKU. Switching supplier for Japan is an update here,
+     * and last month's orders still point at whoever actually served them.
+     */
+    CREATE TABLE IF NOT EXISTS catalog_sources (
+      sku           TEXT NOT NULL REFERENCES catalog_items(sku) ON DELETE CASCADE,
+      fulfiller_id  TEXT NOT NULL,
+      external_id   TEXT NOT NULL,
+      -- Last known wholesale, for margin display only. The number that counts
+      -- is the one written onto the order at the time it was placed.
+      cost_amount   NUMERIC(12,6) NOT NULL DEFAULT 0,
+      cost_currency TEXT NOT NULL DEFAULT 'USD',
+      priority      INTEGER NOT NULL DEFAULT 100,
+      enabled       BOOLEAN NOT NULL DEFAULT true,
+      checked_at    TIMESTAMPTZ,
+      PRIMARY KEY (sku, fulfiller_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_source_pick
+      ON catalog_sources(sku, priority) WHERE enabled;
+  `);
+
+  /* ---- Seams 1 and 2: orders are money, items are things --------------- */
+  await addColumn(p, "orders", "sell_currency", "TEXT NOT NULL DEFAULT 'AUD'");
+  await addColumn(p, "orders", "sell_amount", "NUMERIC(12,2) NOT NULL DEFAULT 0");
+  await addColumn(p, "orders", "tax_code", "TEXT NOT NULL DEFAULT 'GST'");
+  await addColumn(p, "orders", "tax_amount", "NUMERIC(12,2) NOT NULL DEFAULT 0");
+  // Which regime applied, and the evidence for it. Establishing where a
+  // consumer is for VAT takes two pieces of non contradictory evidence, and
+  // that evidence cannot be collected after the fact.
+  await addColumn(p, "orders", "tax_country", "TEXT");
+  await addColumn(p, "orders", "tax_evidence", "JSONB NOT NULL DEFAULT '{}'::jsonb");
+  // What the customer saw, when it differs from what we charge in. Without it,
+  // somebody writing in to say they paid EUR 18.40 cannot be matched to an
+  // order that reads AUD 29.00.
+  await addColumn(p, "orders", "presentment_currency", "TEXT");
+  await addColumn(p, "orders", "presentment_amount", "NUMERIC(12,2)");
+  await addColumn(p, "orders", "discount_code", "TEXT");
+  await addColumn(p, "orders", "discount_amount", "NUMERIC(12,2) NOT NULL DEFAULT 0");
+  await addColumn(p, "orders", "stripe_ref", "TEXT");
+  await addColumn(p, "orders", "paid_at", "TIMESTAMPTZ");
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS order_items (
+      id            TEXT PRIMARY KEY,
+      order_id      TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+      sku           TEXT NOT NULL,
+      -- Category lives HERE and never on the order. That is the boundary.
+      category      TEXT NOT NULL,
+      fulfiller_id  TEXT,
+      supplier_ref  TEXT,
+      cost_currency TEXT NOT NULL DEFAULT 'USD',
+      cost_amount   NUMERIC(12,6) NOT NULL DEFAULT 0,
+      -- Sell currency units per one unit of cost currency, at order time.
+      -- Margin is not knowable without it and it cannot be reconstructed later.
+      fx_rate       NUMERIC(12,6),
+      -- What the customer supplied, if this category asks for anything. Frozen
+      -- on the item, because "you sent it to the wrong number" is a support
+      -- conversation that needs evidence.
+      input         JSONB NOT NULL DEFAULT '{}'::jsonb,
+      status        TEXT NOT NULL DEFAULT 'pending',
+      attempts      INTEGER NOT NULL DEFAULT 0,
+      last_error    TEXT,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+      fulfilled_at  TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS idx_items_order ON order_items(order_id);
+    -- The operations queue: what paid but has not been delivered.
+    CREATE INDEX IF NOT EXISTS idx_items_stuck
+      ON order_items(created_at) WHERE status IN ('pending', 'failed');
+  `);
+
+  /* ---- Seam 4: entitlements -------------------------------------------- */
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS entitlements (
+      id            TEXT PRIMARY KEY,
+      user_id       TEXT NOT NULL REFERENCES users(id),
+      order_item_id TEXT REFERENCES order_items(id),
+      category      TEXT NOT NULL,
+      status        TEXT NOT NULL DEFAULT 'issued',
+      -- The ICCID for an eSIM. Whatever identifies the thing, for the next
+      -- category. The esims table keeps its own detail and this points at it.
+      external_ref  TEXT,
+      -- What the customer sees in a list of things they own.
+      label         TEXT NOT NULL,
+      expires_at    TIMESTAMPTZ,
+      payload       JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS idx_ent_user
+      ON entitlements(user_id, created_at DESC);
+    -- One entitlement per order item. A retried fulfilment must not mint a
+    -- second one, and a unique index says so at the only layer that cannot be
+    -- talked out of it.
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_ent_item
+      ON entitlements(order_item_id) WHERE order_item_id IS NOT NULL;
+  `);
+
+  /* ---- Seam 5: idempotency --------------------------------------------- */
+  await p.query(`
+    /*
+     * Claimed by conditional insert, never by read then write.
+     *
+     * Stripe retries webhooks. Suppliers time out after doing the work. People
+     * double click. Every one of those paths ends at "provision an eSIM", and
+     * two of them can arrive at once. The failure this prevents is two profiles
+     * against one payment, and the second one cannot be clawed back because it
+     * is activated.
+     */
+    CREATE TABLE IF NOT EXISTS idempotency_keys (
+      key        TEXT PRIMARY KEY,
+      scope      TEXT NOT NULL,
+      state      TEXT NOT NULL DEFAULT 'claimed',
+      result     JSONB,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      settled_at TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS idx_idem_age ON idempotency_keys(created_at);
+  `);
 }
 
 /**
@@ -280,6 +497,143 @@ async function migrateDiscounts(p: Pool) {
   await p.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS idx_redemption_order
       ON discount_redemptions(order_id) WHERE order_id IS NOT NULL
+  `);
+}
+
+/**
+ * Staff, sessions and the audit log.
+ *
+ * Two things here are deliberate and neither is obvious.
+ *
+ * **Tokens are stored hashed.** Both the sign in link and the session live in
+ * this table as SHA-256 digests, never as the value the browser holds. A dump
+ * of this database therefore grants nobody a session. It is the same reasoning
+ * as never storing a password, applied to the things that are as good as one.
+ *
+ * **The audit log has no delete path.** Not in the schema, not in the module,
+ * not for the owner. The first instinct after a mistake is to tidy it away, and
+ * a log you can tidy is not evidence of anything.
+ */
+/**
+ * Rate limiting and error tracking.
+ *
+ * Two tables that exist for the same reason: this application went to the point
+ * of being nearly launchable with no way to slow anybody down and no way to
+ * find out that something had broken. Both are operational rather than
+ * commercial, both are written far more often than they are read, and both are
+ * allowed to be lossy. Neither is ever in a transaction with an order.
+ */
+async function migrateGuards(p: Pool) {
+  await p.query(`
+    /*
+     * One row per bucket per window. Written on every limited request, so the
+     * primary key is the access path and there is deliberately no second index:
+     * an index that is maintained on every write and read by nothing is a tax.
+     *
+     * Rows are swept opportunistically from the application rather than by a
+     * scheduled job, because there is no scheduler here and an unbounded table
+     * of counters is a bill that grows with traffic and never shrinks.
+     */
+    CREATE TABLE IF NOT EXISTS rate_limits (
+      bucket        TEXT NOT NULL,
+      window_start  TIMESTAMPTZ NOT NULL,
+      hits          INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (bucket, window_start)
+    );
+
+    /*
+     * One row per DISTINCT failure, not per occurrence.
+     *
+     * The fingerprint is the primary key and that is the whole design. A
+     * supplier outage writes one row with a count of four thousand rather than
+     * four thousand rows, which is the difference between a console page an
+     * operator reads and one they close.
+     *
+     * resolved_at is set by a person and is never cleared by a recurrence.
+     * Auto reopening sounds right and is not: a fault that recurs on a cycle
+     * longer than anybody's attention can then never be marked handled, and a
+     * list that cannot be cleared stops being read.
+     *
+     * detail holds the redacted context object. Nothing that could be a
+     * credential reaches it: see the redact() pass in observe.ts, which runs on
+     * the way in rather than on the way out, so a secret is never stored even
+     * briefly.
+     */
+    CREATE TABLE IF NOT EXISTS error_events (
+      fingerprint   TEXT PRIMARY KEY,
+      level         TEXT NOT NULL DEFAULT 'error',
+      scope         TEXT NOT NULL,
+      message       TEXT NOT NULL,
+      detail        JSONB NOT NULL DEFAULT '{}',
+      stack         TEXT,
+      count         INTEGER NOT NULL DEFAULT 1,
+      first_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+      last_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+      resolved_at   TIMESTAMPTZ
+    );
+  `);
+
+  // The console's default view: unresolved, newest first. Partial, because the
+  // resolved rows are history and nothing pages through them.
+  await p.query(`
+    CREATE INDEX IF NOT EXISTS idx_errors_open
+      ON error_events(last_at DESC) WHERE resolved_at IS NULL
+  `);
+}
+
+async function migrateStaff(p: Pool) {
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS staff (
+      id          TEXT PRIMARY KEY,
+      email       TEXT NOT NULL UNIQUE,
+      name        TEXT,
+      -- owner, operations, finance, support, readonly. Checked in code rather
+      -- than by an enum type so adding one is a deploy, not a migration.
+      role        TEXT NOT NULL DEFAULT 'readonly',
+      active      BOOLEAN NOT NULL DEFAULT true,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+      last_seen   TIMESTAMPTZ
+    );
+
+    /* Sign in links. Single use, short lived, hashed at rest. */
+    CREATE TABLE IF NOT EXISTS staff_login_tokens (
+      token_hash  TEXT PRIMARY KEY,
+      email       TEXT NOT NULL,
+      expires_at  TIMESTAMPTZ NOT NULL,
+      used_at     TIMESTAMPTZ,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+      requested_ip TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_login_expiry ON staff_login_tokens(expires_at);
+
+    CREATE TABLE IF NOT EXISTS staff_sessions (
+      token_hash  TEXT PRIMARY KEY,
+      staff_id    TEXT NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
+      expires_at  TIMESTAMPTZ NOT NULL,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+      ip          TEXT,
+      user_agent  TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_sessions_staff ON staff_sessions(staff_id);
+
+    /*
+     * Append only. Every mutation in the console writes one row: who, what,
+     * which target, the before and after, and where from.
+     */
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id          BIGSERIAL PRIMARY KEY,
+      actor_id    TEXT,
+      actor_email TEXT NOT NULL,
+      actor_role  TEXT NOT NULL,
+      action      TEXT NOT NULL,
+      target      TEXT,
+      before      JSONB,
+      after       JSONB,
+      ip          TEXT,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS idx_audit_time ON audit_log(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_log(actor_email, created_at DESC);
   `);
 }
 
@@ -429,7 +783,7 @@ export function nowIso() {
   return new Date().toISOString();
 }
 
-/** UTC day, as `daily_budget.day` stores it. */
+/** UTC day, `YYYY-MM-DD`. */
 export function today() {
   return new Date().toISOString().slice(0, 10);
 }

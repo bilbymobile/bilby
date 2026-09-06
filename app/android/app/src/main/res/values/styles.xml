@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Shown from the moment the process starts until Flutter renders its first
+      frame. Painted in the brand ground rather than white, so cold start does
+      not flash a white rectangle before a cream app appears.
+    -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+
+    <!-- Swapped in once Flutter has a frame. See NormalTheme in the manifest. -->
+    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@color/bilby_ground</item>
+    </style>
+</resources>
