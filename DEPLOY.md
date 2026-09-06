@@ -44,6 +44,46 @@ The direct connection on 5432 will fail under a serverless deployment, because
 each instance opens its own pool and there are more instances than that port
 will accept. The failure looks like the database being down.
 
+### Check the string before you deploy it
+
+```bash
+cd web
+DATABASE_URL="<your string>" npx tsx scripts/check-db.ts
+```
+
+PowerShell:
+
+```powershell
+cd web
+$env:DATABASE_URL="<your string>"; npx tsx scripts/check-db.ts
+```
+
+It prints the username, host, port and database, names anything wrong, and then
+connects. **It never prints the password**, not masked and not by length, so you
+can paste its output to anybody. The instinct when a connection fails is to send
+somebody the whole string, and the whole string is a credential to your
+production database.
+
+### The username is not decoration
+
+Supabase's three connection strings differ in the **username**, not only the
+host and port:
+
+| | username | host | port |
+|---|---|---|---|
+| Direct connection | `postgres` | `db.<ref>.supabase.co` | 5432 |
+| Session pooler | `postgres.<ref>` | `<region>.pooler.supabase.com` | 5432 |
+| **Transaction pooler** | `postgres.<ref>` | `<region>.pooler.supabase.com` | **6543** |
+
+The pooler finds your project from the username. A bare `postgres` against a
+pooler host reaches no project at all, and the pooler reports that as
+`password authentication failed for user "postgres"` — which sends you off to
+check a password that was never the problem. If you ever see that error, read
+the username in it first.
+
+The application refuses both of the broken shapes at startup with a message
+naming the fix, rather than letting Postgres describe it as an auth failure.
+
 ### Percent encode the password, always
 
 If the password contains `@ : / ? # % [ ]` the string has to be encoded, and the
@@ -184,6 +224,35 @@ you rather than what is written here:
 The apex A record is the one value Vercel still publishes as a constant, and it
 shows you that too. Trust the dashboard over this file in every case: these
 change, and a markdown file does not find out.
+
+### Functions run in Sydney
+
+`web/vercel.json` pins `regions: ["syd1"]`. Vercel defaults every new project to
+`iad1`, Washington D.C., on the theory that most external data sources sit on the
+US east coast. Ours does not: the database is in `ap-southeast-2` and the
+customers are Australian.
+
+Left at the default, every database query would cross the Pacific twice, and this
+application makes several sequential ones per page — a shop row looks up an item,
+a price and a source before it renders. That is most of a second of network time
+on a page where nothing in the code looks slow.
+
+It lives in the repository rather than the dashboard because a region that exists
+only in a settings page is a region nobody knows about until it is wrong.
+
+**Do not put comments in that file.** A `"//"` key is the usual JSON comment
+convention and Vercel rejects it outright:
+
+```
+The `vercel.json` schema validation failed with the following message:
+should NOT have additional property `//`
+```
+
+The build fails before it starts. Vercel validates against a closed list of
+properties, so the file cannot carry its own reasoning; that is what this section
+is for. `scripts/vercel-json.test.ts` checks it, and runs first in `check.sh`
+because it is the cheapest possible failure to catch and the most annoying one to
+discover from a deployment log.
 
 `status.bilbymobile.com` is deliberately **not** in that list. A status page
 hosted on the platform it reports on has already failed at the only moment it

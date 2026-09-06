@@ -1,30 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-
-  "//": [
-    "Functions run in Sydney, not Washington.",
-    "",
-    "Vercel defaults every new project to iad1, Washington D.C., on the theory",
-    "that most external data sources sit on the US east coast. Ours does not:",
-    "the database is in ap-southeast-2 and the customers are Australian.",
-    "",
-    "Left at the default, every request would cross the Pacific twice per query",
-    "and this application makes several sequential queries per page. A shop that",
-    "looks up an item, a price and a source before rendering a row would spend",
-    "most of a second on network time alone, and nothing in the code would look",
-    "slow.",
-    "",
-    "Written here rather than set in the dashboard so it is version controlled,",
-    "travels with the repository, and is visible to whoever reads the code next.",
-    "A region that lives only in a settings page is a region nobody knows about",
-    "until it is wrong.",
-    "",
-    "Hobby plan allows one region. If this ever moves to Pro, the failover",
-    "region should be the nearest one that keeps data in the same jurisdiction,",
-    "which today means there is no such region and the honest answer is to stay",
-    "single region rather than quietly move Australian personal information to",
-    "Singapore during an outage."
-  ],
-
   "regions": ["syd1"]
 }

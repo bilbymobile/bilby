@@ -68,6 +68,82 @@ function connectionString(): string {
   );
 }
 
+/**
+ * Catch the connection strings that are wrong in a way Postgres cannot explain.
+ *
+ * Supabase offers three strings and they differ in the USERNAME, not just the
+ * host and port. The pooler encodes the tenant in the username, so
+ * `postgres.<project ref>` reaches your project and a bare `postgres` reaches
+ * nothing. Supavisor answers that with `password authentication failed for user
+ * "postgres"`, which sends you off to check a password that was never the
+ * problem.
+ *
+ * This turns that into a sentence naming the actual fix. It runs once, at pool
+ * construction, and only refuses configurations that cannot work:
+ *
+ *   pooler host + bare `postgres` username   cannot resolve a tenant, ever
+ *   direct `db.<ref>.supabase.co` host       IPv6 only, and one connection per
+ *                                            instance, which is the wrong shape
+ *                                            for serverless
+ *
+ * Deliberately not a warning. A misconfigured database is not a degraded mode,
+ * and an application that starts anyway just moves the discovery to a customer.
+ */
+function assertUsableConnection(conn: string): void {
+  let user = "";
+  let host = "";
+  let port = "";
+  try {
+    const u = new URL(conn);
+    user = decodeURIComponent(u.username);
+    host = u.hostname;
+    port = u.port;
+  } catch {
+    throw new Error(
+      "DATABASE_URL is not a valid URL.\n\n" +
+        "The usual cause is a password containing one of @ : / ? # % [ ] that " +
+        "has not been percent encoded. Encode it, or reset the database " +
+        "password to letters and digits only, which removes the problem " +
+        "rather than working around it.",
+    );
+  }
+
+  if (host.endsWith(".pooler.supabase.com") && !user.includes(".")) {
+    throw new Error(
+      `DATABASE_URL uses the Supabase pooler but the username is "${user}".\n\n` +
+        "The pooler identifies your project from the username, so it has to be " +
+        "postgres.<project ref>, not a bare postgres. A bare one reaches no " +
+        'tenant at all and the pooler reports it as "password authentication ' +
+        'failed", which is why this check exists: the password is not the ' +
+        "problem.\n\n" +
+        "You have probably copied the Direct connection string and changed the " +
+        "host. Copy the Transaction pooler string whole instead: Supabase, " +
+        "Connect, Transaction pooler.",
+    );
+  }
+
+  if (/^db\..*\.supabase\.co$/.test(host)) {
+    throw new Error(
+      `DATABASE_URL points at ${host}, which is the direct connection.\n\n` +
+        "That will not work from here for two reasons. It is IPv6 only on the " +
+        "free plan, and it gives one real Postgres connection per client, while " +
+        "a serverless deployment opens far more than the server will accept. " +
+        "The failure looks like the database being down.\n\n" +
+        "Use the Transaction pooler string instead: same project, username " +
+        "postgres.<project ref>, host <region>.pooler.supabase.com, port 6543.",
+    );
+  }
+
+  if (host.endsWith(".pooler.supabase.com") && port === "5432") {
+    // Session mode. It works, so this is not fatal, but it holds a connection
+    // for the life of the client and that is the thing serverless does worst.
+    console.warn(
+      "[db] port 5432 on the pooler is session mode. Transaction mode is 6543 " +
+        "and is the one built for serverless.",
+    );
+  }
+}
+
 /** Loopback, or an explicit sslmode=disable. Nothing else counts as local. */
 function isLocal(conn: string): boolean {
   try {
@@ -83,6 +159,7 @@ function getPool(): Pool {
   if (pool) return pool;
 
   const conn = connectionString();
+  assertUsableConnection(conn);
 
   pool = new Pool({
     connectionString: conn,

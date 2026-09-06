@@ -9,6 +9,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+echo "── vercel.json ───────────────────────────────────────"
+npx tsx scripts/vercel-json.test.ts 2>/dev/null | grep -E '^(  FAIL|[0-9]+ passed)'
+
+echo
 echo "── types ──────────────────────────────────────────────"
 npx tsc --noEmit -p tsconfig.json
 echo "clean"
