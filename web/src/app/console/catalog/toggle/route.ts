@@ -1,8 +1,10 @@
+import { revalidatePath } from "next/cache";
 import type { NextRequest } from "next/server";
 
 import { backTo } from "@/lib/console-http";
 import { setItemActive } from "@/lib/platform";
 import { audit, can, currentStaff } from "@/lib/staff";
+import { capture } from "@/lib/observe";
 
 export const runtime = "nodejs";
 
@@ -32,5 +34,28 @@ export async function POST(req: NextRequest) {
   }
 
   await audit(me, next ? "catalog.activate" : "catalog.deactivate", sku);
+
+  /*
+   * The landing page counts destinations that are on sale, and this is the only
+   * thing in the system that changes that answer. Telling it here is what lets
+   * that page be static: without this it would have to poll, and polling on the
+   * page a stranger sees first means somebody pays for a database round trip
+   * before the hero image starts loading.
+   *
+   * Both paths, because the apex serves the landing page at "/" through a
+   * middleware rewrite while the cache entry is keyed on "/home".
+   *
+   * Not awaited into the response contract on purpose: a revalidation that
+   * fails must not turn a successful activation into an error the operator has
+   * to interpret. The SKU is on sale either way; the worst case is a page that
+   * is up to a day stale, which is what the revalidate window is for.
+   */
+  try {
+    revalidatePath("/home");
+    revalidatePath("/");
+  } catch (e) {
+    await capture("catalog.revalidate", e, { sku });
+  }
+
   return backTo(req, "/console/catalog", { done: sku });
 }

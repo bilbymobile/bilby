@@ -34,6 +34,10 @@ echo "── the public catalogue publishes no economics ───────"
 npx tsx scripts/catalog-privacy.test.ts 2>/dev/null | grep -E '^(  FAIL|[0-9]+ passed)'
 
 echo
+echo "── the theme can be read ─────────────────────────────"
+npx tsx scripts/contrast.test.ts 2>/dev/null | grep -E '^(  FAIL|[0-9]+ passed)'
+
+echo
 echo "── the landing page claims only what is on sale ──────"
 npx tsx scripts/live-destinations.test.ts 2>/dev/null | grep -E '^(  FAIL|[0-9]+ passed)'
 

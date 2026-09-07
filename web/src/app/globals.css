@@ -1,26 +1,69 @@
+/*
+ * One visual world, and only one.
+ *
+ * This used to be a dark theme, and the apex, the legal pages and the console
+ * each overrode it back to cream. That is three places remembering to undo a
+ * default, and the default won at least twice: the legal pages once rendered
+ * near white text on the cream ground, and a customer pressing "Open the app"
+ * on a warm cream landing page arrived at a near black one.
+ *
+ * The second is the expensive one. That click is the moment somebody decides
+ * whether to hand over a card, and the page it lands on looked like a different
+ * company. Nothing about a dark shop was a decision; it was the starting theme
+ * of a prototype that the brand then grew away from.
+ *
+ * So cream is the default and there is no dark palette left to leak. A surface
+ * that forgets to label itself now renders as Bilby rather than as the opposite
+ * of Bilby. The marketing and console blocks below still exist, because they
+ * differ in measure, density and radius, but they no longer have to undo a
+ * colour scheme to get there.
+ *
+ * Values come from the landing page's palette so the two hosts are literally
+ * the same colours rather than approximately the same colours.
+ */
 :root {
-  --bg: #07090d;
-  --surface: #0e1319;
-  --surface-2: #151c25;
-  --border: #1e2833;
-  --text: #e8eef5;
-  --muted: #8b9aab;
-  --accent: #2ee6a8;
-  --accent-dim: #10a97a;
-  /* Text drawn ON the accent. Never white: white on aqua is 1.9:1 and
-     unreadable outdoors, which is where a travel app gets used. It is a
-     variable rather than a literal so the marketing surface, where the accent
-     is navy rather than aqua, can flip it to cream instead of shipping dark
-     text on a dark button. */
-  --accent-ink: #04120c;
-  --note-ink: #f0dcc0;
-  --note-ok-ink: #c9f5e5;
-  --note-bad-ink: #f5cfcf;
-  --note-ok-bg: rgba(46, 230, 168, .06);
-  --note-warn-bg: rgba(255, 179, 71, .06);
-  --note-bad-bg: rgba(255, 107, 107, .07);
-  --warn: #ffb347;
-  --danger: #ff6b6b;
+  --bg: #F7EFE4;
+  --surface: #FDF9F3;
+  --surface-2: #F1E6D7;
+  --border: #E7DAC8;
+  --text: #0B2038;
+  --muted: #3A4C60;
+
+  /* The action colour on cream is ink, not a hue: the darkest thing on the
+     screen is the thing you press. That is the same rule the landing page's
+     primary button follows, so Buy and "See where we go" are the same button
+     in two places rather than two buttons that happen to both be buttons.
+
+     --ok keeps a real "yes" colour available. With a navy accent the success
+     states would otherwise go navy too and stop meaning anything. */
+  --accent: #0B2038;
+  --accent-dim: #1B3350;
+  /* Text drawn ON the accent. A variable rather than a literal, because the
+     accent is not always the same lightness and a hardcoded ink is how you
+     ship dark text on a dark button. */
+  --accent-ink: #F7EFE4;
+  --ok: #35857A;
+  /* The same teal, 14% darker, for text links only.
+     #35857A is the brand's "this is fine" colour and it is right on a badge, a
+     border or a check mark, where 3:1 is the bar. As body text on cream it is
+     4.18:1 on a card and 3.85:1 on the page, both under the 4.5:1 WCAG AA asks
+     of text. Darkening the brand colour everywhere would dull every success
+     state to fix a link, so links get their own token instead.
+
+     Measured rather than eyeballed: 4.94 on the page, 5.37 on a card, 4.57 on a
+     raised chip. Defined here only; the marketing and console blocks inherit
+     it, because an accessible link is not a per surface opinion. */
+  --link: #2E7269;
+  --warn: #C87F45;
+  --danger: #B3402F;
+
+  --note-ink: #5C3A1B;
+  --note-ok-ink: #1F4B45;
+  --note-bad-ink: #6B2418;
+  --note-ok-bg: rgba(53, 133, 122, .09);
+  --note-warn-bg: rgba(200, 127, 69, .10);
+  --note-bad-bg: rgba(179, 64, 47, .08);
+
   --radius: 14px;
   --max: 940px;
 }
@@ -32,12 +75,27 @@ html, body {
   padding: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* The same face as the landing page and the legal pages. The shop was the
+     one surface in the brand still set in the system font, which reads as a
+     different site even before you notice the colours. */
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Headings take the display face, as they do on the apex. */
+h1, h2, h3 {
+  font-family: "Outfit", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  letter-spacing: -.02em;
 }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
+/* Body links inside a card get the teal and an underline. On cream the accent
+   is ink, so an unstyled link is the same colour as the sentence around it and
+   nothing marks it as pressable. Scoped to .card on purpose: a bare `a` rule
+   here is 0,1,1 and ties with `nav.links a`, which is how the navigation went
+   teal the last time somebody tried this. */
+.card a:not(.btn) { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
 
 .shell { max-width: var(--max); margin: 0 auto; padding: 0 20px 72px; }
 
@@ -63,6 +121,10 @@ nav.links a:hover { color: var(--text); text-decoration: none; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 22px;
+  /* On a dark ground a border was enough to separate a card from the page. On
+     cream the two are four percent apart in lightness, so the card needs a
+     shadow to exist at all. Same values as the landing page's. */
+  box-shadow: 0 1px 2px rgba(11, 32, 56, .03), 0 12px 32px rgba(11, 32, 56, .05);
 }
 .card + .card { margin-top: 16px; }
 .card h2 { margin: 0 0 6px; font-size: 17px; letter-spacing: -0.01em; }
@@ -100,7 +162,7 @@ button.ghost, .btn.ghost { background: var(--surface-2); color: var(--text); bor
   padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 14px;
   color: var(--note-ink); line-height: 1.5; margin-top: 16px;
 }
-.note.ok { border-color: var(--ok, var(--accent)); background: var(--note-ok-bg); color: var(--note-ok-ink); }
+.note.ok { border-color: var(--ok); background: var(--note-ok-bg); color: var(--note-ok-ink); }
 .note.bad { border-color: var(--danger); background: var(--note-bad-bg); color: var(--note-bad-ink); }
 
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -124,7 +186,7 @@ code.inline { background: var(--surface-2); padding: 2px 6px; border-radius: 5px
   text-transform: uppercase; padding: 4px 9px; border-radius: 99px;
   background: var(--surface-2); color: var(--muted); border: 1px solid var(--border);
 }
-.badge.free { background: var(--note-ok-bg); color: var(--ok, var(--accent)); border-color: transparent; }
+.badge.free { background: var(--note-ok-bg); color: var(--ok); border-color: transparent; }
 
 footer.foot { margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; line-height: 1.6; }
 
@@ -203,7 +265,7 @@ footer.foot { margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--b
    with the shell's own link rules, so the nav and the wordmark were rendering
    teal. Body links inside a legal document are the only ones that want a
    colour of their own. */
-[data-surface="marketing"] .prose a { color: var(--ok); text-decoration: underline; text-underline-offset: 3px; }
+[data-surface="marketing"] .prose a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
 [data-surface="marketing"] .prose { max-width: 78ch; margin: 0 auto; padding-inline: 24px; }
 
 /* The staff console. Same warm system, denser, and it never sees a customer. */

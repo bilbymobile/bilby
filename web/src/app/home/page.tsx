@@ -88,15 +88,25 @@ const PROMISES = [
 ];
 
 /*
- * Revalidated rather than rendered per request.
+ * Static, and regenerated when the catalogue actually changes.
  *
- * This page is the most expensive thing in the repo to render and it is the one
- * a stranger hits first, so it should not open a database connection for every
- * visitor. Five minutes is the lag between activating a plan and the headline
- * saying so, which is a fair trade for a landing page that stays fast under a
- * burst of traffic. Nothing here is transactional; the shop reads live.
+ * The first version of this read the database on every render. The second
+ * revalidated every five minutes, which sounded careful and was not: it meant
+ * that twelve times an hour the unlucky visitor who arrived first paid for a
+ * cold function and a Postgres round trip to Sydney before a single byte of the
+ * page moved. On the one page a stranger judges the business by. The hero image
+ * is 260 KB and marked priority, so what they saw while waiting was the layout
+ * with a hole where the artwork goes.
+ *
+ * A landing page that hesitates is worse than a landing page that is briefly
+ * out of date, and this data changes when somebody presses a button in the
+ * console, which is a moment we know about exactly. So the page is static and
+ * `/console/catalog/toggle` revalidates it on the way out.
+ *
+ * The daily number is a safety net, not the mechanism. It catches a SKU flipped
+ * straight in SQL, which nobody should do and somebody eventually will.
  */
-export const revalidate = 300;
+export const revalidate = 86400;
 
 export default async function HomePage() {
   const live = await liveDestinations();
