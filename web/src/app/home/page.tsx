@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
-import { DESTINATIONS } from "@/lib/destinations";
+import { liveDestinations, heroClaim } from "@/lib/live-destinations";
 import { url } from "@/lib/hosts";
 import styles from "./home.module.css";
 import { FieldNotes } from "./notes";
@@ -16,9 +16,18 @@ import { HeroParallax, Motes, Reveal } from "./motion";
  * The design this came from carried "190+ countries" and "200+ carriers". Both
  * were invented, and both are representations about a future matter under
  * Australian Consumer Law: until a wholesale contract exists, the burden of
- * showing reasonable grounds for them sits with us. So the destination count
- * comes from `DESTINATIONS`, which is the same list the picker and the plan
- * catalogue read, and it grows on its own as the catalogue does.
+ * showing reasonable grounds for them sits with us.
+ *
+ * The first fix took the count from `DESTINATIONS`, the curated list of places
+ * we can quote, price and provision. That was better than a typed number and
+ * still wrong, because it said thirteen on a day when one plan was on sale.
+ * "Can provision" and "is on sale" are different facts and the sentence makes a
+ * claim about the second.
+ *
+ * So the count now comes from the catalogue itself, via `liveDestinations()`. A
+ * destination appears here when a SKU for it is activated and disappears when
+ * the last one is switched off, and the headline changes shape rather than
+ * saying "1 destinations". Nobody edits this page again.
  *
  * ## And there are no prices
  *
@@ -78,8 +87,21 @@ const PROMISES = [
   },
 ];
 
-export default function HomePage() {
-  const count = DESTINATIONS.length;
+/*
+ * Revalidated rather than rendered per request.
+ *
+ * This page is the most expensive thing in the repo to render and it is the one
+ * a stranger hits first, so it should not open a database connection for every
+ * visitor. Five minutes is the lag between activating a plan and the headline
+ * saying so, which is a fair trade for a landing page that stays fast under a
+ * burst of traffic. Nothing here is transactional; the shop reads live.
+ */
+export const revalidate = 300;
+
+export default async function HomePage() {
+  const live = await liveDestinations();
+  const claim = heroClaim(live);
+  const dests = live ?? [];
 
   return (
     <>
@@ -163,10 +185,10 @@ export default function HomePage() {
             */}
             <h1>
               <span className={styles.lineWrap}>
-                <span className={`${styles.line} ${styles.line1}`}>Land connected in</span>
+                <span className={`${styles.line} ${styles.line1}`}>{claim.line1}</span>
               </span>
               <span className={styles.lineWrap}>
-                <span className={`${styles.line} ${styles.line2}`}>{count} destinations.</span>
+                <span className={`${styles.line} ${styles.line2}`}>{claim.line2}</span>
               </span>
             </h1>
             <p className={`${styles.lede} ${styles.rise} ${styles.rise2}`}>
@@ -181,15 +203,19 @@ export default function HomePage() {
               </a>
             </div>
             <div className={`${styles.pills} ${styles.rise} ${styles.rise4}`}>
-              <span className={styles.pill}>
-                <i>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18" />
-                  </svg>
-                </i>
-                {count} destinations
-              </span>
+              {/* Dropped entirely when there is nothing true to put in it. An
+                  empty pill is better than a pill reading "0 destinations". */}
+              {claim.pill ? (
+                <span className={styles.pill}>
+                  <i>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18" />
+                    </svg>
+                  </i>
+                  {claim.pill}
+                </span>
+              ) : null}
               <span className={styles.pill}>
                 <i>eSIM</i> Install before you fly
               </span>
@@ -234,19 +260,33 @@ export default function HomePage() {
             <p className={styles.eyebrow}>Destinations</p>
             <h2>The places Australians actually fly to.</h2>
             <p>
-              A short list on purpose. Every destination here is one we can quote, price and
-              provision, rather than an aspirational map of the world.
+              A short list on purpose. Every destination here is on sale right now, not a
+              country we hope to cover, and this section is built from the same catalogue the
+              shop sells from.
             </p>
           </div></Reveal>
-          <Reveal delay={80}><div className={`${styles.dests} ${styles.cascade}`}>
-            {DESTINATIONS.map((d) => (
-              <div className={styles.dest} key={d.iso}>
-                <div className={styles.swatch}>{d.iso}</div>
-                <h3>{d.name}</h3>
-                <p>{d.blurb ?? "Local networks, full speed"}</p>
-              </div>
-            ))}
-          </div></Reveal>
+          {/*
+            Only what is actually on sale. Listing a destination here that the
+            shop cannot fill sends somebody to an empty shelf, which reads as
+            broken rather than as "not yet", and is the specific failure this
+            whole page was rewritten to stop making.
+          */}
+          {dests.length > 0 ? (
+            <Reveal delay={80}><div className={`${styles.dests} ${styles.cascade}`}>
+              {dests.map((d) => (
+                <div className={styles.dest} key={d.iso}>
+                  <div className={styles.swatch}>{d.iso}</div>
+                  <h3>{d.name}</h3>
+                  <p>{d.blurb ?? "Local networks, full speed"}</p>
+                </div>
+              ))}
+            </div></Reveal>
+          ) : (
+            <Reveal delay={80}><p className={styles.lede}>
+              Nothing is on sale yet. Every plan is tested on a real handset before it goes on
+              this page, so this fills up as that happens rather than all at once.
+            </p></Reveal>
+          )}
         </div>
       </section>
 

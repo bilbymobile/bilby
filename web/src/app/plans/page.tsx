@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { currentUser } from "@/lib/session";
 import { listCatalog } from "@/lib/platform";
-import { DESTINATIONS, destinationName } from "@/lib/destinations";
+import { destinationName } from "@/lib/destinations";
+import { liveDestinations } from "@/lib/live-destinations";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,16 @@ export default async function PlansPage({
 
   const items = await listCatalog("esim", "AUD", { attribute: ["country", iso] });
 
+  /*
+   * The picker offers what is on sale, not what is on the roadmap.
+   *
+   * It used to render `DESTINATIONS`, which meant five countries had a button
+   * and no stock. A customer pressing one landed on an empty shelf and had no
+   * way to tell whether the shop was broken or simply did not sell the UK. Both
+   * readings are bad and neither is what we meant.
+   */
+  const dests = (await liveDestinations()) ?? [];
+
   return (
     <>
       <section className="hero">
@@ -44,7 +55,7 @@ export default async function PlansPage({
         <h2>Destination</h2>
         <p className="sub">Showing {destinationName(iso)}.</p>
         <div className="row">
-          {DESTINATIONS.map((d) => (
+          {dests.map((d) => (
             <a
               key={d.iso}
               className={`btn ${d.iso === iso ? "" : "ghost"}`}
@@ -60,13 +71,17 @@ export default async function PlansPage({
         {items.length === 0 ? (
           <>
             <h2>Nothing on sale for {destinationName(iso)} yet</h2>
+            {/*
+              Customer facing, so it says what this means for them and nothing
+              about how the catalogue works. The previous version told a buyer
+              to activate items from the staff console, which is an instruction
+              they cannot follow, about a system they should not have to know
+              exists.
+            */}
             <p className="sub" style={{ margin: 0 }}>
-              The catalogue is seeded but every item starts inactive, and an
-              inactive item is not for sale. Activate the ones you have checked
-              on a handset from the staff console. Nothing here is a fallback to
-              a live supplier lookup on purpose: a shop that invents a price
-              when the catalogue is empty is a shop that will one day sell at a
-              loss.
+              Every plan is tested on a real handset before it goes on sale, and
+              this one is not through that yet. The destinations above are ready
+              to buy today.
             </p>
           </>
         ) : (

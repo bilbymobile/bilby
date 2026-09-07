@@ -194,6 +194,33 @@ export async function listCatalog(
   }));
 }
 
+/**
+ * Which values of one attribute are actually on sale?
+ *
+ * The same WHERE clause as `listCatalog`, projected to one attribute and
+ * deduplicated. Answers "where can somebody buy something today" without
+ * pulling every row and counting in JavaScript.
+ *
+ * Generic on purpose. This function does not know that the key will be
+ * "country" or that the category will be eSIMs, in the same way the rest of
+ * this file does not. The caller supplies the key, never a request, so there is
+ * nothing to inject.
+ */
+export async function distinctAttributeValues(
+  category: string,
+  currency: string,
+  key: string,
+): Promise<string[]> {
+  const rows = await all<{ value: string | null }>(
+    `SELECT DISTINCT i.attributes ->> ? AS value
+       FROM catalog_items i
+       JOIN catalog_prices p ON p.sku = i.sku AND p.currency = ?
+      WHERE i.category = ? AND i.active`,
+    [key, currency, category],
+  );
+  return rows.map((r) => r.value).filter((v): v is string => !!v);
+}
+
 export async function getItem(sku: string): Promise<CatalogItem | null> {
   const r = await one<ItemRow>(`SELECT * FROM catalog_items WHERE sku = ?`, [sku]);
   return r ? toItem(r) : null;
