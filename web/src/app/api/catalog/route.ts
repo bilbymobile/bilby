@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listCatalog } from "@/lib/platform";
 import { isSupportedDestination } from "@/lib/destinations";
+import { publicAttributes } from "@/lib/catalog-public";
 import { callerIp, consume, limitHeaders } from "@/lib/limits";
 
 export const runtime = "nodejs";
@@ -49,16 +50,24 @@ export async function GET(req: NextRequest) {
       sku: p.sku,
       title: p.title,
       subtitle: p.subtitle,
-      // Attributes are the category's own facts. Passed through rather than
-      // flattened onto the response, so adding a field to an eSIM SKU does not
-      // mean editing this route.
-      attributes: p.attributes,
+      // Attributes are the category's own facts, filtered to the ones a
+      // customer may see. This used to pass the whole object through, on the
+      // reasoning that adding a field to an eSIM SKU should not mean editing
+      // this route. That reasoning cost us: the seed script writes the
+      // economics into attributes for the console, so wholesale cost, target
+      // margin and contribution per sale were served to anybody with the URL.
+      //
+      // The filter is an allowlist in @/lib/catalog-public. Adding a customer
+      // facing field now does mean editing one line there, and that is the
+      // correct price for making the default safe.
+      attributes: publicAttributes(p.attributes),
       currency: p.currency,
       price: p.sellAmount,
-      // Deliberately NOT exposed: anything from catalog_sources. Cost, supplier
-      // identity and the external plan id are one screenshot away from being a
-      // competitor's pricing intelligence, and a supplier's name is leverage
-      // they can use in the next rate negotiation.
+      // Deliberately NOT exposed: anything from catalog_sources, and anything
+      // in attributes that is not on the allowlist. Cost, supplier identity and
+      // the external plan id are one screenshot away from being a competitor's
+      // pricing intelligence, and a supplier's name is leverage they can use in
+      // the next rate negotiation.
     })),
   }, { headers: limitHeaders(gate) });
 }

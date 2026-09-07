@@ -30,6 +30,10 @@ echo "── guards: rate limiting and error tracking ────────�
  npx tsx scripts/guards.test.ts 2>/dev/null | grep -E '^(  FAIL|[0-9]+ passed)'
 
 echo
+echo "── the public catalogue publishes no economics ───────"
+npx tsx scripts/catalog-privacy.test.ts 2>/dev/null | grep -E '^(  FAIL|[0-9]+ passed)'
+
+echo
 echo "── the console bootstrap window ──────────────────────"
 npx tsx scripts/bootstrap.test.ts 2>/dev/null | grep -E '^(  FAIL|[0-9]+ passed)'
 
