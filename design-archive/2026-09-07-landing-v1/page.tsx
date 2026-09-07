@@ -1,0 +1,395 @@
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+
+import { liveDestinations, heroClaim } from "@/lib/live-destinations";
+import { url } from "@/lib/hosts";
+import styles from "./home.module.css";
+import { FieldNotes } from "./notes";
+import { HeroParallax, Motes, Reveal } from "./motion";
+
+/**
+ * The marketing landing page, served on the apex.
+ *
+ * ## Every number on this page is derived, not typed
+ *
+ * The design this came from carried "190+ countries" and "200+ carriers". Both
+ * were invented, and both are representations about a future matter under
+ * Australian Consumer Law: until a wholesale contract exists, the burden of
+ * showing reasonable grounds for them sits with us.
+ *
+ * The first fix took the count from `DESTINATIONS`, the curated list of places
+ * we can quote, price and provision. That was better than a typed number and
+ * still wrong, because it said thirteen on a day when one plan was on sale.
+ * "Can provision" and "is on sale" are different facts and the sentence makes a
+ * claim about the second.
+ *
+ * So the count now comes from the catalogue itself, via `liveDestinations()`. A
+ * destination appears here when a SKU for it is activated and disappears when
+ * the last one is switched off, and the headline changes shape rather than
+ * saying "1 destinations". Nobody edits this page again.
+ *
+ * ## And there are no prices
+ *
+ * For the same reason. There is no signed rate card, so any price here would be
+ * a guess wearing a dollar sign. What replaces it is the pricing *promise*,
+ * which is true today and is the thing that actually differentiates us: the
+ * whole cost on the card, no activation fee, nothing that renews behind you,
+ * and a refund if the eSIM never worked. Put real numbers back the day a
+ * supplier is live, not before.
+ */
+
+export const metadata: Metadata = {
+  title: "Bilby · travel eSIM for Australians",
+  description:
+    "Set up your travel data at home before you fly, land already connected, and reach a person in Australian hours if it goes wrong.",
+  alternates: { canonical: url("marketing", "/") },
+};
+
+const STEPS = [
+  {
+    n: 1,
+    h: "Pick where you are going",
+    p: "Choose a country and a size. The full price is on the card before you pay, including what happens if the eSIM never activates.",
+  },
+  {
+    n: 2,
+    h: "Install it at home",
+    p: "One scan on your own couch, on your own wifi, with time to spare. Nothing switches on yet and nothing starts counting down.",
+  },
+  {
+    n: 3,
+    h: "Land already connected",
+    p: "Turn the phone on and it finds a local network by itself. No app to open and no code to type while you are carrying a bag and a passport.",
+  },
+];
+
+const PROMISES = [
+  {
+    h: "Someone answers",
+    p: "A person in Australian hours who can see your profile and fix it. Not a form, and not a bot that asks you to restart your phone.",
+    d: "M21 12a8 8 0 0 1-8 8H6l-3 2 1-4a8 8 0 1 1 17-6z",
+  },
+  {
+    h: "Australian consumer law",
+    p: "You are covered by Australian Consumer Law, not by terms written in a jurisdiction you have never been to.",
+    d: "M4 6h16v12H4z M4 10h16",
+  },
+  {
+    h: "A refund if it never worked",
+    p: "If the eSIM never activated on your trip you get your money back, and we do not ask you to prove it with screenshots.",
+    d: "M20 7L9 18l-5-5",
+  },
+  {
+    h: "Nothing renews behind you",
+    p: "The plan ends when the trip ends. There is no subscription quietly billing you three months after you got home.",
+    d: "M12 7v6l4 2",
+  },
+];
+
+/*
+ * Static, and regenerated when the catalogue actually changes.
+ *
+ * The first version of this read the database on every render. The second
+ * revalidated every five minutes, which sounded careful and was not: it meant
+ * that twelve times an hour the unlucky visitor who arrived first paid for a
+ * cold function and a Postgres round trip to Sydney before a single byte of the
+ * page moved. On the one page a stranger judges the business by. The hero image
+ * is 260 KB and marked priority, so what they saw while waiting was the layout
+ * with a hole where the artwork goes.
+ *
+ * A landing page that hesitates is worse than a landing page that is briefly
+ * out of date, and this data changes when somebody presses a button in the
+ * console, which is a moment we know about exactly. So the page is static and
+ * `/console/catalog/toggle` revalidates it on the way out.
+ *
+ * The daily number is a safety net, not the mechanism. It catches a SKU flipped
+ * straight in SQL, which nobody should do and somebody eventually will.
+ */
+export const revalidate = 86400;
+
+export default async function HomePage() {
+  const live = await liveDestinations();
+  const claim = heroClaim(live);
+  const dests = live ?? [];
+
+  return (
+    <>
+      <section className={styles.hero} id="top">
+        <HeroParallax>
+        {/*
+          Three boxes, and each one exists because of a specific failure.
+
+          `.art` clips and fades. It must NOT be scaled: it is the box whose
+          left edge sits against the flat cream half of the hero, and scaling it
+          moves that edge, leaving a hairline of raw image where the scrim no
+          longer reaches. One pixel wide, running the full height, and only
+          visible once you scroll.
+
+          `.artInner` carries the scroll: parallax and the slow push in. Inside
+          the clip, so it can scale freely.
+
+          `.artIn` carries the entrance. Separate from the scroll box because a
+          fill-mode forwards animation keeps overriding the properties it
+          animated forever, so on one element the entrance silently won and the
+          scroll did nothing at all.
+
+          The scrim is a sibling of the mover, not a child, so it stays put and
+          keeps covering the left edge while everything behind it moves.
+        */}
+        <div className={styles.art}>
+          <div className={styles.artInner}>
+          <div className={styles.artIn}>
+            <Image
+              src="/hero-bilby.jpg"
+              alt="The Bilby mascot above the Earth over Australia, broadcasting a signal"
+              width={1400}
+              height={1484}
+              priority
+              sizes="(max-width: 980px) 100vw, 64vw"
+              className={styles.drift}
+            />
+            <div className={styles.bloom} />
+            {/*
+              The overlay must map its viewBox onto the box the same way the image
+              does. `slice` is object-fit: cover; the default `meet` is contain,
+              and mixing the two is what had the arcs floating over the ear
+              instead of sitting on the antenna.
+            */}
+            <svg
+              className={styles.sig}
+              viewBox="0 0 1400 1484"
+              preserveAspectRatio="xMidYMid slice"
+              aria-hidden="true"
+            >
+              <g transform="rotate(6 559 300)">
+                <path className={styles.wave} d="M446 123 A 142 142 0 0 1 672 123" />
+                <path className={styles.wave} d="M446 123 A 142 142 0 0 1 672 123" />
+                <path className={styles.wave} d="M446 123 A 142 142 0 0 1 672 123" />
+              </g>
+              <circle className={styles.spark} cx="559" cy="300" r="11" />
+              <ellipse className={styles.orbit} cx="700" cy="1180" rx="560" ry="150" strokeDasharray="26 22" />
+              <ellipse
+                className={`${styles.orbit} ${styles.orbitB}`}
+                cx="700" cy="1244" rx="650" ry="180" strokeDasharray="16 32"
+              />
+            </svg>
+            <Motes className={styles.motes} />
+            <div className={styles.vignette} />
+            <div className={styles.grain} />
+            <div className={styles.sweep} />
+          </div>
+          </div>
+          <div className={styles.fade} />
+        </div>
+        </HeroParallax>
+
+        <div className={`${styles.shell} ${styles.heroShell}`}>
+          <div className={styles.copy}>
+            {/*
+              Split into two lines by hand rather than left to wrap, because
+              each line is clipped and rises from behind its own edge. A browser
+              chosen break would put the mask in a different place at every
+              viewport width, and half the effect is that the breaks are
+              composed.
+            */}
+            <h1>
+              <span className={styles.lineWrap}>
+                <span className={`${styles.line} ${styles.line1}`}>{claim.line1}</span>
+              </span>
+              <span className={styles.lineWrap}>
+                <span className={`${styles.line} ${styles.line2}`}>{claim.line2}</span>
+              </span>
+            </h1>
+            <p className={`${styles.lede} ${styles.rise} ${styles.rise2}`}>
+              Set it up on the couch before you fly. Simple. Calm. Australian.
+            </p>
+            <div className={`${styles.acts} ${styles.rise} ${styles.rise3}`}>
+              <a className={`${styles.btn} ${styles.btnGo}`} href="#dests">
+                See where we go
+              </a>
+              <a className={`${styles.btn} ${styles.btnQuiet}`} href="#how">
+                How it works
+              </a>
+            </div>
+            <div className={`${styles.pills} ${styles.rise} ${styles.rise4}`}>
+              {/* Dropped entirely when there is nothing true to put in it. An
+                  empty pill is better than a pill reading "0 destinations". */}
+              {claim.pill ? (
+                <span className={styles.pill}>
+                  <i>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18" />
+                    </svg>
+                  </i>
+                  {claim.pill}
+                </span>
+              ) : null}
+              <span className={styles.pill}>
+                <i>eSIM</i> Install before you fly
+              </span>
+              <span className={`${styles.pill} ${styles.pillOk}`}>
+                <i>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </i>
+                Australian support
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={`${styles.band} ${styles.bandSurface}`} id="how">
+        <div className={styles.shell}>
+          <Reveal><div className={styles.head}>
+            <p className={styles.eyebrow}>How it works</p>
+            <h2>Three steps, and none of them happen at the airport.</h2>
+            <p>
+              The thing that goes wrong in this category is a traveller standing at arrivals at
+              eleven at night trying to install something. So Bilby moves all of it earlier.
+            </p>
+          </div></Reveal>
+          <Reveal delay={80}><div className={`${styles.steps} ${styles.cascade}`}>
+            {STEPS.map((s) => (
+              <div className={styles.step} key={s.n}>
+                <div className={styles.num}>{s.n}</div>
+                <h3>{s.h}</h3>
+                <p>{s.p}</p>
+              </div>
+            ))}
+          </div></Reveal>
+        </div>
+      </section>
+
+      <section className={styles.band} id="dests">
+        <div className={styles.shell}>
+          <Reveal><div className={styles.head}>
+            <p className={styles.eyebrow}>Destinations</p>
+            <h2>The places Australians actually fly to.</h2>
+            <p>
+              A short list on purpose. Every destination here is on sale right now, not a
+              country we hope to cover, and this section is built from the same catalogue the
+              shop sells from.
+            </p>
+          </div></Reveal>
+          {/*
+            Only what is actually on sale. Listing a destination here that the
+            shop cannot fill sends somebody to an empty shelf, which reads as
+            broken rather than as "not yet", and is the specific failure this
+            whole page was rewritten to stop making.
+          */}
+          {dests.length > 0 ? (
+            <Reveal delay={80}><div className={`${styles.dests} ${styles.cascade}`}>
+              {dests.map((d) => (
+                <div className={styles.dest} key={d.iso}>
+                  <div className={styles.swatch}>{d.iso}</div>
+                  <h3>{d.name}</h3>
+                  <p>{d.blurb ?? "Local networks, full speed"}</p>
+                </div>
+              ))}
+            </div></Reveal>
+          ) : (
+            <Reveal delay={80}><p className={styles.lede}>
+              Nothing is on sale yet. Every plan is tested on a real handset before it goes on
+              this page, so this fills up as that happens rather than all at once.
+            </p></Reveal>
+          )}
+        </div>
+      </section>
+
+      <section className={`${styles.band} ${styles.bandSurface}`} id="pricing">
+        <div className={styles.shell}>
+          <Reveal><div className={styles.head}>
+            <p className={styles.eyebrow}>Pricing</p>
+            <h2>No prices yet, because we will not guess at them.</h2>
+            <p>
+              Our wholesale agreement is not signed, so any number on this page today would be
+              invention. What we can tell you now is exactly how the pricing will behave, and that
+              part is not going to change.
+            </p>
+          </div></Reveal>
+          <Reveal delay={80}><div className={`${styles.why} ${styles.cascade}`}>
+            <div className={styles.wy}>
+              <h3>The whole cost, on one card</h3>
+              <p>Data, validity, the networks it uses, and the refund position. Before you pay, not after.</p>
+            </div>
+            <div className={styles.wy}>
+              <h3>No activation fee</h3>
+              <p>The price on the card is the price. Nothing is added at the last screen.</p>
+            </div>
+            <div className={styles.wy}>
+              <h3>Per trip, not per month</h3>
+              <p>It ends when your trip ends. There is no subscription to remember to cancel.</p>
+            </div>
+            <div className={styles.wy}>
+              <h3>Full speed throughout</h3>
+              <p>No throttle after a hidden allowance. A slow eSIM you cannot use is the same as no eSIM.</p>
+            </div>
+          </div></Reveal>
+        </div>
+      </section>
+
+      <section className={styles.band} id="help">
+        <div className={styles.shell}>
+          <Reveal><div className={styles.head}>
+            <p className={styles.eyebrow}>Why Bilby</p>
+            <h2>A small Australian business, which is the point.</h2>
+            <p>
+              The large travel eSIM brands are support desks in another time zone reselling the same
+              underlying networks. What differs is who picks up when it goes wrong.
+            </p>
+          </div></Reveal>
+          <Reveal delay={80}><div className={`${styles.why} ${styles.cascade}`}>
+            {PROMISES.map((w) => (
+              <div className={styles.wy} key={w.h}>
+                <div className={styles.ic}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" strokeWidth="2" strokeLinecap="round">
+                    <path d={w.d} />
+                  </svg>
+                </div>
+                <h3>{w.h}</h3>
+                <p>{w.p}</p>
+              </div>
+            ))}
+          </div></Reveal>
+        </div>
+      </section>
+
+      <section className={`${styles.band} ${styles.bandSurface}`} id="notes">
+        <div className={styles.shell}>
+          <Reveal><div className={styles.head}>
+            <p className={styles.eyebrow}>Field notes</p>
+            <h2>Travellers write down what actually happened.</h2>
+            <p>
+              Not a star rating. A note: which airport, which network it picked up, and how long it
+              took between the plane door and the first bar of signal. The next person going there
+              reads it before they fly.
+            </p>
+          </div></Reveal>
+          <Reveal delay={80}><FieldNotes /></Reveal>
+        </div>
+      </section>
+
+      <section className={styles.band}>
+        <div className={styles.shell}>
+          <Reveal><div className={styles.close}>
+            <div>
+              <h2>Sort the phone out before you sort the packing.</h2>
+              <p>
+                We are not open yet. When we are, the part of the trip nobody enjoys thinking about
+                takes five minutes on the couch.
+              </p>
+            </div>
+            <Link className={`${styles.btn} ${styles.btnGo}`} href="/plans">
+              Open the app
+            </Link>
+          </div></Reveal>
+        </div>
+      </section>
+
+    </>
+  );
+}

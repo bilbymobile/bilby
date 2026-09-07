@@ -25,6 +25,23 @@ import {
  * at a non-existent SM-DP+, so the install page, QR encoder and universal-link
  * handoff can all be tested for real. They will fail at the final step on a
  * handset, which is correct — nothing here should ever burn a real profile.
+ *
+ * ## It accepts plan ids it has never heard of, on purpose
+ *
+ * It used to refuse them, and that defeated the entire point of it existing.
+ * The catalogue is seeded from a real supplier rate card, so a live SKU carries
+ * a real external id like `JC066`. The mock only knew the ids it had invented
+ * for itself, so the first genuine test purchase failed with:
+ *
+ *     Error: Unknown plan JC066
+ *
+ * A paid order, a webhook that verified, an order marked paid, and nothing
+ * provisioned. The strictness looked like rigour and was the opposite: a stand
+ * in that only works with its own fixtures cannot stand in for anything.
+ *
+ * So an unknown id is simulated rather than rejected. The invented catalogue
+ * below stays, because `listPlans` needs to return something on a fresh clone
+ * with no rate card, but ordering no longer requires membership of it.
  */
 
 const PLANS: CatalogPlan[] = [];
@@ -89,9 +106,36 @@ export class MockSupplier implements Supplier {
     return all.filter((p) => p.countries.includes(iso));
   }
 
+  /**
+   * The plan behind an id, real or improvised.
+   *
+   * A known id keeps its invented wholesale so wallet exhaustion can still be
+   * tested deliberately. An unknown one gets a nominal plan: enough to charge
+   * the fake wallet and issue a fake profile, and honest about being a guess.
+   *
+   * The allowance and validity here are nominal and are NOT what the customer
+   * was sold. That lives on the order, written from the catalogue at the moment
+   * of purchase, and nothing downstream reads its entitlement from a supplier.
+   * What this shapes is only the simulated usage snapshot, which exists so the
+   * usage screen has something to render before a real supplier exists.
+   */
+  private planFor(planId: string): CatalogPlan {
+    const known = PLANS.find((p) => p.planId === planId);
+    if (known) return known;
+    return {
+      planId,
+      name: `Simulated ${planId}`,
+      countries: [],
+      dataMb: 1024,
+      validityDays: 30,
+      wholesaleUsd: 1,
+      minSellUsd: 2.2,
+      topUpSupported: true,
+    };
+  }
+
   async order(planId: string, _ref: string): Promise<OrderResult> {
-    const plan = PLANS.find((p) => p.planId === planId);
-    if (!plan) throw new Error(`Unknown plan ${planId}`);
+    const plan = this.planFor(planId);
 
     if (this.walletUsd < plan.wholesaleUsd) {
       throw new InsufficientSupplierBalance(this.id);
@@ -129,8 +173,10 @@ export class MockSupplier implements Supplier {
   }
 
   async topUp(iccid: string, planId: string, _ref: string) {
-    const plan = PLANS.find((p) => p.planId === planId);
-    if (!plan) throw new Error(`Unknown plan ${planId}`);
+    const plan = this.planFor(planId);
+    // The ICCID check stays. An unknown plan id is a gap in the fixtures; an
+    // unknown ICCID is topping up a profile that was never issued, which is a
+    // real bug worth failing on.
     const snap = this.issued.get(iccid);
     if (!snap) throw new Error(`Unknown ICCID ${iccid}`);
     if (this.walletUsd < plan.wholesaleUsd) {

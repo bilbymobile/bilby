@@ -71,6 +71,21 @@ export interface Supplier {
   topUp(iccid: string, planId: string, ref: string): Promise<{ costUsd: number }>;
   usage(iccid: string): Promise<UsageSnapshot>;
   balanceUsd(): Promise<number>;
+
+  /**
+   * Hand an unused profile back for a refund, where the supplier allows it.
+   *
+   * Optional because not every supplier offers it, and the ones that do all
+   * restrict it to a profile that was issued and never installed. It matters
+   * for two reasons that are easy to underestimate: it is how you test against
+   * a supplier with no sandbox without burning money, and it is what makes a
+   * customer refund whole rather than a write off, since the wholesale cost
+   * comes back instead of staying spent.
+   *
+   * Returns false when the supplier declines, which is a normal answer for an
+   * installed profile and not a fault.
+   */
+  cancel?(ref: { iccid?: string; supplierRef?: string }): Promise<boolean>;
 }
 
 /** Thrown when a supplier rejects an order for lack of prepaid funds. */

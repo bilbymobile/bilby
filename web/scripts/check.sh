@@ -42,6 +42,10 @@ echo "── the landing page claims only what is on sale ──────"
 npx tsx scripts/live-destinations.test.ts 2>/dev/null | grep -E '^(  FAIL|[0-9]+ passed)'
 
 echo
+echo "── the eSIM Access adapter ───────────────────────────"
+npx tsx scripts/esimaccess.test.ts 2>/dev/null | grep -E '^(  FAIL|[0-9]+ passed)'
+
+echo
 echo "── the console bootstrap window ──────────────────────"
 npx tsx scripts/bootstrap.test.ts 2>/dev/null | grep -E '^(  FAIL|[0-9]+ passed)'
 

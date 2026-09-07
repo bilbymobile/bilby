@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { brand } from "@/lib/brand";
+import { MotionGate } from "./home/motion-gate";
 import { MarketingShell } from "./home/shell";
 import { HOSTS, roleForHost } from "@/lib/hosts";
 import { LEGAL_ENTITY } from "@/lib/legal";
@@ -131,6 +132,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <html lang="en">
         <head>
           <FontLinks />
+          <MotionGate />
         </head>
         <body data-surface="console" style={{ margin: 0 }}>{children}</body>
       </html>
@@ -142,6 +144,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <html lang="en">
         <head>
           <FontLinks />
+          <MotionGate />
         </head>
         <body data-surface="marketing" style={{ margin: 0 }}>
           <MarketingShell>{children}</MarketingShell>
@@ -154,6 +157,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en">
       <head>
         <FontLinks />
+        {/* Decides whether a page is allowed to hide anything behind an
+            entrance animation. See motion-gate.tsx: without it, nothing hides.
+            On every branch, because the landing page renders under the product
+            role on preview deployments and on localhost, which is exactly where
+            a blank hero gets reviewed and believed. */}
+        <MotionGate />
       </head>
       <body>
         <div className="shell">
