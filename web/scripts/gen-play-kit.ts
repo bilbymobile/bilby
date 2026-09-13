@@ -25,7 +25,7 @@ w(`> edit the source and re-run \`npx tsx scripts/gen-play-kit.ts\`. The whole`)
 w(`> point is that these answers and the published privacy policy cannot drift`);
 w(`> apart, because Play treats a mismatch as a misrepresentation.`);
 w();
-w(`Effective ${LEGAL_ENTITY.effectiveDate} · package \`${brand.androidPackage}\``);
+w(`Effective ${LEGAL_ENTITY.effective.privacy} · package \`${brand.androidPackage}\``);
 w();
 w("---");
 w();

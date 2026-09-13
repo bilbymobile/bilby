@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 /**
  * Terms of service.
  *
- * Two things this deliberately does NOT do:
+ * ## What this deliberately does not do
  *
  *  1. It does not stay quiet about the two things that bite people at an
  *     airport: that validity runs from first use, and that an eSIM profile has
@@ -26,17 +26,59 @@ export const metadata: Metadata = {
  *  2. It does not attempt to exclude the Australian Consumer Law guarantees.
  *     You cannot, they apply regardless, and a terms document that pretends
  *     otherwise is itself a breach.
+ *  3. It does not describe a business larger than this one. An earlier draft
+ *     opened with partnering to bring you local networks "across the globe".
+ *     Eight destinations are on sale. Reach is the one thing in this category
+ *     everybody inflates and it is a representation like any other.
+ *
+ * ## What changed in this revision, and why
+ *
+ * Two drafts were reconciled into this one. Where they disagreed:
+ *
+ *  - **Liability cap.** One capped at the price of the plan in question, the
+ *    other at twelve months of spend. Twelve months is kept: it is the more
+ *    generous of the two and a cap set at the price of one $3.95 plan is the
+ *    kind of clause that reads as a company that has thought hard about not
+ *    paying you.
+ *  - **Suspension for unlawful use.** One draft suspended people for breaching
+ *    the law of the destination country, which makes us a judge of foreign law
+ *    we have no way to apply. The narrower version is kept: conduct that would
+ *    put our supplier in breach, which is a real consequence we can point at.
+ *  - **Profile expiry.** One draft buried it in a bullet list. It stays as its
+ *    own notice, because it is the clause most likely to cost somebody a
+ *    working phone on a holiday and a bullet is where a reader's eye slides.
+ *  - **Governing law.** One draft named Victoria. Nobody has confirmed where
+ *    the business is registered, so the page reads `LEGAL_ENTITY.governingLaw`
+ *    and says "Australia" until somebody sets the state. See legal.ts.
+ *
+ * And one thing neither draft had. Both said a material change would be
+ * notified "in the app". Most customers buy on the web and may never install
+ * the app, so notice in the app alone is not notice. Section 9 now commits to
+ * the address they gave at checkout as well.
+ *
+ * A previous version cross referenced "section 6" for the Australian Consumer
+ * Law, which is section 7. A liability clause carved out by reference to the
+ * wrong section is a liability clause with no carve out.
  *
  * The terms describe what the code actually does. Where the code changes, these
  * change with it.
  */
+
+/** Shared list styling. Inline because a legal page is not worth a module. */
+const list = {
+  color: "var(--muted)",
+  fontSize: 14,
+  lineHeight: 1.7,
+  paddingLeft: 20,
+} as const;
+
 export default function TermsPage() {
   return (
     <div className="prose">
       <section className="hero">
         <h1>Terms of Service</h1>
         <p>
-          Effective {LEGAL_ENTITY.effectiveDate}. Using {brand.name} means you
+          Effective {LEGAL_ENTITY.effective.terms}. Using {brand.name} means you
           agree to these.
         </p>
       </section>
@@ -46,11 +88,13 @@ export default function TermsPage() {
         <p className="sub">
           {brand.name} resells mobile data through eSIM profiles. We are not a
           mobile network. We buy connectivity wholesale and provide it to you.
-          The actual network in any country is operated by a third party.
+          In each destination we sell, the network your phone actually connects
+          to is owned and operated by a third party, and which networks those
+          are is shown on the plan before you pay for it.
         </p>
         <p className="sub" style={{ margin: 0 }}>
           {LEGAL_ENTITY.descriptor} These terms are governed by the laws of{" "}
-          {LEGAL_ENTITY.country}.
+          {LEGAL_ENTITY.governingLaw}.
         </p>
       </div>
 
@@ -58,11 +102,11 @@ export default function TermsPage() {
         <h2>2. What you are buying</h2>
         <p className="sub">
           A prepaid data allowance on a roaming eSIM profile, for one country or
-          region, valid for a fixed period. Not a subscription. Nothing renews on
-          its own and there is nothing to cancel.
+          region, valid for a fixed period. It is a single purchase, not a
+          subscription. Nothing renews on its own and there is nothing to cancel.
         </p>
         <p className="sub">Concretely, and without weasel words:</p>
-        <ul style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.7, paddingLeft: 20 }}>
+        <ul style={list}>
           <li>
             The full price, the data included, the validity period and the
             networks the plan uses are all shown before you pay. There is no
@@ -74,7 +118,8 @@ export default function TermsPage() {
           </li>
           <li>
             When the data is used or the period ends, the plan stops. We do not
-            bill you again and we do not keep charging you at a higher rate.
+            bill you again, we do not keep charging you at a higher rate, and
+            there are no excess usage fees.
           </li>
           <li>
             Unused data does not roll over into a new plan and has no cash value.
@@ -85,11 +130,12 @@ export default function TermsPage() {
           </li>
         </ul>
         <div className="note">
-          Your eSIM profile does not last forever. Industry practice is that a
-          profile must be activated within a set window after it is issued, and
-          is reclaimed by the network after a further period of inactivity. If
-          yours lapses before you travel, tell us and we will reissue it at no
-          charge.
+          <strong>Your eSIM profile does not last forever.</strong> Industry
+          practice is that a profile must be activated within a set window after
+          it is issued, and is reclaimed by the network after a further period of
+          inactivity. The window that applies to your plan is shown when you buy
+          it. If yours lapses before you travel, tell us and we will reissue it
+          at no charge.
         </div>
       </div>
 
@@ -98,11 +144,11 @@ export default function TermsPage() {
         <p className="sub">
           We sometimes issue discount codes. Unless the offer says otherwise:
         </p>
-        <ul style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.7, paddingLeft: 20 }}>
+        <ul style={list}>
           <li>One code per order, and codes do not stack.</li>
           <li>
-            A code has no cash value, cannot be exchanged for money, and cannot be
-            sold or transferred.
+            A code has no cash value, cannot be exchanged for money, and cannot
+            be sold or transferred.
           </li>
           <li>
             Codes have an expiry and may have a usage limit, a minimum spend, or
@@ -110,8 +156,8 @@ export default function TermsPage() {
             are shown with the code.
           </li>
           <li>
-            We may withdraw a code at any time. Withdrawing one does not affect an
-            order you have already placed with it.
+            We may withdraw a code at any time. Withdrawing one does not affect
+            an order you have already placed with it.
           </li>
           <li>
             If a refund is due on a discounted order, we refund what you actually
@@ -131,7 +177,7 @@ export default function TermsPage() {
           We may suspend an account, cancel an order or refuse service where we
           have reasonable grounds to believe someone has:
         </p>
-        <ul style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.7, paddingLeft: 20 }}>
+        <ul style={list}>
           <li>Resold {brand.name} data or eSIM profiles</li>
           <li>Created multiple accounts to reuse a single use discount code</li>
           <li>Misrepresented their location to obtain regional pricing</li>
@@ -142,21 +188,24 @@ export default function TermsPage() {
           </li>
         </ul>
         <p className="sub" style={{ margin: 0 }}>
-          If we get this wrong, email us and a human will look at it. We would
+          If we get this wrong, email us and a person will look at it. We would
           rather reinstate a wrongly flagged account than keep it suspended.
+          Where we suspend or cancel and you have paid for data you have not
+          used, section 7 still applies and so does our{" "}
+          <Link href="/refunds">refund policy</Link>.
         </p>
       </div>
 
       <div className="card">
         <h2>5. Your eSIM</h2>
-        <ul style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.7, paddingLeft: 20 }}>
+        <ul style={list}>
           <li>
             You need an eSIM-capable, carrier-unlocked phone. We cannot tell in
             advance whether yours qualifies, so check with your carrier first.
           </li>
           <li>
-            Your {brand.name} eSIM is a <strong>roaming profile</strong>. You must
-            switch data roaming on for it or it will not connect.
+            Your {brand.name} eSIM is a <strong>roaming profile</strong>. You
+            must switch data roaming on for it or it will not connect.
           </li>
           <li>
             It is data only. No calls, no SMS, no phone number, and{" "}
@@ -169,7 +218,8 @@ export default function TermsPage() {
           </li>
           <li>
             An eSIM profile can normally be installed once. Reinstalling on a new
-            phone may need a new profile, and we may charge for that.
+            phone may need a new profile. We will tell you what that costs before
+            we issue it, and it is never more than the price of the plan.
           </li>
         </ul>
       </div>
@@ -177,15 +227,16 @@ export default function TermsPage() {
       <div className="card">
         <h2>6. Plans and payment</h2>
         <p className="sub">
-          Paid plans are prepaid. Prices are shown before you buy and include any
-          applicable GST. Data expires at the end of the plan&apos;s validity
-          period, whether or not you have used it. That is how wholesale data is
-          sold to us and we are not able to change it.
+          Paid plans are prepaid. Prices are shown before you buy, in Australian
+          dollars, and include any applicable GST. Data expires at the end of the
+          plan&apos;s validity period, whether or not you have used it. That is
+          how wholesale data is sold to us and we are not able to change it.
         </p>
         <p className="sub" style={{ margin: 0 }}>
           Refunds are covered separately in our{" "}
           <Link href="/refunds">refund policy</Link>, which forms part of these
-          terms.
+          terms and operates in addition to your rights under section 7, not
+          instead of them.
         </p>
       </div>
 
@@ -207,29 +258,38 @@ export default function TermsPage() {
 
       <div className="card">
         <h2>8. Liability</h2>
-        <p className="sub" style={{ margin: 0 }}>
-          Subject to section 6, and to the extent permitted by law, our total
+        <p className="sub">
+          Subject to section 7, and to the extent permitted by law, our total
           liability to you for any claim is limited to the greater of the amount
-          you paid us in the 12 months before the claim, or AUD $100. We are not
-          liable for indirect or consequential loss, including missed flights,
-          bookings or business, arising from a loss of connectivity. Mobile
-          networks fail. Do not make {brand.name} your only plan for anything
-          that matters.
+          you paid us in the twelve months before the claim, or AUD $100.
+        </p>
+        <p className="sub" style={{ margin: 0 }}>
+          To the extent permitted by law, we are not liable for indirect or
+          consequential loss, including missed flights, bookings or business,
+          arising from a loss of connectivity. Mobile networks fail, and coverage
+          depends on infrastructure and conditions nobody controls. Do not make{" "}
+          {brand.name} your only plan for anything that matters.
         </p>
       </div>
 
       <div className="card">
         <h2>9. Changes, and contact</h2>
         <p className="sub">
-          We may change these terms. If a change is material we will notify you
-          in the app before it takes effect. Continuing to use {brand.name} after
-          that means you accept the change.
+          We may change these terms. If a change is material we will tell you
+          before it takes effect, by email to the address you gave at checkout
+          and in the app, and the effective date at the top of this page moves
+          with it. Continuing to use {brand.name} after that means you accept the
+          change. A change never applies retrospectively to a plan you have
+          already bought.
         </p>
         <p className="sub" style={{ margin: 0 }}>
           Questions or complaints:{" "}
           <a href={`mailto:${LEGAL_ENTITY.contactEmail}`}>
             {LEGAL_ENTITY.contactEmail}
           </a>
+          . Tell us what went wrong and what you would like done about it, and a
+          person will answer you. If we cannot put it right, we will say so
+          plainly rather than leave you waiting.
         </p>
       </div>
     </div>

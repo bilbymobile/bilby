@@ -30,7 +30,7 @@ export default function PrivacyPage() {
       <section className="hero">
         <h1>Privacy Policy</h1>
         <p>
-          Effective {LEGAL_ENTITY.effectiveDate}. This covers the {brand.name}{" "}
+          Effective {LEGAL_ENTITY.effective.privacy}. This covers the {brand.name}{" "}
           app and {brand.domain}.
         </p>
       </section>
