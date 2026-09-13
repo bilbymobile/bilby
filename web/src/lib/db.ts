@@ -52,6 +52,27 @@ import { Pool, type PoolClient, type QueryResultRow } from "pg";
 let pool: Pool | null = null;
 let migrated: Promise<void> | null = null;
 
+/**
+ * Is a database configured at all?
+ *
+ * Not "is it reachable" and not "is it healthy": just whether anybody has told
+ * this deployment where Postgres is. Those are different questions with
+ * different answers and only this one can be answered without a round trip.
+ *
+ * It exists because a preview deployment has no environment variables unless
+ * somebody scopes them to Preview, and every variable on this project is
+ * scoped to Production. So every branch preview runs with no DATABASE_URL, the
+ * product routes throw on their first query, and the reviewer sees a stack
+ * trace where the thing they were asked to review should be.
+ *
+ * The marketing routes already survived this, because they catch and say
+ * nothing about a catalogue they could not read. The product routes did not.
+ * Now they can ask first and render an honest page instead of a 500.
+ */
+export function databaseConfigured(): boolean {
+  return Boolean(process.env.DATABASE_URL);
+}
+
 function connectionString(): string {
   const url = process.env.DATABASE_URL;
   if (url) return url;

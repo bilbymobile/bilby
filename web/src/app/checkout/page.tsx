@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { currentUser } from "@/lib/session";
+import { databaseConfigured } from "@/lib/db";
+import { NoDatabase } from "../no-database";
 import { getItem, priceOf } from "@/lib/platform";
 import { checkoutOpen, paymentsConfigured } from "@/lib/stripe";
 import { GST_DIVISOR } from "@/lib/money";
@@ -26,6 +28,9 @@ export default async function CheckoutPage({
 }: {
   searchParams: Promise<{ sku?: string; cancelled?: string }>;
 }) {
+  // Ask before querying. See lib/db.ts databaseConfigured and no-database.tsx.
+  if (!databaseConfigured()) return <NoDatabase what="Checkout" />;
+
   const { sku, cancelled } = await searchParams;
   await currentUser();
 

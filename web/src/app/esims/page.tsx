@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { currentUser } from "@/lib/session";
+import { databaseConfigured } from "@/lib/db";
+import { NoDatabase } from "../no-database";
 import { all } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +13,9 @@ interface Row {
 }
 
 export default async function EsimsPage() {
+  // Ask before querying. See lib/db.ts databaseConfigured and no-database.tsx.
+  if (!databaseConfigured()) return <NoDatabase what="Your eSIMs" />;
+
   const user = await currentUser();
   const rows = await all<Row>(
     `SELECT iccid, created_at, installed_at
