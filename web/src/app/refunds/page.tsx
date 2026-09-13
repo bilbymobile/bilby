@@ -31,7 +31,7 @@ export default function RefundsPage() {
       <section className="hero">
         <h1>Refund Policy</h1>
         <p>
-          Effective {LEGAL_ENTITY.effectiveDate}. Part of our{" "}
+          Effective {LEGAL_ENTITY.effective.refunds}. Part of our{" "}
           <a href="/terms">Terms of Service</a>.
         </p>
       </section>

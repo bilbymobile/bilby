@@ -50,6 +50,14 @@ echo "── the console bootstrap window ────────────�
 npx tsx scripts/bootstrap.test.ts 2>/dev/null | grep -E '^(  FAIL|[0-9]+ passed)'
 
 echo
+echo "── the site promises nothing the product does not do ─"
+npx tsx scripts/promises.test.ts 2>/dev/null | grep -E '^(  FAIL|[0-9]+ passed)'
+
+echo
+echo "── the legal pages say what they think they say ──────"
+npx tsx scripts/legal.test.ts 2>/dev/null | grep -E '^(  FAIL|[0-9]+ passed)'
+
+echo
 echo "── the shop cannot take money until somebody says so ─"
 npx tsx scripts/checkout-gate.test.ts 2>/dev/null | grep -E '^(  FAIL|[0-9]+ passed)'
 

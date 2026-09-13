@@ -558,7 +558,7 @@ DATABASE_URL="<a database you can write to>" ./scripts/check.sh
 Types, the first run migration, the rate limiter and error store, the console
 bootstrap window, the theme's contrast, the landing page's claims, the eSIM
 Access adapter, the checkout gate, the money path, the webhook, and the build.
-222 checks. Run it before every deploy.
+284 checks. Run it before every deploy.
 
 The first run check is skipped unless you also set `VIRGIN_DATABASE_URL` to a
 database that is genuinely empty, because that is the only way to test it:

@@ -82,10 +82,24 @@ export const DATA_INVENTORY: DataItem[] = [
       "address, for example 'AU' or 'TH'. We store the country code only. " +
       "We do not store your IP address, and we never request GPS or precise " +
       "location permission.",
+    /*
+     * This used to say the country told us "how much data one ad can actually
+     * pay for where you are", which described an ad funded product that was
+     * abandoned before launch. It rendered on the live privacy page two
+     * paragraphs below the sentence "We show no advertising", so the policy
+     * contradicted itself in public, and because this file generates the Play
+     * Data Safety answers the same wrong purpose would have been declared to
+     * Google. The whole reason this file exists is that a policy and a Data
+     * Safety form must not drift apart; it drifted inside itself.
+     *
+     * What the code actually does with the country: session.ts stores it, and
+     * effectiveDestination() falls back to it when the user has not chosen a
+     * destination, so the shop opens on somewhere plausible.
+     */
     purpose:
-      "Mobile data costs us different amounts in different countries, and ads " +
-      "are worth different amounts too. Your country is what lets us work out " +
-      "how much data one ad can actually pay for where you are.",
+      "So the shop opens on a sensible destination before you have picked one, " +
+      "and so we know which country a plan is being bought from. It is never " +
+      "used to set your price: every plan is the same price for everybody.",
     collected: true,
     shared: false,
     deletable: true,
@@ -209,8 +223,39 @@ export const LEGAL_ENTITY = {
   parentSite: "nextwave.au",
   parentSiteUrl: "https://nextwave.au",
 
-  /** Effective date shown on the documents. Update when you materially change them. */
-  effectiveDate: "16 August 2026",
+  /**
+   * Which Australian state or territory governs the agreement.
+   *
+   * Deliberately empty, and the page reads correctly either way: unset, the
+   * terms are governed by "the laws of Australia"; set to "Victoria", by "the
+   * laws of Victoria, Australia".
+   *
+   * It is empty rather than guessed because nobody has confirmed where the
+   * business is registered, and a governing law clause is not a detail to fill
+   * in plausibly. "Australia" on its own is weak drafting: there are nine
+   * jurisdictions here and a clause that names none of them leaves the question
+   * to be argued about at the worst possible moment. Set this the day the
+   * registered office is confirmed.
+   */
+  governingState: "",
+
+  /**
+   * Effective dates, one per document.
+   *
+   * These used to be a single shared string, which meant materially revising
+   * the terms silently re-dated the privacy policy and the refund policy too.
+   * An effective date is a statement about one document: it says when that text
+   * took effect, and moving it on a document that did not change is a false
+   * statement in the one place a regulator looks first.
+   *
+   * Move a date only when the text above it materially changes, and when you
+   * move it, section 9 of the terms obliges you to have told people first.
+   */
+  effective: {
+    terms: "13 September 2026",
+    privacy: "16 August 2026",
+    refunds: "16 August 2026",
+  },
 
   /**
    * One sentence identifying the supplier. Used in the footer and at the foot
@@ -223,6 +268,13 @@ export const LEGAL_ENTITY = {
   /** The contact route printed under [descriptor]. */
   get contactLine(): string {
     return `${this.parentEmail} · ${this.parentSite}`;
+  },
+
+  /** "Australia", or "Victoria, Australia" once [governingState] is set. */
+  get governingLaw(): string {
+    return this.governingState
+      ? `${this.governingState}, ${this.country}`
+      : this.country;
   },
 };
 

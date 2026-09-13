@@ -126,6 +126,28 @@ export interface Shopfront {
   /** Live destinations, cheapest first price attached, in curated order. */
   destinations: Array<Destination & { fromAmount: number }>;
   /**
+   * Does anything on sale slow down after a daily allowance?
+   *
+   * The landing page promised "full speed throughout, no throttle after a
+   * hidden allowance" while fourteen of the fifty two active SKUs throttled to
+   * 384 or 512 Kbps after a daily cap, and said so in their own subtitles two
+   * clicks away. Neither sentence was written to mislead. They were written
+   * months apart and nobody reread one while editing the other, which is how
+   * every claim like this breaks.
+   *
+   * So the page asks the catalogue instead of remembering.
+   */
+  anyThrottled: boolean;
+  /**
+   * Does anything on sale route the traffic out through an overseas exit point?
+   *
+   * Every SKU seeded so far does. It is a real product difference: it breaks
+   * Australian banking apps and geo checked streaming, the checkout page warns
+   * about it, and the plan subtitle says it. The landing page was describing
+   * the same plans as "local networks, full speed".
+   */
+  anyRoutedOverseas: boolean;
+  /**
    * The cheapest plan anywhere in the catalogue, or null if nothing is on sale.
    *
    * In major units. `catalog_prices.sell_amount` is NUMERIC dollars, not cents,
@@ -166,6 +188,11 @@ export async function liveShopfront(currency = "AUD"): Promise<Shopfront | null>
       destinations,
       fromAmount: all.length ? Math.min(...all) : null,
       planCount: items.length,
+      // Read off the rows rather than off a memory of what we seeded. A plan
+      // that throttles carries a daily cap; one that breaks out locally is
+      // marked "local" and anything else leaves the destination country.
+      anyThrottled: items.some((i) => i.attributes.daily === true),
+      anyRoutedOverseas: items.some((i) => String(i.attributes.routing ?? "") !== "local"),
       currency,
     };
   } catch (e) {
