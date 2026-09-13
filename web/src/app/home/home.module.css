@@ -70,6 +70,24 @@
   --glass: rgba(255, 255, 255, .04);
   --glass-hi: rgba(255, 255, 255, .07);
 
+  /*
+   * Motion, to the brand guidelines' spec rather than to whatever each rule
+   * felt like at the time.
+   *
+   *   Duration  300 to 500ms for most transitions
+   *   Easing    cubic-bezier(.16, 1, .3, 1), a smooth deceleration
+   *   Entrance  fade plus a subtle upward translate of 12px
+   *   Never     bouncy springs, spinning loaders, flashy transitions
+   *
+   * The page previously used four different easings and entrance distances
+   * between 20 and 26px, all of them chosen individually and none of them
+   * wrong, which is exactly how a page ends up feeling slightly incoherent
+   * without anybody being able to say why.
+   */
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --dur: .42s;
+  --rise: 12px;
+
   /* On a dark ground a drop shadow does not separate anything, because the
      shadow and the page are both darkness. What lifts a surface here is the
      one pixel of light along its top edge. The drop stays only to seat it. */
@@ -189,7 +207,7 @@
 .links a { text-decoration: none; padding: 6px 0; position: relative; }
 .links a::after {
   content: ""; position: absolute; left: 0; right: 100%; bottom: 0; height: 1px;
-  background: var(--coral); transition: right .28s cubic-bezier(.22, 1, .36, 1);
+  background: var(--coral); transition: right .3s var(--ease);
 }
 .links a:hover { color: var(--ink); }
 .links a:hover::after { right: 0; }
@@ -296,7 +314,7 @@
   font-weight: 500; font-size: .76rem; letter-spacing: .13em; text-transform: uppercase;
   text-decoration: none;
   border: 1px solid transparent; cursor: pointer;
-  transition: transform .18s cubic-bezier(.22, 1, .36, 1), box-shadow .25s ease, background .2s ease;
+  transition: transform .3s var(--ease), box-shadow .3s ease, background .3s ease;
   white-space: nowrap;
 }
 .btnGo {
@@ -415,7 +433,7 @@
   background: var(--deep);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
-  transition: transform .28s cubic-bezier(.22, 1, .36, 1), border-color .28s ease, box-shadow .28s ease;
+  transition: transform var(--dur) var(--ease), border-color var(--dur) ease, box-shadow var(--dur) ease;
 }
 .dest:hover { transform: translateY(-4px); border-color: rgba(255, 122, 61, .42); box-shadow: var(--lift); }
 .dest h3 { font-size: 1.42rem; margin-bottom: 5px; }
@@ -645,19 +663,19 @@
 .line { display: block; }
 :global([data-motion="on"]) .line {
   transform: translateY(112%);
-  animation: lineUp 1.05s cubic-bezier(.16, .84, .24, 1) forwards;
+  animation: lineUp .62s var(--ease) forwards;
 }
-.line1 { animation-delay: .34s; }
-.line2 { animation-delay: .46s; }
+.line1 { animation-delay: .16s; }
+.line2 { animation-delay: .26s; }
 @keyframes lineUp { to { transform: none; } }
 
 /* Everything under the headline. Still a rise, because these are supporting
    elements and giving them the headline's masked entrance would flatten the
    hierarchy the sequence exists to build. */
-:global([data-motion="on"]) .rise { opacity: 0; transform: translateY(20px); animation: rise 1s cubic-bezier(.22, 1, .36, 1) forwards; }
-.rise2 { animation-delay: .74s; }
-.rise3 { animation-delay: .86s; }
-.rise4 { animation-delay: .98s; }
+:global([data-motion="on"]) .rise { opacity: 0; transform: translateY(var(--rise)); animation: rise .5s var(--ease) forwards; }
+.rise2 { animation-delay: .58s; }
+.rise3 { animation-delay: .68s; }
+.rise4 { animation-delay: .78s; }
 @keyframes rise { to { opacity: 1; transform: none; } }
 
 /*
@@ -700,7 +718,7 @@
  * suspended. Seven seconds, offset from every other cycle on the page so they
  * never resynchronise into a visible pulse.
  */
-:global([data-motion="on"]) .artIn { animation: artIn 1.9s cubic-bezier(.16, .84, .24, 1) forwards, floatySoft 7s ease-in-out 1.9s infinite; }
+:global([data-motion="on"]) .artIn { animation: artIn 1.1s var(--ease) forwards, floatySoft 7s ease-in-out 1.1s infinite; }
 @keyframes floatySoft {
   0%, 100% { transform: translateY(0) rotate(-1deg); }
   50%      { transform: translateY(-16px) rotate(1.2deg); }
@@ -787,9 +805,9 @@
  * composites on the GPU and never touches layout, and it is the only thing on
  * the page that repeats forever. That is a deliberate budget of one.
  */
-.wave { animation: emit 3.4s ease-out infinite; }
-.wave:nth-child(2) { animation-delay: 1.13s; }
-.wave:nth-child(3) { animation-delay: 2.26s; }
+.wave { animation: emit 2.8s ease-out infinite; }
+.wave:nth-child(2) { animation-delay: .93s; }
+.wave:nth-child(3) { animation-delay: 1.86s; }
 /*
  * The scale origin is written into the transform chain rather than set with
  * transform-origin, on purpose. These paths live inside a translated and scaled
@@ -798,24 +816,120 @@
  * the emission point somewhere out in space. Naming the antenna coordinate
  * twice is uglier and is correct in every browser.
  */
+/*
+ * The reference calls this ping-ring and runs it at 2.8 seconds from .72 to
+ * 1.18. Those numbers are kept exactly: a ring that starts too small reads as
+ * appearing rather than expanding, and one that ends too large reads as a
+ * ripple in water rather than a signal.
+ */
 @keyframes emit {
-  0%   { opacity: 0; transform: translate(256px, 88px) scale(.42) translate(-256px, -88px); }
-  22%  { opacity: .8; }
-  100% { opacity: 0; transform: translate(256px, 88px) scale(1.25) translate(-256px, -88px); }
+  0%   { opacity: .85; transform: translate(256px, 88px) scale(.72) translate(-256px, -88px); }
+  100% { opacity: 0;   transform: translate(256px, 88px) scale(1.18) translate(-256px, -88px); }
 }
 
 /* The circle is centred on the antenna already, so this one can use its own
    fill box and stay readable. */
-.spark { animation: spark 3.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.spark { animation: spark 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes spark {
   0%, 100% { opacity: .78; transform: scale(1); }
   50%      { opacity: 1; transform: scale(1.12); }
 }
 
-/* The orbits turn, very slowly, which is what keeps the scene from reading as
-   a flat illustration without asking anyone to notice motion. */
-.orbits { animation: turn 60s linear infinite; transform-box: view-box; transform-origin: 320px 332px; }
-@keyframes turn { to { transform: rotate(360deg); } }
+/*
+ * The orbits turn, and they turn opposite ways.
+ *
+ * One rotating ring is a rotating ring. Two rotating opposite ways at different
+ * speeds is parallax, and parallax is the cheapest depth cue there is. The
+ * reference pairs spin-slow with spin-slower for exactly this reason, and the
+ * 34 second figure is its own.
+ *
+ * A spinning ring is not a spinning loader. The guidelines ban the latter, and
+ * the distinction is whether it is reporting progress: these are decoration on
+ * a scene and they are still turning when everything has finished loading.
+ */
+.orbitOuter { animation: spinSlow 46s linear infinite; transform-box: view-box; transform-origin: 320px 332px; }
+.orbitInner { animation: spinSlower 34s linear infinite; transform-box: view-box; transform-origin: 320px 352px; }
+@keyframes spinSlow   { to { transform: rotate(360deg); } }
+@keyframes spinSlower { to { transform: rotate(-360deg); } }
+
+/*
+ * A scan passing over the character.
+ *
+ * One band of light crossing the artwork every eleven seconds. It is the only
+ * animation on this page that suggests the scene is being read by something
+ * rather than simply lit, which is the right note for a connectivity product,
+ * and at four percent opacity nobody consciously sees a band: they see that the
+ * picture is alive.
+ *
+ * Confined to the artwork frame. A scanline across the whole page would be a
+ * screensaver.
+ */
+.scan {
+  position: absolute; left: 0; right: 0; height: 22%;
+  pointer-events: none; z-index: 2;
+  background: linear-gradient(180deg, transparent, rgba(94, 200, 255, .05) 45%, transparent);
+  /*
+   * Masked on the horizontal too, not only faded top and bottom.
+   *
+   * Without this the band is a full width rectangle with two hard vertical
+   * edges, and against the character's glow those edges read as a grey panel
+   * sitting on the artwork rather than as light passing over it. A scan that
+   * announces its own bounding box is worse than no scan.
+   */
+  mask-image: radial-gradient(60% 100% at 50% 50%, #000, transparent 78%);
+  -webkit-mask-image: radial-gradient(60% 100% at 50% 50%, #000, transparent 78%);
+  /* Parked above the frame and moved with a transform, never with `top`. */
+  top: 0;
+  opacity: 0;
+  will-change: transform;
+}
+:global([data-motion="on"]) .scan { animation: scanline 11s linear infinite; }
+/*
+ * Driven by translate rather than by `top`, which is what the reference
+ * animates.
+ *
+ * `top` is a layout property: every frame asks the browser to position the
+ * element again, and it cannot be handed to the compositor. Measured on this
+ * page the difference was not visible, because the band is absolutely
+ * positioned inside a positioned ancestor and there is almost nothing for the
+ * layout pass to do. That is luck rather than design. A transform is free on
+ * any page, and this one is the only animation here that was not already.
+ */
+@keyframes scanline {
+  0%       { transform: translateY(-100%); opacity: 0; }
+  12%, 78% { opacity: 1; }
+  100%     { transform: translateY(455%); opacity: 0; }
+}
+
+/*
+ * The icon tiles breathe.
+ *
+ * Twelve pixels, no rotation, and staggered so the four never move together.
+ * The reference keeps `floaty` and `floaty-soft` as separate keyframes for this
+ * distinction: the soft one tilts and belongs to something suspended, the plain
+ * one only lifts and belongs to something sitting on a surface.
+ *
+ * On the icons rather than on the cards. Four floating cards is a page that
+ * will not hold still while somebody reads it.
+ */
+:global([data-motion="on"]) .ic { animation: floaty 6.4s ease-in-out infinite; }
+.wy:nth-child(2) .ic { animation-delay: .8s; }
+.wy:nth-child(3) .ic { animation-delay: 1.6s; }
+.wy:nth-child(4) .ic { animation-delay: 2.4s; }
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+}
+
+/*
+ * `bounce` is in the reference's stylesheet and is deliberately not here.
+ *
+ * The brand guidelines list "bouncy springs" under Never, alongside spinning
+ * loaders and flashy transitions, and a bounce is the one piece of the
+ * reference's vocabulary that contradicts the document it came with. Where the
+ * two disagree on a matter of taste rather than of fact, the written rule wins,
+ * because it is the one somebody can point at later.
+ */
 
 /*
  * The hero leaving.
@@ -842,30 +956,30 @@
  * mattering past about ten, so the ladder flattens rather than growing forever.
  */
 :global([data-motion="on"]) .cascade > * {
-  opacity: 0; transform: translateY(26px);
-  transition: opacity .8s ease, transform .8s cubic-bezier(.22, 1, .36, 1);
+  opacity: 0; transform: translateY(var(--rise));
+  transition: opacity var(--dur) ease, transform var(--dur) var(--ease);
 }
 :global(.is-revealed) .cascade > * { opacity: 1; transform: none; }
 .cascade > *:nth-child(1)  { transition-delay: .00s; }
-.cascade > *:nth-child(2)  { transition-delay: .07s; }
-.cascade > *:nth-child(3)  { transition-delay: .14s; }
-.cascade > *:nth-child(4)  { transition-delay: .21s; }
-.cascade > *:nth-child(5)  { transition-delay: .28s; }
-.cascade > *:nth-child(6)  { transition-delay: .35s; }
-.cascade > *:nth-child(7)  { transition-delay: .42s; }
-.cascade > *:nth-child(8)  { transition-delay: .49s; }
-.cascade > *:nth-child(9)  { transition-delay: .56s; }
-.cascade > *:nth-child(n+10) { transition-delay: .63s; }
+.cascade > *:nth-child(2)  { transition-delay: .05s; }
+.cascade > *:nth-child(3)  { transition-delay: .10s; }
+.cascade > *:nth-child(4)  { transition-delay: .15s; }
+.cascade > *:nth-child(5)  { transition-delay: .20s; }
+.cascade > *:nth-child(6)  { transition-delay: .25s; }
+.cascade > *:nth-child(7)  { transition-delay: .30s; }
+.cascade > *:nth-child(8)  { transition-delay: .35s; }
+.cascade > *:nth-child(9)  { transition-delay: .40s; }
+.cascade > *:nth-child(n+10) { transition-delay: .45s; }
 
 /* Scroll reveals. Global class names because they are applied by a shared
    component that has no access to this module's hashes. */
 :global([data-motion="on"]) :global(.is-hidden) {
-  opacity: 0; transform: translateY(24px);
-  transition: opacity .85s ease, transform .85s cubic-bezier(.22, 1, .36, 1);
+  opacity: 0; transform: translateY(var(--rise));
+  transition: opacity var(--dur) ease, transform var(--dur) var(--ease);
 }
 :global(.is-revealed) {
   opacity: 1; transform: none;
-  transition: opacity .85s ease, transform .85s cubic-bezier(.22, 1, .36, 1);
+  transition: opacity var(--dur) ease, transform var(--dur) var(--ease);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -878,12 +992,14 @@
      and opacity 0 is invisible, so the resting state is stated explicitly. */
   .wave { animation: none; opacity: .5; transform: none; }
   .spark { animation: none; opacity: 1; transform: none; }
-  .orbits { animation: none; }
   .hero::before { animation: none; transform: none; }
   .earL, .earR { animation: none; transform: none; }
   .dot { animation: none; opacity: 1; transform: none; }
   /* The track stops where it started, which is the readable half. */
   .tickerTrack { animation: none; transform: none; }
+  .scan { animation: none; opacity: 0; }
+  .ic { animation: none; transform: none; }
+  .orbitOuter, .orbitInner { animation: none; }
   :global(.is-hidden) { opacity: 1; transform: none; }
   .cascade > * { opacity: 1; transform: none; transition: none; }
 }

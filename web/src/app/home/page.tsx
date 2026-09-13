@@ -263,6 +263,11 @@ export default async function HomePage() {
                 <div className={styles.artIn}>
                   <Motes className={styles.motes} />
                   <HeroArt />
+                  {/* A band of light crossing the frame every eleven seconds.
+                      Purely decorative, pinned inside the artwork box, and the
+                      only thing on the page that suggests the scene is being
+                      read rather than simply lit. */}
+                  <div className={styles.scan} aria-hidden="true" />
                 </div>
               </div>
             </div>
@@ -379,10 +384,20 @@ export default async function HomePage() {
         <div className={styles.shell}>
           <Reveal><div className={styles.head}>
             <p className={styles.eyebrow}>Why Bilby</p>
-            <h2>A small Australian business, which is the point.</h2>
+            {/*
+              This used to read "A small Australian business, which is the
+              point." Small was doing the opposite of its job. A traveller about
+              to depend on this for a fortnight overseas reads small as "may not
+              be there when I need them", and it buys nothing in exchange: it is
+              a fact about us rather than about them. Australian buys a great
+              deal, because it names a time zone, a body of law and somebody who
+              can be held to both.
+            */}
+            <h2>Australian, and answerable for it.</h2>
             <p>
-              The large travel eSIM brands are support desks in another time zone reselling the same
-              underlying networks. What differs is who picks up when it goes wrong.
+              The big travel eSIM brands resell the same underlying networks we do. What differs is
+              the time zone the help desk sits in, whose law covers you when it goes wrong, and
+              whether a person reads what you actually wrote.
             </p>
           </div></Reveal>
           <Reveal delay={80}><div className={`${styles.why} ${styles.cascade}`}>
