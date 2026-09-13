@@ -500,6 +500,41 @@ different surface. The adapter is one file once those exist.
 
 ---
 
+## 7b · Opening the till
+
+The shop is browsable before it is buyable, and that is a switch rather than a
+consequence.
+
+```
+CHECKOUT_OPEN=true
+```
+
+Anything else, including unset, empty, `1` and `yes`, means closed. Closed means
+the plans page shows every plan with its real price and an **Opening soon**
+badge instead of a Buy button, the checkout page shows the price and says
+payments open shortly, and `POST /api/checkout` answers 503
+`checkout_not_open`. The last one is the gate that matters; the button is a
+courtesy, and a hidden button is not a gate.
+
+It exists because a Stripe key and a decision to sell are two different things,
+and tonight they come apart. The keys are set, the catalogue is priced, and
+`PAID_SUPPLIER` is still `mock`. In that state a successful payment would take
+real money and deliver a simulated profile, which is the worst thing this
+product could do, and nothing about it would look like a failure from the
+inside: the payment clears, the webhook fires, the order says paid.
+
+**Never set `CHECKOUT_OPEN=true` while `PAID_SUPPLIER=mock`.** The shop prints a
+red banner when you do, but it is a warning, not a lock.
+
+The order to switch things on:
+
+1. Fund the eSIM Access wallet.
+2. `PAID_SUPPLIER=esimaccess`, plus its credentials.
+3. Buy one plan yourself, install it on a real handset, watch it connect.
+4. Then, and only then, `CHECKOUT_OPEN=true`.
+
+---
+
 ## 8 · Before the first real dollar
 
 - `RESEND_API_KEY` and `MAIL_FROM`, or nobody gets their eSIM link. Set these
@@ -521,8 +556,9 @@ DATABASE_URL="<a database you can write to>" ./scripts/check.sh
 ```
 
 Types, the first run migration, the rate limiter and error store, the console
-bootstrap window, the money path, the webhook, and the build. 124 checks. Run it
-before every deploy.
+bootstrap window, the theme's contrast, the landing page's claims, the eSIM
+Access adapter, the checkout gate, the money path, the webhook, and the build.
+222 checks. Run it before every deploy.
 
 The first run check is skipped unless you also set `VIRGIN_DATABASE_URL` to a
 database that is genuinely empty, because that is the only way to test it:

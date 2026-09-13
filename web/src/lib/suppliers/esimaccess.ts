@@ -442,6 +442,9 @@ function toPlan(p: EaPackage): CatalogPlan {
     // Documented as "1 = no, 2 = yes, 3 = yes with periodNum", so a truthy
     // check would call 1 a yes.
     topUpSupported: p.supportTopUpType === 2 || p.supportTopUpType === 3,
+    // Their `ipExport` is the traffic exit country. Sometimes a pair like
+    // "UK/NO", so only a clean two letter code is trusted.
+    exitCountry: /^[A-Za-z]{2}$/.test(p.ipExport ?? "") ? p.ipExport!.toUpperCase() : undefined,
   };
 }
 
@@ -500,6 +503,8 @@ interface EaPackage {
   supportTopUpType?: number;
   /** Comma separated ISO alpha-2, eg "CN,HK,ID,JP". */
   location?: string;
+  /** Traffic exit country, eg "HK". Occasionally a pair such as "UK/NO". */
+  ipExport?: string;
 }
 
 interface EaEsim {

@@ -6,17 +6,16 @@
  *
  * ## Why a test and not a designer's eye
  *
- * The shop was a dark theme and the brand grew away from it, so the palette was
- * swapped for the landing page's cream and navy. Swapping a palette is the
- * moment contrast breaks: every pair that was fine on near black has to be
- * re-earned on cream, and the failures are quiet. Text at 4.1:1 looks fine to
- * somebody with good eyes, on a good screen, in a room with the blinds down. It
- * does not look fine to a fifty year old on a phone in Australian sun, which is
- * exactly where a travel eSIM gets used.
+ * The palette has now been swapped twice: dark to cream, and cream to the app's
+ * dark cinematic system so that website, web app and Android are one brand. A
+ * palette swap is the moment contrast breaks, and the failures are quiet. Text
+ * at 4.1:1 looks fine to somebody with good eyes, on a good screen, in a room
+ * with the blinds down. It does not look fine to a fifty year old on a phone in
+ * Australian sun, which is exactly where a travel eSIM gets used.
  *
- * One pair did fail on the swap: the brand teal as a link colour, at 4.18:1 on
- * a card and 3.85:1 on the page. It was fixed by giving links their own darker
- * token rather than by darkening the brand and dulling every success state.
+ * Each swap broke a pair. On cream it was the brand teal as a link, at 3.85:1
+ * on the page. On the dark system it would have been the success colour doing
+ * double duty as a link, so links keep their own token either way.
  *
  * ## It reads globals.css rather than repeating it
  *
@@ -29,7 +28,7 @@
  *
  * WCAG 2.1 AA: 4.5:1 for body text, 3:1 for large text and for the boundaries
  * of user interface components. Not AAA, which would push the muted tone so
- * dark it stops reading as secondary and the hierarchy the page depends on
+ * pale it stops reading as secondary and the hierarchy the page depends on
  * disappears.
  */
 
@@ -139,6 +138,8 @@ const pairs: Array<[string, string, string, number]> = [
   ["secondary text on the page", muted, bg, AA_TEXT],
   ["secondary text on a card", muted, surface, AA_TEXT],
   ["secondary text on a raised chip", muted, surface2, AA_TEXT],
+  ["body text on a raised chip", text, surface2, AA_TEXT],
+  ["a card border against the card", token("border"), surface, 1.2],
   ["the label on a primary button", accentInk, accent, AA_TEXT],
   ["a link in a card", link, surface, AA_TEXT],
   ["a link on the page", link, bg, AA_TEXT],
@@ -157,9 +158,9 @@ for (const [name, fg, back, need] of pairs) {
 /* ---- Note text, against the blend a reader actually sees --------------- */
 
 const notes: Array<[string, string, [number, number, number, number]]> = [
-  ["warning note text", noteInk, [200, 127, 69, 0.1]],
-  ["success note text", noteOkInk, [53, 133, 122, 0.09]],
-  ["error note text", noteBadInk, [179, 64, 47, 0.08]],
+  ["warning note text", noteInk, [255, 179, 71, 0.1]],
+  ["success note text", noteOkInk, [70, 241, 214, 0.1]],
+  ["error note text", noteBadInk, [255, 107, 107, 0.1]],
 ];
 
 for (const [name, fg, [r, g, b, a]] of notes) {
@@ -171,30 +172,63 @@ for (const [name, fg, [r, g, b, a]] of notes) {
 /* ---- The theme is one theme ------------------------------------------- */
 
 /*
- * The dark palette is gone, and staying gone is the point. Every surface that
- * used to override it back to cream was a place that had to remember, and at
- * least two of them forgot: the legal pages once served near white text on the
- * cream ground, and the shop stayed near black behind a warm cream landing page
- * for months. A stray dark ground in this file is how that returns.
+ * One palette, defined once, and every other surface inherits it.
  *
- * Checked by token name rather than by scanning every hex, because the navy ink
- * is legitimately darker than any ground and would trip a blanket "nothing
- * dark" rule. What must never be dark is specifically a background.
+ * The failure this guards against is not a colour being wrong, it is a colour
+ * being redefined. The marketing and console blocks used to restate all sixteen
+ * tokens, which meant a change to the brand had to be made in three places and
+ * was twice made in one. That is how the legal pages served near white text on
+ * a light ground, and how the shop stayed near black behind a warm landing page
+ * for months.
+ *
+ * So: no colour token may appear outside `:root`. The blocks below it may still
+ * set measure, radius and density, because those legitimately differ between a
+ * legal page, a dashboard and a console.
+ */
+const colourTokens = /--(bg|surface|surface-2|border|text|muted|accent|accent-dim|accent-ink|ok|link|warn|danger|note-[a-z-]*?ink|note-[a-z]+-bg):/g;
+const belowRoot = css.slice(css.indexOf("\n}", rootStart));
+const redefined = [...belowRoot.matchAll(colourTokens)].map((m) => m[1]);
+check(
+  "no colour token is redefined outside :root",
+  redefined.length === 0,
+  redefined.join(", "),
+);
+
+/*
+ * And the ground is genuinely dark, on every surface that has one.
+ *
+ * Checked by token name rather than by scanning every hex, because the text is
+ * legitimately lighter than any ground and would trip a blanket "nothing light"
+ * rule. What must never be light is specifically a background. The QR code's
+ * white field is exempt by construction: it is a literal in a rule, not a token,
+ * because a camera has to read it.
  */
 const groundTokens = [...css.matchAll(/--(bg|surface|surface-2):\s*(#[0-9a-fA-F]{6})/g)];
-const darkGrounds = groundTokens
-  .filter(([, , hex]) => luminance(hex) < 0.5)
+const lightGrounds = groundTokens
+  .filter(([, , hex]) => luminance(hex) > 0.2)
   .map(([, name, hex]) => `--${name}: ${hex}`);
 check(
-  `no dark ground survives on any surface (${groundTokens.length} checked)`,
-  darkGrounds.length === 0,
-  darkGrounds.join(", "),
+  `no light ground survives on any surface (${groundTokens.length} checked)`,
+  lightGrounds.length === 0,
+  lightGrounds.join(", "),
 );
 
 check(
-  "the page ground is light, so an unlabelled surface renders as Bilby",
-  luminance(bg) > 0.7,
-  `luminance ${luminance(bg).toFixed(3)}`,
+  "the page ground is dark, so an unlabelled surface renders as Bilby",
+  luminance(bg) < 0.02,
+  `luminance ${luminance(bg).toFixed(4)}`,
+);
+
+check(
+  "the page is the darkest thing, then the card, then the raised chip",
+  luminance(bg) < luminance(surface) && luminance(surface) < luminance(surface2),
+  `${luminance(bg).toFixed(4)} / ${luminance(surface).toFixed(4)} / ${luminance(surface2).toFixed(4)}`,
+);
+
+check(
+  "the button is lighter than the card it sits on, because the action leads",
+  luminance(accent) > luminance(surface),
+  `accent ${luminance(accent).toFixed(3)} vs card ${luminance(surface).toFixed(3)}`,
 );
 
 console.log(`\n${passed} passed, ${failed} failed\n`);

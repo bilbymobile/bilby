@@ -11,13 +11,20 @@
  * launcher's themed icon background, which a flat silhouette cannot: flattened,
  * this becomes an anonymous blob with ears.
  *
- * Geometry is identical to brand/mark/bilby-mark.svg, on the same 512 grid, so
- * the site header and the app icon are provably the same drawing. If one
- * changes, change the other in the same commit.
+ * Geometry is identical to brand/mark/bilby-mark.svg and to the character in
+ * hero-art.tsx, all on the same 512 grid, so the header, the hero and the app
+ * icon are provably one drawing. If one changes, change the others in the same
+ * commit.
+ *
+ * The default ink is `currentColor` rather than a named variable. It used to be
+ * `var(--ink)`, which exists on the landing page and on no other surface, so on
+ * the console the fill resolved to nothing and the mark inherited whatever fill
+ * happened to be in scope. Inheriting the text colour is both defined and what
+ * you want in every case, and any caller that wants otherwise says so.
  */
 export function Mark({
   size = 34,
-  fill = "var(--ink)",
+  fill = "currentColor",
   eye = "currentColor",
 }: {
   size?: number;

@@ -27,7 +27,7 @@ export function Nav() {
     <header className={`${styles.nav} ${stuck ? styles.navStuck : ""}`}>
       <div className={`${styles.shell} ${styles.navInner}`}>
         <Link className={styles.brandLink} href="/">
-          <Mark size={34} />
+          <Mark size={34} fill="var(--coral)" eye="var(--aurora)" />
           <span>Bilby</span>
         </Link>
         <nav className={styles.links}>

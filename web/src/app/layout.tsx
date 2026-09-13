@@ -3,9 +3,11 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { brand } from "@/lib/brand";
 import { MotionGate } from "./home/motion-gate";
+import { Mark } from "./home/mark";
 import { MarketingShell } from "./home/shell";
 import { HOSTS, roleForHost } from "@/lib/hosts";
 import { LEGAL_ENTITY } from "@/lib/legal";
+import { checkoutOpen } from "@/lib/stripe";
 import "./globals.css";
 
 /**
@@ -27,9 +29,10 @@ import "./globals.css";
  * reads the variables rather than the family names.
  */
 const FONT_HREF =
-  "https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700" +
-  "&family=Plus+Jakarta+Sans:wght@400;500;600" +
-  "&family=IBM+Plex+Mono:wght@400;500&display=swap";
+  "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700" +
+  "&family=Bebas+Neue" +
+  "&family=Instrument+Serif:ital@0;1" +
+  "&family=JetBrains+Mono:wght@400;500&display=swap";
 
 function FontLinks() {
   return (
@@ -83,11 +86,12 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   /*
-   * The ink navy, matching the icon ground rather than `brand.colors.bg`,
-   * which is the abandoned dark palette and left the mobile browser chrome a
-   * colour that appears nowhere else on the site.
+   * The page ground itself, so the phone's browser chrome and the notch area
+   * disappear into the page rather than drawing a bar in a colour that appears
+   * nowhere else on the site. Same hex as --bg in globals.css and as `void` in
+   * the app's palette, because the three surfaces are one brand.
    */
-  themeColor: "#0B2038",
+  themeColor: "#04060F",
   width: "device-width",
   initialScale: 1,
   // The install flow hands off to the system eSIM UI; letting the page zoom
@@ -109,6 +113,51 @@ function usingMockSupplier(): boolean {
 }
 
 /**
+ * What the banner should actually say.
+ *
+ * It used to say one thing: that the supplier was simulated and that nothing
+ * here could charge a card. The second half stopped being true the moment a
+ * Stripe key was set, and a preview notice that contains a false statement is
+ * worse than no preview notice, because it is the sentence a customer will
+ * quote back at you.
+ *
+ * So the two facts are read separately and the sentence is assembled from
+ * whichever of them is true right now.
+ */
+function previewNotice(): { head: string; body: string } | null {
+  const mock = usingMockSupplier();
+  const open = checkoutOpen();
+
+  if (mock && !open) {
+    return {
+      head: "Preview.",
+      body:
+        "Plans and prices here are real. Card payments are not switched on yet, " +
+        "and the supplier account is not funded, so nothing can be bought and " +
+        "no eSIM issued here would be a real one.",
+    };
+  }
+  if (mock && open) {
+    return {
+      head: "Do not buy.",
+      body:
+        "Payments are switched on but the supplier account is not funded, so a " +
+        "payment would take money and deliver a simulated profile. Switch " +
+        "CHECKOUT_OPEN off or point PAID_SUPPLIER at the real supplier.",
+    };
+  }
+  if (!open) {
+    return {
+      head: "Opening soon.",
+      body:
+        "Plans and prices here are real and so is the stock. Card payments are " +
+        "not switched on yet, so nothing can be bought today.",
+    };
+  }
+  return null;
+}
+
+/**
  * Chrome is chosen by hostname, not by route.
  *
  * The apex is the marketing face and the `app.` host is the product, and they
@@ -122,7 +171,7 @@ function usingMockSupplier(): boolean {
  * the product chrome. See `roleForHost`.
  */
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const mock = usingMockSupplier();
+  const notice = previewNotice();
   const role = roleForHost((await headers()).get("host"));
 
   if (role === "admin") {
@@ -167,8 +216,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <div className="shell">
           <header className="nav">
+            {/* The same drawing as the landing page header and the app icon.
+                It was a coloured dot, which is a different brand on the one
+                journey a customer actually makes: apex, then "Open the app". */}
             <Link href="/" className="brand" style={{ color: "var(--text)" }}>
-              <span className="dot" />
+              <Mark size={26} fill="var(--accent)" eye="var(--ok)" />
               {brand.name}
             </Link>
             <nav className="links">
@@ -177,7 +229,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </nav>
           </header>
 
-          {mock ? (
+          {notice ? (
             <div
               className="card"
               style={{
@@ -188,9 +240,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 fontSize: 13.5,
               }}
             >
-              <strong style={{ color: "var(--warn)" }}>Preview.</strong>{" "}
-              No supplier account is funded yet, so any eSIM issued here is
-              simulated. Nothing on this deployment can charge a card.
+              <strong style={{ color: "var(--warn)" }}>{notice.head}</strong>{" "}
+              {notice.body}
             </div>
           ) : null}
 
