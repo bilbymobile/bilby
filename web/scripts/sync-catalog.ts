@@ -70,6 +70,9 @@ const num = (name: string) => {
  * the destination list catches up.
  */
 const ONLY_KNOWN = !argv.includes("--all");
+
+/** Required before anything currently on sale is taken off it. */
+const WITHDRAW = argv.includes("--withdraw");
 const KNOWN = new Set(DESTINATIONS.map((d) => d.iso.toUpperCase()));
 
 /**
@@ -95,6 +98,7 @@ interface Planned {
   marginPct: number;
   contributionAud: number;
   topUpSupported: boolean;
+  routing: "home" | "local";
 }
 
 /**
@@ -112,7 +116,25 @@ interface Planned {
 function skuFor(p: CatalogPlan, country: string): string {
   const gb = p.dataMb / 1024;
   const size = (Number.isInteger(gb) ? String(gb) : gb.toFixed(1)).replace(".", "p");
-  return `esim.${country.toLowerCase()}.${size}gb-${p.validityDays}d.esa`;
+  return `esim.${country.toLowerCase()}.${size}gb-${p.validityDays}d.${routingOf(p, country)}`;
+}
+
+/**
+ * Local breakout, or out through the supplier's home network?
+ *
+ * The last part of a SKU has always been the routing, because it is a real
+ * product difference. This used to write `.esa`, naming the supplier, which
+ * broke the rule written above it AND did not match the existing `.home` and
+ * `.local` scheme: a sync would have created 203 parallel SKUs beside the 52
+ * already seeded, called all 52 withdrawn, and switched off the Japan plan that
+ * was on sale. The dry run said so and that is the only reason it was caught.
+ *
+ * An undisclosed exit counts as home, because the honest default is the one
+ * that makes the shop warn the customer.
+ */
+function routingOf(p: CatalogPlan, country: string): "home" | "local" {
+  if (!p.exitCountry) return "home";
+  return p.exitCountry.toUpperCase() === country.toUpperCase() ? "local" : "home";
 }
 
 function titleFor(p: CatalogPlan, country: string): string {
@@ -211,6 +233,7 @@ async function main() {
       marginPct: b.margin,
       contributionAud: b.contribution,
       topUpSupported: p.topUpSupported,
+      routing: routingOf(p, country),
     });
   }
 
@@ -264,11 +287,28 @@ async function main() {
     `  Skipped: ${skipped.multiCountry} regional or global, ${skipped.unknown} outside the ` +
       `destination list, ${skipped.noData} with no data or validity, ${skipped.duplicate} duplicate shapes.`,
   );
-  if (vanished.length) {
-    console.log(
-      `  ${vanished.length} SKUs are no longer offered and will be deactivated` +
-        `${vanished.some((v) => v.active) ? ", including some currently on sale" : ""}.`,
-    );
+  /*
+   * Taking something off sale is a decision, not housekeeping.
+   *
+   * An active SKU has been looked at by a person and put in front of customers.
+   * If it stops appearing in the feed the causes are a transient result, a
+   * changed filter, or a real withdrawal, and only the third justifies switching
+   * it off. Guessing wrong empties the shop.
+   */
+  const goneLive = vanished.filter((v) => v.active);
+  const goneQuiet = vanished.filter((v) => !v.active);
+  if (goneQuiet.length) {
+    console.log(`  ${goneQuiet.length} inactive SKUs are no longer offered and will be tidied away.`);
+  }
+  if (goneLive.length) {
+    console.log("");
+    console.log(`  ${goneLive.length} SKUs are ON SALE and no longer appear in the supplier feed:`);
+    for (const v of goneLive.slice(0, 12)) console.log(`      ${v.sku}`);
+    if (goneLive.length > 12) console.log(`      and ${goneLive.length - 12} more`);
+    console.log(WITHDRAW
+      ? "  --withdraw was passed, so these will be taken off sale."
+      : "  These are being LEFT ON SALE. Check the supplier really dropped them\n" +
+        "  before passing --withdraw; a filter change looks identical here.");
   }
 
   if (!APPLY) {
@@ -298,7 +338,7 @@ async function main() {
         days: r.days,
         daily: false,
         fup: null,
-        routing: "esa",
+        routing: r.routing,
         topUpSupported: r.topUpSupported,
         // Internal. The allowlist in catalog-public.ts keeps this off the wire;
         // see the commit where it did not.
@@ -327,6 +367,7 @@ async function main() {
   }
 
   for (const v of vanished) {
+    if (v.active && !WITHDRAW) continue; // see the note above
     await run(`UPDATE catalog_items SET active = false WHERE sku = ?`, [v.sku]);
     await run(
       `UPDATE catalog_sources SET enabled = false WHERE sku = ? AND fulfiller_id = 'esimaccess'`,
@@ -336,7 +377,11 @@ async function main() {
 
   console.log("");
   console.log(`  ${rows.length} SKUs written, ${fresh} of them new and inactive.`);
-  if (vanished.length) console.log(`  ${vanished.length} withdrawn SKUs deactivated.`);
+  const deactivated = vanished.filter((v) => !v.active || WITHDRAW).length;
+  if (deactivated) console.log(`  ${deactivated} withdrawn SKUs deactivated.`);
+  if (goneLive.length && !WITHDRAW) {
+    console.log(`  ${goneLive.length} withdrawn SKUs left on sale, untouched. Pass --withdraw to change that.`);
+  }
   console.log("");
   console.log("  Nothing new is on sale. Activate from the console, one at a time,");
   console.log("  after you have looked at the margin and installed it on a handset.");

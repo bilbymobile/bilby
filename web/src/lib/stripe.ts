@@ -56,6 +56,44 @@ export function paymentsConfigured(): boolean {
   return stripe() !== null;
 }
 
+/**
+ * Forget the memoised client.
+ *
+ * For checks only, and it exists because the memo is the right thing in a
+ * running process and the wrong thing in a test that has to ask what happens
+ * with no key after it has already asked what happens with one. Reimporting the
+ * module under a cache busting query does not work: the loader strips it, the
+ * same instance comes back, and the check passes for the wrong reason, which is
+ * how this was discovered.
+ */
+export function __resetStripe(): void {
+  client = undefined;
+}
+
+/**
+ * Is the shop allowed to take money today?
+ *
+ * Two conditions, and both must hold.
+ *
+ * A Stripe key is the technical half. The other half is a decision, and it
+ * needs its own switch because the two come apart in exactly the situation we
+ * are in tonight: the keys are set, the catalogue is priced, the plans are
+ * worth showing, and the supplier account is not funded, so a payment that
+ * succeeded would provision a simulated profile. Taking a card in that state is
+ * the single worst thing this product could do, and "the key is set" is not a
+ * decision to do it.
+ *
+ * So CHECKOUT_OPEN is an explicit, deliberate, human act. Unset means closed.
+ * There is no clever default, because every clever default here fails open.
+ *
+ * The gate is enforced at the API, not at the button. A disabled button is a
+ * courtesy to the customer; the route is what stops a payment.
+ */
+export function checkoutOpen(): boolean {
+  if ((process.env.CHECKOUT_OPEN ?? "").trim().toLowerCase() !== "true") return false;
+  return paymentsConfigured();
+}
+
 /** Stripe wants the smallest unit. 17.95 AUD is 1795. */
 export function toMinorUnits(amount: number, currency: string): number {
   // The zero decimal currencies. JPY 1795 is one thousand seven hundred and

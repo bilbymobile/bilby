@@ -3,6 +3,7 @@ import { currentUser } from "@/lib/session";
 import { listCatalog } from "@/lib/platform";
 import { destinationName } from "@/lib/destinations";
 import { liveDestinations } from "@/lib/live-destinations";
+import { checkoutOpen } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,16 @@ export default async function PlansPage({
    * readings are bad and neither is what we meant.
    */
   const dests = (await liveDestinations()) ?? [];
+
+  /*
+   * Plans are on the shelf before the till is switched on.
+   *
+   * A button that starts a purchase the server will refuse is worse than no
+   * button: the customer finds out at the payment step, which is the exact
+   * moment this product promises not to surprise anybody. So the button says
+   * what is true, and the API refuses independently.
+   */
+  const open = checkoutOpen();
 
   return (
     <>
@@ -112,14 +123,18 @@ export default async function PlansPage({
                     <td className="num">
                       {mb >= 1024 ? `${(mb / 1024).toFixed(mb % 1024 ? 1 : 0)} GB` : `${mb} MB`}
                     </td>
-                    <td className="num">{days || "—"}</td>
+                    <td className="num">{days || "n/a"}</td>
                     <td className="num">
                       <strong>${p.sellAmount.toFixed(2)}</strong>
                     </td>
                     <td className="num">
-                      <Link className="btn" href={`/checkout?sku=${encodeURIComponent(p.sku)}`}>
-                        Buy
-                      </Link>
+                      {open ? (
+                        <Link className="btn" href={`/checkout?sku=${encodeURIComponent(p.sku)}`}>
+                          Buy
+                        </Link>
+                      ) : (
+                        <span className="badge">Opening soon</span>
+                      )}
                     </td>
                   </tr>
                 );

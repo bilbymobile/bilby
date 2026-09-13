@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { currentUser } from "@/lib/session";
 import { createDraft } from "@/lib/orders";
-import { checkoutSession, origin, paymentsConfigured } from "@/lib/stripe";
+import { checkoutOpen, checkoutSession, origin, paymentsConfigured } from "@/lib/stripe";
 import { consume, limitHeaders } from "@/lib/limits";
 import { capture } from "@/lib/observe";
 
@@ -44,6 +44,17 @@ export async function POST(req: NextRequest) {
     // trace.
     return NextResponse.json(
       { ok: false, reason: "payments_not_configured" },
+      { status: 503, headers: limitHeaders(gate) },
+    );
+  }
+
+  // The shop is priced and browsable before it is open. This is the gate that
+  // actually holds: the page hides the button, and this refuses the request
+  // that the button would have made. A closed shop that only hides a button is
+  // open to anybody who can type a fetch call.
+  if (!checkoutOpen()) {
+    return NextResponse.json(
+      { ok: false, reason: "checkout_not_open" },
       { status: 503, headers: limitHeaders(gate) },
     );
   }

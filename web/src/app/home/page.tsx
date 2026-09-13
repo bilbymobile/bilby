@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 
-import { liveDestinations, heroClaim } from "@/lib/live-destinations";
+import { liveDestinations, liveShopfront, heroClaim, money } from "@/lib/live-destinations";
 import { url } from "@/lib/hosts";
 import styles from "./home.module.css";
 import { FieldNotes } from "./notes";
+import { HeroArt } from "./hero-art";
 import { HeroParallax, Motes, Reveal } from "./motion";
 
 /**
@@ -24,19 +24,25 @@ import { HeroParallax, Motes, Reveal } from "./motion";
  * "Can provision" and "is on sale" are different facts and the sentence makes a
  * claim about the second.
  *
- * So the count now comes from the catalogue itself, via `liveDestinations()`. A
+ * So the count comes from the catalogue itself, and so does the price. A
  * destination appears here when a SKU for it is activated and disappears when
  * the last one is switched off, and the headline changes shape rather than
  * saying "1 destinations". Nobody edits this page again.
  *
- * ## And there are no prices
+ * ## The second design this page has worn
  *
- * For the same reason. There is no signed rate card, so any price here would be
- * a guess wearing a dollar sign. What replaces it is the pricing *promise*,
- * which is true today and is the thing that actually differentiates us: the
- * whole cost on the card, no activation fee, nothing that renews behind you,
- * and a refund if the eSIM never worked. Put real numbers back the day a
- * supplier is live, not before.
+ * It was warm cream around a photographic hero. The hero was 262 KB, marked
+ * priority, and on a phone browser it was the thing that kept arriving as a
+ * broken image glyph while the words waited behind it. The character is vector
+ * now (see hero-art.tsx) and the page is the same night palette the Android app
+ * and the web app use, so a customer pressing "Open the app" no longer crosses
+ * into what looks like a different company.
+ *
+ * ## What is still not claimed
+ *
+ * Checkout is not open. That is said plainly on the buttons rather than left
+ * for somebody to discover at the payment step, because the whole argument of
+ * this product is that the incumbents are not straight about what happens next.
  */
 
 export const metadata: Metadata = {
@@ -48,17 +54,17 @@ export const metadata: Metadata = {
 
 const STEPS = [
   {
-    n: 1,
+    n: "01",
     h: "Pick where you are going",
     p: "Choose a country and a size. The full price is on the card before you pay, including what happens if the eSIM never activates.",
   },
   {
-    n: 2,
+    n: "02",
     h: "Install it at home",
     p: "One scan on your own couch, on your own wifi, with time to spare. Nothing switches on yet and nothing starts counting down.",
   },
   {
-    n: 3,
+    n: "03",
     h: "Land already connected",
     p: "Turn the phone on and it finds a local network by itself. No app to open and no code to type while you are carrying a bag and a passport.",
   },
@@ -87,6 +93,25 @@ const PROMISES = [
   },
 ];
 
+const PRICING = [
+  {
+    h: "The whole cost, on one card",
+    p: "Data, validity, the networks it uses, and the refund position. Before you pay, not after.",
+  },
+  {
+    h: "No activation fee",
+    p: "The price on the card is the price. Nothing is added at the last screen.",
+  },
+  {
+    h: "Per trip, not per month",
+    p: "It ends when your trip ends. There is no subscription to remember to cancel.",
+  },
+  {
+    h: "Full speed throughout",
+    p: "No throttle after a hidden allowance. A slow eSIM you cannot use is the same as no eSIM.",
+  },
+];
+
 /*
  * Static, and regenerated when the catalogue actually changes.
  *
@@ -94,9 +119,7 @@ const PROMISES = [
  * revalidated every five minutes, which sounded careful and was not: it meant
  * that twelve times an hour the unlucky visitor who arrived first paid for a
  * cold function and a Postgres round trip to Sydney before a single byte of the
- * page moved. On the one page a stranger judges the business by. The hero image
- * is 260 KB and marked priority, so what they saw while waiting was the layout
- * with a hole where the artwork goes.
+ * page moved. On the one page a stranger judges the business by.
  *
  * A landing page that hesitates is worse than a landing page that is briefly
  * out of date, and this data changes when somebody presses a button in the
@@ -111,79 +134,13 @@ export const revalidate = 86400;
 export default async function HomePage() {
   const live = await liveDestinations();
   const claim = heroClaim(live);
-  const dests = live ?? [];
+  const shop = await liveShopfront();
+  const dests = shop?.destinations ?? [];
+  const from = shop?.fromAmount ?? null;
 
   return (
     <>
       <section className={styles.hero} id="top">
-        <HeroParallax>
-        {/*
-          Three boxes, and each one exists because of a specific failure.
-
-          `.art` clips and fades. It must NOT be scaled: it is the box whose
-          left edge sits against the flat cream half of the hero, and scaling it
-          moves that edge, leaving a hairline of raw image where the scrim no
-          longer reaches. One pixel wide, running the full height, and only
-          visible once you scroll.
-
-          `.artInner` carries the scroll: parallax and the slow push in. Inside
-          the clip, so it can scale freely.
-
-          `.artIn` carries the entrance. Separate from the scroll box because a
-          fill-mode forwards animation keeps overriding the properties it
-          animated forever, so on one element the entrance silently won and the
-          scroll did nothing at all.
-
-          The scrim is a sibling of the mover, not a child, so it stays put and
-          keeps covering the left edge while everything behind it moves.
-        */}
-        <div className={styles.art}>
-          <div className={styles.artInner}>
-          <div className={styles.artIn}>
-            <Image
-              src="/hero-bilby.jpg"
-              alt="The Bilby mascot above the Earth over Australia, broadcasting a signal"
-              width={1400}
-              height={1484}
-              priority
-              sizes="(max-width: 980px) 100vw, 64vw"
-              className={styles.drift}
-            />
-            <div className={styles.bloom} />
-            {/*
-              The overlay must map its viewBox onto the box the same way the image
-              does. `slice` is object-fit: cover; the default `meet` is contain,
-              and mixing the two is what had the arcs floating over the ear
-              instead of sitting on the antenna.
-            */}
-            <svg
-              className={styles.sig}
-              viewBox="0 0 1400 1484"
-              preserveAspectRatio="xMidYMid slice"
-              aria-hidden="true"
-            >
-              <g transform="rotate(6 559 300)">
-                <path className={styles.wave} d="M446 123 A 142 142 0 0 1 672 123" />
-                <path className={styles.wave} d="M446 123 A 142 142 0 0 1 672 123" />
-                <path className={styles.wave} d="M446 123 A 142 142 0 0 1 672 123" />
-              </g>
-              <circle className={styles.spark} cx="559" cy="300" r="11" />
-              <ellipse className={styles.orbit} cx="700" cy="1180" rx="560" ry="150" strokeDasharray="26 22" />
-              <ellipse
-                className={`${styles.orbit} ${styles.orbitB}`}
-                cx="700" cy="1244" rx="650" ry="180" strokeDasharray="16 32"
-              />
-            </svg>
-            <Motes className={styles.motes} />
-            <div className={styles.vignette} />
-            <div className={styles.grain} />
-            <div className={styles.sweep} />
-          </div>
-          </div>
-          <div className={styles.fade} />
-        </div>
-        </HeroParallax>
-
         <div className={`${styles.shell} ${styles.heroShell}`}>
           <div className={styles.copy}>
             {/*
@@ -204,6 +161,17 @@ export default async function HomePage() {
             <p className={`${styles.lede} ${styles.rise} ${styles.rise2}`}>
               Set it up on the couch before you fly. Simple. Calm. Australian.
             </p>
+
+            {/* Only rendered when the catalogue actually answered. A price is
+                the one thing on this page nobody should ever see a placeholder
+                for. */}
+            {from !== null ? (
+              <p className={`${styles.priceLine} ${styles.rise} ${styles.rise2}`}>
+                <b>{money(from, shop?.currency)}</b>
+                <span>the cheapest plan on sale today</span>
+              </p>
+            ) : null}
+
             <div className={`${styles.acts} ${styles.rise} ${styles.rise3}`}>
               <a className={`${styles.btn} ${styles.btnGo}`} href="#dests">
                 See where we go
@@ -212,6 +180,7 @@ export default async function HomePage() {
                 How it works
               </a>
             </div>
+
             <div className={`${styles.pills} ${styles.rise} ${styles.rise4}`}>
               {/* Dropped entirely when there is nothing true to put in it. An
                   empty pill is better than a pill reading "0 destinations". */}
@@ -239,6 +208,24 @@ export default async function HomePage() {
               </span>
             </div>
           </div>
+
+          {/*
+            Decorative, and every word above it is in the DOM beside it rather
+            than inside it. The three nested boxes are not decoration: `.art`
+            clips and fades, `.artInner` carries the scroll, `.artIn` carries
+            the entrance, and putting the scroll and the entrance on one element
+            meant the entrance's fill mode silently won forever.
+          */}
+          <HeroParallax>
+            <div className={styles.art}>
+              <div className={styles.artInner}>
+                <div className={styles.artIn}>
+                  <Motes className={styles.motes} />
+                  <HeroArt />
+                </div>
+              </div>
+            </div>
+          </HeroParallax>
         </div>
       </section>
 
@@ -271,8 +258,8 @@ export default async function HomePage() {
             <h2>The places Australians actually fly to.</h2>
             <p>
               A short list on purpose. Every destination here is on sale right now, not a
-              country we hope to cover, and this section is built from the same catalogue the
-              shop sells from.
+              country we hope to cover, and every price is the one the shop charges, read from
+              the same catalogue at the same moment.
             </p>
           </div></Reveal>
           {/*
@@ -288,6 +275,9 @@ export default async function HomePage() {
                   <div className={styles.swatch}>{d.iso}</div>
                   <h3>{d.name}</h3>
                   <p>{d.blurb ?? "Local networks, full speed"}</p>
+                  <span className={styles.destPrice}>
+                    {money(d.fromAmount, shop?.currency)} <small>and up</small>
+                  </span>
                 </div>
               ))}
             </div></Reveal>
@@ -304,30 +294,23 @@ export default async function HomePage() {
         <div className={styles.shell}>
           <Reveal><div className={styles.head}>
             <p className={styles.eyebrow}>Pricing</p>
-            <h2>No prices yet, because we will not guess at them.</h2>
+            <h2>
+              {from !== null
+                ? `One price, paid once, starting at ${money(from, shop?.currency)}.`
+                : "One price, paid once, and no surprises at the last screen."}
+            </h2>
             <p>
-              Our wholesale agreement is not signed, so any number on this page today would be
-              invention. What we can tell you now is exactly how the pricing will behave, and that
-              part is not going to change.
+              Every plan is a single charge in Australian dollars. Below is how the pricing
+              behaves, and that part is not going to change as the catalogue grows.
             </p>
           </div></Reveal>
           <Reveal delay={80}><div className={`${styles.why} ${styles.cascade}`}>
-            <div className={styles.wy}>
-              <h3>The whole cost, on one card</h3>
-              <p>Data, validity, the networks it uses, and the refund position. Before you pay, not after.</p>
-            </div>
-            <div className={styles.wy}>
-              <h3>No activation fee</h3>
-              <p>The price on the card is the price. Nothing is added at the last screen.</p>
-            </div>
-            <div className={styles.wy}>
-              <h3>Per trip, not per month</h3>
-              <p>It ends when your trip ends. There is no subscription to remember to cancel.</p>
-            </div>
-            <div className={styles.wy}>
-              <h3>Full speed throughout</h3>
-              <p>No throttle after a hidden allowance. A slow eSIM you cannot use is the same as no eSIM.</p>
-            </div>
+            {PRICING.map((w) => (
+              <div className={styles.wy} key={w.h}>
+                <h3>{w.h}</h3>
+                <p>{w.p}</p>
+              </div>
+            ))}
           </div></Reveal>
         </div>
       </section>
@@ -346,7 +329,7 @@ export default async function HomePage() {
             {PROMISES.map((w) => (
               <div className={styles.wy} key={w.h}>
                 <div className={styles.ic}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" strokeWidth="2" strokeLinecap="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <path d={w.d} />
                   </svg>
                 </div>
@@ -379,12 +362,12 @@ export default async function HomePage() {
             <div>
               <h2>Sort the phone out before you sort the packing.</h2>
               <p>
-                We are not open yet. When we are, the part of the trip nobody enjoys thinking about
-                takes five minutes on the couch.
+                Plans and prices are up. Card payments open shortly, so you can see exactly what
+                you will pay today and buy it the moment we switch it on.
               </p>
             </div>
             <Link className={`${styles.btn} ${styles.btnGo}`} href="/plans">
-              Open the app
+              See the plans
             </Link>
           </div></Reveal>
         </div>

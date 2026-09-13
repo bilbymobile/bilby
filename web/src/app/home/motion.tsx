@@ -63,12 +63,12 @@ export function HeroParallax({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Dust in the light.
+ * Stars behind the character.
  *
- * Twenty two specks drifting up and right through the warm half of the frame.
- * It is the cheapest atmosphere available and the reason it works is that it is
- * barely visible: at these opacities nobody consciously sees a particle, they
- * just stop reading the picture as a flat asset.
+ * Twenty two specks drifting slowly up and right behind the hero. It is the
+ * cheapest atmosphere available and the reason it works is that it is barely
+ * visible: at these opacities nobody consciously sees a particle, they just
+ * stop reading the picture as a flat asset.
  *
  * Drawn on one canvas rather than as DOM nodes. Twenty two animated elements is
  * twenty two things for the compositor to track every frame; a canvas is one.
@@ -88,10 +88,13 @@ export function Motes({ className = "" }: { className?: string }) {
     let w = 0;
     let h = 0;
 
+    // Clamped to the viewport as well as pinned by CSS. A decorative layer
+    // larger than the window is meaningless, and the runaway this guards
+    // against cost a gigabyte of RGBA on a phone.
     const size = () => {
       const r = cv.getBoundingClientRect();
-      w = r.width;
-      h = r.height;
+      w = Math.min(r.width, window.innerWidth);
+      h = Math.min(r.height, window.innerHeight);
       cv.width = Math.max(1, Math.round(w * dpr));
       cv.height = Math.max(1, Math.round(h * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -128,7 +131,12 @@ export function Motes({ className = "" }: { className?: string }) {
         const twinkle = 0.65 + 0.35 * Math.sin(t * 0.7 + d.p);
         ctx.beginPath();
         ctx.arc(d.x * w, d.y * h, d.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 246, 228, ${d.a * twinkle})`;
+        // Cool white, with roughly one speck in five taking the aurora. A
+        // field of identical dots reads as noise on a texture; a field with two
+        // temperatures in it reads as distance.
+        ctx.fillStyle = d.r > 2.1
+          ? `rgba(70, 241, 214, ${d.a * twinkle})`
+          : `rgba(226, 233, 255, ${d.a * twinkle})`;
         ctx.fill();
       }
       raf = requestAnimationFrame(frame);

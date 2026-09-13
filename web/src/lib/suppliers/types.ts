@@ -28,6 +28,14 @@ export interface CatalogPlan {
   minSellUsd?: number;
   /** True if the plan can be topped up in place rather than re-provisioned. */
   topUpSupported: boolean;
+  /**
+   * ISO country the traffic appears to come from, when the supplier says.
+   *
+   * A real product difference: a plan that exits in Hong Kong while you stand
+   * in Tokyo breaks Australian banking apps and geo blocked streaming. Undefined
+   * when undisclosed, which is not the same as local breakout.
+   */
+  exitCountry?: string;
 }
 
 export interface EsimProfile {

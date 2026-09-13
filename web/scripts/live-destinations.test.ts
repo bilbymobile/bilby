@@ -18,7 +18,7 @@
 
 import { run } from "../src/lib/db";
 import { upsertItem, setPrice } from "../src/lib/platform";
-import { liveDestinations, heroClaim } from "../src/lib/live-destinations";
+import { liveDestinations, liveShopfront, heroClaim, money } from "../src/lib/live-destinations";
 import { DESTINATIONS } from "../src/lib/destinations";
 
 let passed = 0;
@@ -37,7 +37,7 @@ function check(name: string, ok: boolean, detail?: unknown) {
 async function seed(
   sku: string,
   country: string,
-  opts: { active: boolean; priced: boolean },
+  opts: { active: boolean; priced: boolean; amount?: number },
 ) {
   await upsertItem({
     sku,
@@ -46,7 +46,7 @@ async function seed(
     active: opts.active,
     attributes: { country, dataMb: 1024, days: 7 },
   });
-  if (opts.priced) await setPrice(sku, "AUD", 3.95, true);
+  if (opts.priced) await setPrice(sku, "AUD", opts.amount ?? 3.95, true);
 }
 
 async function main() {
@@ -152,6 +152,67 @@ async function main() {
   check(
     "turning the last SKU off removes the destination again",
     (await liveDestinations())?.length === 1,
+  );
+
+  await run(`DELETE FROM catalog_prices`);
+  await run(`DELETE FROM catalog_sources`);
+  await run(`DELETE FROM catalog_items`);
+
+  /* ---- The price on the page is the price in the till ------------------ */
+
+  /*
+   * The landing page shipped "$0.03" for a $2.95 plan.
+   *
+   * `catalog_prices.sell_amount` is NUMERIC dollars and the formatter divided
+   * by a hundred, because cents is the other common convention and a number
+   * does not carry its own unit. Nothing threw, nothing looked broken, and the
+   * hero simply advertised a price a hundred times too low on the one page a
+   * stranger judges the business by.
+   *
+   * Both halves are pinned below: the formatter on its own, and the whole path
+   * from a row in Postgres to the string a customer reads.
+   */
+  console.log("\nWhat a price looks like by the time somebody reads it\n");
+
+  check("a stored 4.95 is four dollars ninety five", money(4.95) === "$4.95", money(4.95));
+  check("a whole dollar drops the cents", money(12) === "$12", money(12));
+  check("a stored 2.95 is never three cents", money(2.95) !== "$0.03", money(2.95));
+  check(
+    "a currency that is not the local one is named rather than assumed",
+    money(4.95, "USD") === "4.95 USD",
+    money(4.95, "USD"),
+  );
+
+  await seed("test.jp.cheap", "JP", { active: true, priced: true, amount: 2.95 });
+  await seed("test.jp.dear", "JP", { active: true, priced: true, amount: 27.95 });
+  await seed("test.th.mid", "TH", { active: true, priced: true, amount: 9.95 });
+  await seed("test.id.off", "ID", { active: false, priced: true, amount: 1.0 });
+
+  const shop = await liveShopfront();
+  check(
+    "the cheapest plan anywhere is the cheapest ACTIVE plan",
+    shop?.fromAmount === 2.95,
+    shop?.fromAmount,
+  );
+  check(
+    "and it reaches the page as a price, not as small change",
+    shop !== null && money(shop.fromAmount!) === "$2.95",
+    shop && money(shop.fromAmount!),
+  );
+  check(
+    "each destination carries its own cheapest, not the global one",
+    shop?.destinations.find((d) => d.iso === "TH")?.fromAmount === 9.95,
+    shop?.destinations.find((d) => d.iso === "TH")?.fromAmount,
+  );
+  check(
+    "an inactive SKU never sets a from price",
+    shop?.destinations.every((d) => d.iso !== "ID") === true,
+    shop?.destinations.map((d) => d.iso).join(","),
+  );
+  check(
+    "the shopfront and the destination list agree on what is on sale",
+    shop?.destinations.map((d) => d.iso).join(",") ===
+      (await liveDestinations())?.map((d) => d.iso).join(","),
   );
 
   await run(`DELETE FROM catalog_prices`);

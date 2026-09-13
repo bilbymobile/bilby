@@ -11,7 +11,7 @@ export function Footer() {
       <div className={`${styles.shell} ${styles.footInner}`}>
         <div className={styles.about}>
           <Link className={styles.brandLink} href="/">
-            <Mark size={30} />
+            <Mark size={30} fill="var(--coral)" eye="var(--aurora)" />
             <span>Bilby</span>
           </Link>
           <p>{LEGAL_ENTITY.descriptor}</p>

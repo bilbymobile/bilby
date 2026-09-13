@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { currentUser } from "@/lib/session";
 import { getItem, priceOf } from "@/lib/platform";
-import { paymentsConfigured } from "@/lib/stripe";
+import { checkoutOpen, paymentsConfigured } from "@/lib/stripe";
 import { GST_DIVISOR } from "@/lib/money";
 import { BuyButton } from "./buy";
 
@@ -31,7 +31,7 @@ export default async function CheckoutPage({
 
   const item = sku ? await getItem(sku) : null;
   const price = item?.active ? await priceOf(item.sku, "AUD") : null;
-  const live = paymentsConfigured();
+  const live = checkoutOpen();
 
   if (!item || !item.active || price === null) {
     return (
@@ -133,11 +133,15 @@ export default async function CheckoutPage({
           </>
         ) : (
           <>
-            <h2>Payments are not connected yet</h2>
-            <p className="sub" style={{ margin: 0 }}>
-              This deployment has no payment key set, so nothing can be charged.
-              Nothing has been charged.
+            <h2>Card payments open shortly</h2>
+            <p className="sub" style={{ marginBottom: 14 }}>
+              {paymentsConfigured()
+                ? "The shop is not taking payments yet. The plan and the price above are real, and this is what you will pay when it opens. Nothing has been charged."
+                : "This deployment has no payment key set, so nothing can be charged. Nothing has been charged."}
             </p>
+            <Link className="btn ghost" href="/plans">
+              Back to plans
+            </Link>
           </>
         )}
       </div>

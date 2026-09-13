@@ -27,7 +27,7 @@
  */
 
 import { DESTINATIONS, type Destination } from "./destinations";
-import { distinctAttributeValues } from "./platform";
+import { distinctAttributeValues, listCatalog } from "./platform";
 import { warn } from "./observe";
 
 /**
@@ -91,4 +91,102 @@ export function heroClaim(live: Destination[] | null): {
     line2: `${live.length} destinations.`,
     pill: `${live.length} destinations`,
   };
+}
+
+/**
+ * The cheapest real price, per destination and overall.
+ *
+ * ## Why the landing page is allowed to show prices now
+ *
+ * It was not, and the section saying so was correct at the time: there was no
+ * rate card, so any number would have been a guess wearing a dollar sign. That
+ * has changed. The catalogue holds activated SKUs with prices somebody set, and
+ * a price that has been set is a price we will honour.
+ *
+ * What has not changed is where the number comes from. Nobody types a price
+ * into a marketing page. This reads the same rows the shop charges from, so the
+ * page and the till can never disagree, and a price change in the console moves
+ * the landing page without anyone remembering to.
+ *
+ * ## One query, not one per country
+ *
+ * The obvious shape is a loop over destinations asking for each one's cheapest
+ * plan. On a page that renders at build time that is thirteen round trips to
+ * Sydney to answer a question one query answers, and it grows with the
+ * catalogue. So: pull the active priced eSIM rows once and reduce them here.
+ *
+ * ## It never throws
+ *
+ * Same contract as `liveDestinations`. On failure the caller gets nulls and
+ * says nothing about price, which is the honest degradation. A marketing page
+ * that 500s because Postgres hiccupped is worse than one that is briefly vaguer
+ * than usual.
+ */
+export interface Shopfront {
+  /** Live destinations, cheapest first price attached, in curated order. */
+  destinations: Array<Destination & { fromAmount: number }>;
+  /**
+   * The cheapest plan anywhere in the catalogue, or null if nothing is on sale.
+   *
+   * In major units. `catalog_prices.sell_amount` is NUMERIC dollars, not cents,
+   * and the first version of this treated it as cents: the hero rendered
+   * "$0.03" for a $2.95 plan, and it rendered it confidently, because nothing
+   * about a number is self describing. The unit is now named in the field, in
+   * the formatter, and in a check.
+   */
+  fromAmount: number | null;
+  /** How many activated, priced SKUs there are. */
+  planCount: number;
+  currency: string;
+}
+
+export async function liveShopfront(currency = "AUD"): Promise<Shopfront | null> {
+  try {
+    const items = await listCatalog("esim", currency);
+
+    // Cheapest per country. The attribute is read defensively because a SKU
+    // written by a supplier sync is not required to have every field a curated
+    // SKU has, and a missing country must drop the row rather than throw the
+    // whole page away.
+    const cheapest = new Map<string, number>();
+    for (const it of items) {
+      const iso = String(it.attributes.country ?? "").toUpperCase();
+      if (!iso) continue;
+      const now = cheapest.get(iso);
+      if (now === undefined || it.sellAmount < now) cheapest.set(iso, it.sellAmount);
+    }
+
+    const destinations = DESTINATIONS.flatMap((d) => {
+      const c = cheapest.get(d.iso.toUpperCase());
+      return c === undefined ? [] : [{ ...d, fromAmount: c }];
+    });
+
+    const all = [...cheapest.values()];
+    return {
+      destinations,
+      fromAmount: all.length ? Math.min(...all) : null,
+      planCount: items.length,
+      currency,
+    };
+  } catch (e) {
+    await warn("catalog.liveShopfront", e);
+    return null;
+  }
+}
+
+/**
+ * A stored price to something a person reads.
+ *
+ * The argument is in MAJOR units, which is how `catalog_prices.sell_amount` is
+ * stored: 4.95 means four dollars ninety five. It is worth saying twice because
+ * the alternative convention is common enough that assuming it is the natural
+ * mistake, and the mistake is silent. A hero reading "$0.05" looks like a
+ * deliberate loss leader, not like a bug.
+ *
+ * Whole dollars lose the ".00" because "$5" is what a price tag says and
+ * "$5.00" is what a receipt says, and the hero is a price tag.
+ */
+export function money(amount: number, currency = "AUD"): string {
+  const body = Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
+  return currency === "AUD" ? `$${body}` : `${body} ${currency}`;
 }

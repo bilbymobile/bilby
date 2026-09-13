@@ -10,478 +10,517 @@
  * Element selectors are NOT scoped by CSS modules, only class names, so every
  * rule here descends from .page.
  *
- * One visual world on purpose. Warm cream ground, deep navy ink, sand and clay
- * from the Australian interior, a single teal reserved for "this is fine" and a
- * pale sky blue reserved for signal and nothing else. The hero render is lit at
- * golden hour, so there is no dark mode: a dark inversion would fight the
- * photograph rather than serve it, and the reader is usually anxious rather
- * than nocturnal.
+ * ## One visual world
+ *
+ * Deep night ground, the bilby's coral and mango carrying every action, aurora
+ * reserved for signal and for "this is fine", sky blue for links. The values
+ * are not approximations of the Android app's palette, they are the same hex,
+ * so a customer crossing from the website to the web app to the phone crosses
+ * nothing at all.
+ *
+ * The previous version of this file was warm cream lit for a photographic hero.
+ * That hero is gone (see hero-art.tsx) and so is the reason for the cream.
  */
 
 .page {
-  --font-display: "Outfit";
-  --font-body: "Plus Jakarta Sans";
-  --font-mono: "IBM Plex Mono";
+  --font-display: "Space Grotesk";
+  --font-body: "Space Grotesk";
+  --font-mono: "JetBrains Mono";
 
-  --cream: #F7EFE4;
-  --surface: #FDF9F3;
-  --raised: #F1E6D7;
-  --sunk: #EADCC9;
-  --line: #E7DAC8;
-  --line2: #F0E5D6;
-  --ink: #0B2038;
-  --ink2: #3A4C60;
-  --ink3: #7C8B99;
-  --sand: #EEBF8B;
-  --sand-ink: #2A1A0B;
-  --clay: #C87F45;
-  --teal: #35857A;
-  --shadow: 0 1px 2px rgba(11, 32, 56, .04), 0 14px 38px rgba(11, 32, 56, .07);
-  --lift: 0 2px 6px rgba(11, 32, 56, .06), 0 26px 60px rgba(11, 32, 56, .12);
+  /* Ground, deepest to highest. */
+  --void: #04060F;
+  --abyss: #0A0E1F;
+  --deep: #10142A;
+  --surface: #161B36;
+  --raised: #1E2447;
+  --chrome: #2A3162;
 
-  background: var(--cream);
+  --line: rgba(255, 255, 255, .07);
+  --line2: rgba(255, 255, 255, .12);
+
+  --ink: #F4F6FF;
+  --ink2: #B4BBD9;
+  --ink3: #7A82A6;
+
+  --coral: #FF7A3D;
+  --coral-soft: #FFB088;
+  --mango: #FFB347;
+  --aurora: #46F1D6;
+  --sky: #5EC8FF;
+
+  /* Text drawn on a coral or mango fill. Named rather than written inline,
+     because a hardcoded light ink is how a mango button ships unreadable. */
+  --on-warm: #04060F;
+
+  --glass: rgba(255, 255, 255, .04);
+  --glass-hi: rgba(255, 255, 255, .07);
+
+  /* On a dark ground a drop shadow does not separate anything, because the
+     shadow and the page are both darkness. What lifts a surface here is the
+     one pixel of light along its top edge. The drop stays only to seat it. */
+  --shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 18px 44px rgba(0, 0, 0, .5);
+  --lift: inset 0 1px 0 rgba(255, 255, 255, .10), 0 28px 70px rgba(0, 0, 0, .6);
+
+  background: var(--void);
   color: var(--ink);
-  font-family: var(--font-body), -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-body), ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
   font-size: 16.5px;
   line-height: 1.66;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  /* Horizontal only. `overflow: hidden` on both axes here would make the page
+     its own scroll container and break position: sticky in the header. */
+  overflow-x: clip;
 }
 
 .page h1,
 .page h2,
 .page h3 {
-  font-family: var(--font-display), -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-display), ui-sans-serif, -apple-system, sans-serif;
   margin: 0;
+  font-weight: 700;
   letter-spacing: -.03em;
+  line-height: 1.06;
   text-wrap: balance;
 }
 .page p { margin: 0; }
 .page a { color: inherit; }
 .page img { max-width: 100%; display: block; }
-.page :focus-visible { outline: 2.5px solid var(--teal); outline-offset: 3px; border-radius: 8px; }
+.page :focus-visible { outline: 2.5px solid var(--aurora); outline-offset: 3px; border-radius: 8px; }
 
 .shell { max-width: 1240px; margin: 0 auto; padding: 0 28px; width: 100%; }
-.band { padding: clamp(62px, 7.5vw, 108px) 0; }
-.bandSurface { background: var(--surface); border-block: 1px solid var(--line2); }
+.band { padding: clamp(62px, 7.5vw, 108px) 0; position: relative; }
+
+/*
+ * The alternating band.
+ *
+ * On cream this was a lighter panel with a hairline above and below. On night
+ * the same job is done by lifting the ground one step and letting the seam be a
+ * gradient rather than a line: a hard 1px rule between two near blacks reads as
+ * a rendering artefact on an OLED phone, where both sides are genuinely off.
+ */
+.bandSurface {
+  background:
+    linear-gradient(180deg, var(--void) 0%, var(--abyss) 14%, var(--abyss) 86%, var(--void) 100%);
+}
 
 .eyebrow {
   font-family: var(--font-mono), ui-monospace, Menlo, monospace;
-  font-size: .68rem; letter-spacing: .17em; text-transform: uppercase;
-  color: var(--ink3); margin: 0 0 14px;
+  font-size: .68rem; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--aurora);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
 }
-.head { max-width: 56ch; margin-bottom: clamp(30px, 4vw, 48px); }
-.head h2 { font-size: clamp(27px, 3.5vw, 42px); line-height: 1.1; font-weight: 600; margin-bottom: 14px; }
-.head p { font-size: 1.05rem; color: var(--ink2); max-width: 60ch; }
+/* A short rule after the label rather than a bullet before it. It points at the
+   heading, which is where the eye should go next. */
+.eyebrow::after {
+  content: ""; height: 1px; flex: 1; max-width: 72px;
+  background: linear-gradient(90deg, var(--aurora), transparent);
+}
 
-/* ── Nav ─────────────────────────────────────────────────────────────── */
+.head { max-width: 720px; margin-bottom: clamp(34px, 4vw, 54px); }
+.head h2 { font-size: clamp(30px, 4.2vw, 50px); margin-bottom: 16px; }
+.head p { color: var(--ink2); font-size: 1.06rem; max-width: 62ch; }
+
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+
 .nav {
-  position: sticky; top: 0; z-index: 50;
-  background: rgba(247, 239, 228, .86);
-  backdrop-filter: blur(16px) saturate(1.2);
+  position: sticky; top: 0; z-index: 60;
+  padding: 14px 0;
+  /* Transparent until scrolled, so the hero starts at the top of the window
+     rather than under a bar. */
+  background: transparent;
+  transition: background .3s ease, backdrop-filter .3s ease, border-color .3s ease;
   border-bottom: 1px solid transparent;
 }
-.navStuck { border-bottom-color: var(--line); }
-.navInner { display: flex; align-items: center; gap: 30px; height: 82px; }
-.brandLink { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
-.brandLink span {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 700; font-size: 1.55rem; letter-spacing: -.045em;
+.navStuck {
+  background: rgba(4, 6, 15, .78);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-bottom-color: var(--line);
 }
-.links { margin-left: auto; display: flex; gap: 26px; font-size: .95rem; align-items: center; }
-.links a { color: var(--ink2); text-decoration: none; transition: color .22s; }
+.navInner { display: flex; align-items: center; gap: 22px; }
+.brandLink {
+  display: inline-flex; align-items: center; gap: 11px;
+  font-weight: 700; font-size: 1.2rem; letter-spacing: -.02em;
+  text-decoration: none; color: var(--ink);
+}
+/* The mark takes the coral so the wordmark stays ink. Two warm things beside
+   each other at the same weight and neither one leads. */
+.brandLink svg { color: var(--coral); fill: currentColor; flex: none; }
+.links { display: flex; gap: 26px; margin-left: auto; font-size: .93rem; color: var(--ink2); }
+.links a { text-decoration: none; padding: 6px 0; position: relative; }
+.links a::after {
+  content: ""; position: absolute; left: 0; right: 100%; bottom: 0; height: 1px;
+  background: var(--coral); transition: right .28s cubic-bezier(.22, 1, .36, 1);
+}
 .links a:hover { color: var(--ink); }
+.links a:hover::after { right: 0; }
 .login {
-  border: 1.5px solid var(--ink); border-radius: 999px; padding: 12px 26px;
-  font-family: var(--font-display), sans-serif; font-weight: 500; font-size: .98rem;
-  text-decoration: none; color: var(--ink); white-space: nowrap;
-  transition: background .28s ease, color .28s ease;
+  padding: 10px 18px; border-radius: 999px;
+  border: 1px solid var(--line2); color: var(--ink);
+  text-decoration: none; font-size: .9rem; font-weight: 600;
+  background: var(--glass);
+  transition: background .2s ease, border-color .2s ease;
 }
-.login:hover { background: var(--ink); color: var(--cream); }
+.login:hover { background: var(--glass-hi); border-color: var(--coral); }
+
+
+/* ── Hero ────────────────────────────────────────────────────────────────── */
+
+.hero {
+  position: relative;
+  /* Pulled up under the transparent header. */
+  margin-top: -68px;
+  padding: clamp(132px, 15vw, 190px) 0 clamp(60px, 7vw, 96px);
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/*
+ * The light in the room.
+ *
+ * Three soft blobs at low opacity, painted as one element. This is what stops a
+ * near black page reading as an unstyled document: the ground is not one colour
+ * anywhere, so the eye reads depth before it reads anything else.
+ */
+.hero::before {
+  content: "";
+  position: absolute; inset: -20% -10% 0;
+  z-index: 0;
+  background:
+    radial-gradient(46% 40% at 78% 18%, rgba(255, 122, 61, .18), transparent 70%),
+    radial-gradient(40% 38% at 14% 30%, rgba(70, 241, 214, .10), transparent 70%),
+    radial-gradient(60% 44% at 50% 96%, rgba(45, 127, 232, .12), transparent 72%);
+  pointer-events: none;
+}
+
+.heroShell {
+  position: relative; z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, .82fr);
+  gap: clamp(28px, 4vw, 56px);
+  align-items: center;
+}
+
+.copy { max-width: 640px; }
+
+.copy h1 {
+  font-size: clamp(42px, 6.6vw, 82px);
+  letter-spacing: -.04em;
+  margin-bottom: 22px;
+}
+/* The second line takes the warm gradient. One line, not both: a headline
+   entirely in gradient is a hero from a template, and the contrast between an
+   ink line and a lit line is what makes the lit one mean something. */
+.line2 {
+  background: linear-gradient(96deg, var(--coral-soft), var(--mango) 55%, var(--coral));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* The clip leaves no colour for a system that ignores background-clip, so the
+     fallback is spelled out rather than left to chance. */
+  -webkit-text-fill-color: transparent;
+}
+
+.lede { color: var(--ink2); font-size: clamp(1.02rem, 1.6vw, 1.17rem); max-width: 52ch; margin-bottom: 30px; }
+
+.acts { display: flex; gap: 13px; flex-wrap: wrap; margin-bottom: 30px; }
 
 .btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-  padding: 17px 34px; border-radius: 999px;
-  font-family: var(--font-display), sans-serif; font-weight: 600; font-size: 1rem;
-  text-decoration: none; border: 1.5px solid transparent; cursor: pointer;
-  transition: transform .45s cubic-bezier(.22, 1.2, .36, 1), box-shadow .45s ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 15px 26px; border-radius: 999px;
+  font-weight: 600; font-size: .97rem; text-decoration: none;
+  border: 1px solid transparent; cursor: pointer;
+  transition: transform .18s cubic-bezier(.22, 1, .36, 1), box-shadow .25s ease, background .2s ease;
+  white-space: nowrap;
 }
-.btn:hover { transform: translateY(-2px); box-shadow: var(--lift); }
-/*
- * Two classes, not one, and it matters.
- *
- * `.page a { color: inherit }` above is 0,1,1 and a single class is 0,1,0, so a
- * one class rule LOSES to it and the label renders in the inherited ink. On the
- * navy button that is navy on navy: a button with no visible text, which is
- * exactly how it shipped the first time. Doubling the class to 0,2,0 wins
- * without resorting to !important.
- */
-.btn.btnGo { background: var(--ink); color: var(--cream); }
-.btn.btnQuiet { background: var(--surface); color: var(--ink); border-color: var(--line); }
-.close .btn.btnGo { background: var(--sand); color: var(--sand-ink); }
+.btnGo {
+  background: linear-gradient(96deg, var(--mango), var(--coral));
+  color: var(--on-warm);
+  box-shadow: 0 10px 30px rgba(255, 122, 61, .3);
+}
+.btnGo:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(255, 122, 61, .42); }
+.btnQuiet {
+  background: var(--glass); color: var(--ink);
+  border-color: var(--line2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.btnQuiet:hover { background: var(--glass-hi); border-color: var(--chrome); transform: translateY(-2px); }
 
-/* ── Hero ────────────────────────────────────────────────────────────── */
-.hero {
-  position: relative; overflow: hidden; display: flex; align-items: center;
-  min-height: min(86vh, 880px);
-  padding: clamp(34px, 5vw, 72px) 0 clamp(46px, 6vw, 86px);
-}
-.heroShell { position: relative; z-index: 2; width: 100%; }
-.copy { max-width: min(640px, 54%); }
-.hero h1 {
-  /* Capped at 66 rather than 76 so the two composed lines fit their measure at
-     every width. A headline that rewraps defeats the mask: the clip would sit
-     mid line and the words would rise from nowhere. */
-  font-size: clamp(36px, 4.9vw, 66px); line-height: 1.03; font-weight: 600;
-  letter-spacing: -.045em; margin-bottom: 22px;
-}
-.lede { font-size: clamp(17px, 1.5vw, 22px); color: var(--ink2); max-width: 30ch; margin-bottom: 36px; }
-.acts { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 42px; }
-
-.pills {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
-}
+.pills { display: flex; gap: 10px; flex-wrap: wrap; }
 .pill {
-  display: inline-flex; align-items: center; gap: 10px; padding: 6px 16px 6px 6px;
-  border-radius: 999px; font-size: .9rem; color: var(--ink2); white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 15px; border-radius: 999px;
+  background: var(--glass); border: 1px solid var(--line);
+  font-size: .82rem; color: var(--ink2); white-space: nowrap;
 }
-.pill i {
-  width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--ink); color: var(--cream);
-  font-family: var(--font-mono), monospace; font-size: .6rem; font-style: normal; flex: none;
-}
-.pillOk i { background: var(--teal); }
+.pill i { display: inline-flex; color: var(--sky); font-style: normal; font-size: .74rem; font-weight: 700; letter-spacing: .06em; }
+.pillOk i { color: var(--aurora); }
 
-/* Hero art, bled to the right edge the way the render is composed */
-/*
- * Right aligned rather than full bleed, and that is a constraint of the source
- * rather than a preference: the render is portrait, so covering a 16:9 hero
- * with it crops to roughly twice the intended zoom and puts the headline across
- * the mascot's face. Bleeding it off the right edge keeps the subject whole and
- * still reads as one frame, because the scrim feathers the join rather than
- * ending on a line.
- */
-.art { position: absolute; inset: 0 0 0 auto; width: min(68%, 1080px); z-index: 1; overflow: hidden; }
-/* The mover and the entrance, each on their own box. See the note in page.tsx
-   for the two separate bugs that produced this shape. */
-.artInner { position: absolute; inset: 0; }
-.artIn { position: absolute; inset: 0; }
-.art img { width: 100%; height: 100%; object-fit: cover; object-position: 52% 46%; }
-.drift { animation: drift 17s ease-in-out infinite alternate; }
-@keyframes drift {
-  from { transform: translateY(9px) scale(1.012); }
-  to   { transform: translateY(-11px) scale(1.038); }
+/* The price, stated plainly and taken from the catalogue. */
+.priceLine {
+  display: inline-flex; align-items: baseline; gap: 9px;
+  margin-bottom: 26px;
+  font-family: var(--font-mono), ui-monospace, Menlo, monospace;
 }
+.priceLine b {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(28px, 3.4vw, 38px); font-weight: 700;
+  letter-spacing: -.03em; color: var(--mango);
+}
+.priceLine span { font-size: .84rem; color: var(--ink3); letter-spacing: .04em; }
+
+
+/* ── The hero artwork ────────────────────────────────────────────────────── */
 
 /*
- * Golden hour bloom.
+ * Three boxes, each for a reason that cost something to learn.
  *
- * The render's light source sits low and left, behind the mascot. This breathes
- * over it on a cycle deliberately prime against the drift cycle (17s and 13s)
- * so the two never resynchronise into a visible pulse. That non repetition is
- * most of what separates ambient motion from a loop.
+ * `.art` clips and fades and must not move. `.artInner` carries the scroll, so
+ * it is safely inside the clip. `.artIn` carries the entrance, separate because
+ * a fill-mode forwards animation keeps overriding the properties it animated
+ * forever, and on one shared element the entrance silently won and the scroll
+ * did nothing at all.
  */
-.bloom {
-  position: absolute; inset: 0; pointer-events: none; z-index: 1;
-  background: radial-gradient(52% 46% at 34% 62%,
-    rgba(255, 226, 179, .55) 0%, rgba(255, 214, 152, .22) 42%, transparent 74%);
-  animation: bloom 13s ease-in-out infinite alternate;
-  /* Masked to the right, for the same reason the vignette is: this layer is
-     clipped by the art box, and the page outside that box is untouched cream,
-     so an unmasked edge draws a faint vertical seam down the whole hero. It is
-     invisible in isolation and obvious once you have seen it. */
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 22%, #000 54%);
-  mask-image: linear-gradient(90deg, transparent 0%, transparent 22%, #000 54%);
-}
-@keyframes bloom {
-  from { opacity: .58; transform: scale(1); }
-  to   { opacity: .92; transform: scale(1.07); }
+.art { position: relative; z-index: 2; }
+.artInner { position: relative; }
+.artIn { position: relative; }
+
+.scene { width: 100%; height: auto; display: block; overflow: visible; }
+
+.ink { filter: drop-shadow(0 0 26px rgba(255, 122, 61, .45)); }
+
+.orbits { stroke: var(--sky); opacity: .3; stroke-width: 1.4; }
+.orbit { stroke: var(--sky); }
+.orbitB { stroke: var(--aurora); opacity: .8; }
+
+.planet { }
+.coast { fill: none; stroke: var(--aurora); stroke-width: 1.6; opacity: .28; stroke-linecap: round; }
+
+.waves { stroke: var(--aurora); stroke-width: 9; stroke-linecap: round; }
+.wave { opacity: 0; }
+
+.spark { filter: drop-shadow(0 0 12px rgba(255, 179, 71, .9)); }
+
+/* The star field canvas. Pinned, decorative, and clamped in script as well,
+   because a canvas whose intrinsic size is set from its layout size can feed
+   itself and grow without limit. It reached 23130 by 11556 CSS pixels once. */
+.motes {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  display: block;
+  pointer-events: none; z-index: 1;
 }
 
-/*
- * The opening light sweep. Fires once, on load, and never again.
- *
- * This is the single most film like device on the page: a raking highlight
- * crossing the frame as it settles. It runs once because a sweep on a loop
- * stops reading as light and starts reading as a loading shimmer.
- */
-.sweep {
-  position: absolute; inset: -20% -40%; pointer-events: none; z-index: 2;
-  background: linear-gradient(104deg,
-    transparent 38%, rgba(255, 248, 235, .5) 48%, rgba(255, 252, 245, .72) 52%,
-    rgba(255, 248, 235, .4) 56%, transparent 66%);
-  opacity: 0; transform: translateX(-52%);
-  animation: sweep 1.5s cubic-bezier(.3, .5, .2, 1) .34s forwards;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 26%, #000 52%);
-  mask-image: linear-gradient(90deg, transparent 0%, transparent 26%, #000 52%);
-}
-@keyframes sweep {
-  0%   { opacity: 0;   transform: translateX(-52%); }
-  22%  { opacity: .85; }
-  74%  { opacity: .5; }
-  100% { opacity: 0;   transform: translateX(46%); }
-}
 
-/*
- * Film grain, scoped to the art rather than the page.
- *
- * Grain is what makes a frame read as photographed rather than rendered, and
- * six percent is the whole budget: past about eight it stops being texture and
- * starts being dirt on the screen. Kept inside .art on purpose — over the flat
- * cream half of the hero there is no image for it to sit in, so it would read
- * as speckle on nothing and give away the boundary between the two halves.
- */
-.grain {
-  position: absolute; inset: 0; pointer-events: none; z-index: 3; opacity: .06;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 160px 160px;
-  /* Masked to the right, for the same reason the vignette is: this layer is
-     clipped by the art box, and the page outside that box is untouched cream,
-     so an unmasked edge draws a faint vertical seam down the whole hero. It is
-     invisible in isolation and obvious once you have seen it. */
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 22%, #000 54%);
-  mask-image: linear-gradient(90deg, transparent 0%, transparent 22%, #000 54%);
-}
+/* ── How it works ────────────────────────────────────────────────────────── */
 
-/* Dust in the light. Drawn on a canvas rather than as DOM nodes: twenty two
-   animated elements is twenty two things for the compositor to track, and one
-   canvas is one. */
-.motes { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
-/* The scrim. Solid at the left where the headline sits, gone by two thirds
-   across so the mascot is untouched, and feathered top and bottom so the frame
-   melts into the bands above and below rather than ending on a line. */
-.fade {
-  position: absolute; inset: 0; pointer-events: none;
-  background:
-    linear-gradient(90deg,
-      var(--cream) 0%, rgba(247,239,228,.94) 16%, rgba(247,239,228,.55) 32%,
-      rgba(247,239,228,.18) 46%, rgba(247,239,228,0) 60%),
-    linear-gradient(0deg, var(--cream) 0%, rgba(247,239,228,.55) 8%, rgba(247,239,228,0) 22%),
-    linear-gradient(180deg, var(--cream) 0%, rgba(247,239,228,0) 14%);
-}
-/*
- * The signal overlay, and the bug that made it look wrong for two weeks.
- *
- * The <img> underneath is `object-fit: cover`. This SVG defaulted to
- * preserveAspectRatio="xMidYMid meet", which is `contain`. Two different
- * mappings of the same viewBox onto the same box, so the arcs never sat where
- * the antenna was: they floated up and left of it, over the ear, and no amount
- * of nudging the coordinates would have fixed it because the error scales with
- * the viewport. `slice` is cover, and xMid/yMid is within two percent of the
- * image's 52% / 46% object-position, which is closer than the eye resolves.
- */
-.sig { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
-.wave {
-  fill: none; stroke: #D6F1FF; stroke-width: 12; stroke-linecap: round;
-  filter: drop-shadow(0 0 10px rgba(150, 215, 255, .95));
-  opacity: 0; transform-box: view-box; transform-origin: 559px 308px;
-  animation: emit 3s cubic-bezier(.32, .6, .4, 1) infinite;
-}
-.wave:nth-child(2) { animation-delay: 1s; }
-.wave:nth-child(3) { animation-delay: 2s; }
-@keyframes emit {
-  0%   { opacity: 0;   transform: scale(.3); }
-  16%  { opacity: .95; }
-  66%  { opacity: .45; }
-  100% { opacity: 0;   transform: scale(1.45); }
-}
-.spark {
-  fill: #E8F7FF; transform-box: view-box; transform-origin: 559px 308px;
-  animation: spark 3s ease-in-out infinite;
-}
-@keyframes spark {
-  0%, 100% { opacity: .35; transform: scale(.8); }
-  50%      { opacity: .95; transform: scale(1.2); }
-}
-.orbit {
-  fill: none; stroke: #CFEDFF; stroke-width: 3.5; opacity: 0;
-  filter: drop-shadow(0 0 6px rgba(150, 215, 255, .7));
-  animation: orbit 8s linear infinite;
-}
-.orbitB { animation-delay: 3s; }
-@keyframes orbit {
-  0%   { opacity: 0;  stroke-dashoffset: 0; }
-  14%  { opacity: .6; }
-  82%  { opacity: .4; }
-  100% { opacity: 0;  stroke-dashoffset: -1600; }
-}
-
-/* ── Steps ───────────────────────────────────────────────────────────── */
-.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.steps { display: grid; gap: 20px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .step {
-  background: var(--surface); border: 1px solid var(--line); border-radius: 26px;
-  padding: 32px 30px 34px;
-  transition: transform .5s cubic-bezier(.22, 1, .36, 1), box-shadow .5s ease;
+  position: relative;
+  padding: 30px 26px 28px;
+  border-radius: 22px;
+  background: linear-gradient(165deg, var(--glass-hi), transparent 55%), var(--deep);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
 }
-.step:hover { transform: translateY(-5px); box-shadow: var(--lift); }
+.step h3 { font-size: 1.16rem; margin-bottom: 9px; }
+.step p { color: var(--ink2); font-size: .96rem; }
 .num {
-  width: 44px; height: 44px; border-radius: 14px; background: var(--ink); color: var(--cream);
+  font-family: var(--font-mono), monospace;
+  font-size: .78rem; font-weight: 600; letter-spacing: .1em;
+  width: 38px; height: 38px; border-radius: 12px;
   display: grid; place-items: center;
-  font-family: var(--font-display), sans-serif; font-weight: 600; font-size: 1.05rem;
-  margin-bottom: 20px;
+  background: rgba(255, 122, 61, .12);
+  border: 1px solid rgba(255, 122, 61, .3);
+  color: var(--mango);
+  margin-bottom: 18px;
 }
-.step h3 { font-size: 1.24rem; font-weight: 600; margin-bottom: 11px; }
-.step p { font-size: .96rem; color: var(--ink2); }
 
-/* ── Destinations ────────────────────────────────────────────────────── */
-.dests { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+
+/* ── Destinations ────────────────────────────────────────────────────────── */
+
+.dests { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(214px, 1fr)); }
 .dest {
-  background: var(--surface); border: 1px solid var(--line); border-radius: 22px;
-  padding: 22px 22px 20px; cursor: pointer; text-align: left; font: inherit; color: inherit;
-  transition: transform .45s cubic-bezier(.22, 1, .36, 1), box-shadow .45s ease, border-color .3s;
+  padding: 22px 20px;
+  border-radius: 20px;
+  background: var(--deep);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  transition: transform .28s cubic-bezier(.22, 1, .36, 1), border-color .28s ease, box-shadow .28s ease;
 }
-.dest:hover { transform: translateY(-4px); box-shadow: var(--lift); border-color: var(--sand); }
+.dest:hover { transform: translateY(-4px); border-color: rgba(255, 122, 61, .42); box-shadow: var(--lift); }
+.dest h3 { font-size: 1.06rem; margin-bottom: 4px; }
+.dest p { color: var(--ink3); font-size: .86rem; line-height: 1.5; }
 .swatch {
-  width: 46px; height: 46px; border-radius: 14px; margin-bottom: 16px;
-  background: var(--ink); color: var(--cream); display: grid; place-items: center;
-  font-family: var(--font-mono), monospace; font-size: .86rem; letter-spacing: .04em;
-  transition: background .3s ease, color .3s ease;
+  font-family: var(--font-mono), monospace;
+  font-size: .74rem; font-weight: 600; letter-spacing: .12em;
+  display: inline-block; padding: 5px 10px; border-radius: 8px;
+  background: var(--raised); color: var(--ink2);
+  border: 1px solid var(--line);
+  margin-bottom: 14px;
 }
-.dest:hover .swatch { background: var(--sand); color: var(--sand-ink); }
-.dest h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 4px; }
-.dest p { font-size: .86rem; color: var(--ink3); }
-.from {
-  font-family: var(--font-display), sans-serif; font-weight: 600; color: var(--ink);
-  font-size: 1.1rem; margin-top: 12px; font-variant-numeric: tabular-nums;
+.destPrice {
+  display: block; margin-top: 14px;
+  font-family: var(--font-mono), monospace;
+  font-size: .88rem; color: var(--mango); font-weight: 600;
 }
+.destPrice small { color: var(--ink3); font-weight: 400; letter-spacing: .04em; }
 
-/* ── Why ─────────────────────────────────────────────────────────────── */
-.why { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; }
-.wy { background: var(--raised); border-radius: 24px; padding: 28px; }
+
+/* ── Reasons, promises, pricing ──────────────────────────────────────────── */
+
+.why { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(258px, 1fr)); }
+.wy {
+  padding: 26px 24px;
+  border-radius: 20px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.wy h3 { font-size: 1.06rem; margin-bottom: 8px; }
+.wy p { color: var(--ink2); font-size: .95rem; }
 .ic {
-  width: 40px; height: 40px; border-radius: 12px; background: var(--surface);
-  display: grid; place-items: center; margin-bottom: 18px;
+  width: 42px; height: 42px; border-radius: 13px;
+  display: grid; place-items: center; margin-bottom: 16px;
+  background: rgba(70, 241, 214, .1);
+  border: 1px solid rgba(70, 241, 214, .26);
+  color: var(--aurora);
 }
-.wy h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 9px; }
-.wy p { font-size: .92rem; color: var(--ink2); }
 
-/* ── Field notes ─────────────────────────────────────────────────────── */
+
+/* ── Field notes ─────────────────────────────────────────────────────────── */
+
 .board {
-  background: var(--surface); border: 1px solid var(--line); border-radius: 30px;
-  padding: clamp(24px, 3.4vw, 42px); box-shadow: var(--shadow);
+  border-radius: 24px;
+  border: 1px dashed var(--chrome);
+  background: var(--glass);
+  padding: clamp(28px, 4vw, 46px);
 }
-.empty { border: 1.5px dashed var(--line); border-radius: 24px; padding: 48px 30px; text-align: center; }
-.empty h3 { font-size: 1.3rem; font-weight: 600; margin-bottom: 12px; }
-.empty p { font-size: .98rem; color: var(--ink2); max-width: 54ch; margin: 0 auto 24px; }
+.empty { max-width: 560px; }
+.empty h3 { font-size: 1.3rem; margin-bottom: 10px; }
+.empty p { color: var(--ink2); margin-bottom: 22px; }
+.noteGrid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(262px, 1fr)); }
+.fnote {
+  padding: 22px;
+  border-radius: 18px;
+  background: var(--deep);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.where {
+  display: flex; justify-content: space-between; gap: 12px;
+  font-family: var(--font-mono), monospace;
+  font-size: .74rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink3); margin-bottom: 12px;
+}
+.where span:first-child { color: var(--sky); }
+.tagex {
+  display: inline-block; margin-bottom: 12px;
+  font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px;
+  background: rgba(255, 179, 71, .12); color: var(--mango);
+  border: 1px solid rgba(255, 179, 71, .3);
+}
+.fnote p { color: var(--ink); font-size: .96rem; }
+.who { color: var(--ink3) !important; font-size: .84rem !important; margin-top: 12px !important; }
 
-/* ── Closing ─────────────────────────────────────────────────────────── */
+
+/* ── Closing ─────────────────────────────────────────────────────────────── */
+
 .close {
-  background: var(--ink); color: var(--cream); border-radius: 36px;
-  padding: clamp(40px, 5vw, 66px);
-  display: grid; grid-template-columns: 1fr auto; gap: 34px; align-items: center;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 30px; flex-wrap: wrap;
+  padding: clamp(34px, 4.5vw, 56px);
+  border-radius: 28px;
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(80% 160% at 88% 12%, rgba(255, 122, 61, .2), transparent 62%),
+    radial-gradient(70% 140% at 6% 92%, rgba(70, 241, 214, .12), transparent 60%),
+    var(--deep);
+  border: 1px solid var(--line2);
+  box-shadow: var(--lift);
 }
-.close h2 { font-size: clamp(26px, 3.2vw, 40px); line-height: 1.1; font-weight: 600; margin-bottom: 14px; }
-.close p { color: rgba(247, 239, 228, .72); max-width: 46ch; }
+.close > div { flex: 1 1 420px; }
+.close h2 { font-size: clamp(26px, 3.4vw, 40px); margin-bottom: 12px; max-width: 26ch; }
+.close p { color: var(--ink2); max-width: 52ch; }
 
-/* ── Footer ──────────────────────────────────────────────────────────── */
-.foot { background: var(--cream); padding: 60px 0 68px; border-top: 1px solid var(--line); }
-.footInner { display: flex; flex-wrap: wrap; gap: 36px; justify-content: space-between; align-items: flex-start; }
-.about { max-width: 34ch; }
-.about p { font-size: .87rem; color: var(--ink3); margin-top: 14px; }
-.contact { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; font-size: .87rem; }
-.contact a { color: var(--ink2); text-decoration: none; border-bottom: 1px solid var(--line); }
-.contact a:hover { color: var(--ink); border-bottom-color: var(--ink); }
-.contact span { color: var(--ink3); }
-.cols { display: flex; gap: 52px; flex-wrap: wrap; font-size: .9rem; }
-.cols div { display: grid; gap: 10px; align-content: start; }
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+
+.foot {
+  border-top: 1px solid var(--line);
+  padding: clamp(42px, 5vw, 64px) 0 44px;
+  background: var(--abyss);
+}
+.footInner { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr); gap: 40px; }
+.about p { color: var(--ink3); font-size: .9rem; margin-top: 14px; max-width: 40ch; }
+.contact { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; }
+.contact a { color: var(--sky); text-decoration: none; }
+.contact a:hover { text-decoration: underline; }
+.contact span { color: var(--chrome); }
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; }
+.cols > div { display: flex; flex-direction: column; gap: 10px; font-size: .92rem; }
 .cols b {
-  font-family: var(--font-mono), monospace; font-size: .64rem; letter-spacing: .15em;
-  text-transform: uppercase; color: var(--ink3); font-weight: 500;
+  font-family: var(--font-mono), monospace;
+  font-size: .68rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink3); font-weight: 600; margin-bottom: 4px;
 }
 .cols a { color: var(--ink2); text-decoration: none; }
-.cols a:hover { color: var(--ink); }
+.cols a:hover { color: var(--coral); }
 
-@media (max-width: 980px) {
-  .hero { display: block; min-height: 0; padding: 0 0 clamp(40px, 7vw, 64px); }
-  .art { position: relative; width: 100%; height: auto; margin-bottom: 26px; overflow: visible; }
-  .art img { height: auto; }
-  .drift { animation: none; }
-  .fade {
-    background:
-      linear-gradient(0deg, var(--cream) 0%, rgba(247,239,228,0) 26%),
-      linear-gradient(180deg, var(--cream) 0%, rgba(247,239,228,0) 14%);
-  }
-  .copy { max-width: 100%; }
-  .steps { grid-template-columns: 1fr; }
-  .links { display: none; }
-  .close { grid-template-columns: 1fr; }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .page *,
-  .page *::before,
-  .page *::after { animation: none !important; transition: none !important; }
-  .wave { opacity: .6; }
-}
-
-/* Field note cards. Named fnote rather than note because .note already means
-   something else in globals.css, and the two collided once already. */
-.noteGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 16px; }
-.fnote { background: var(--raised); border-radius: 22px; padding: 24px; position: relative; }
-.where {
-  font-family: var(--font-mono), monospace; font-size: .72rem; letter-spacing: .07em;
-  color: var(--clay); margin-bottom: 13px;
-  display: flex; justify-content: space-between; gap: 10px; padding-right: 70px;
-}
-.fnote p { font-size: .95rem; margin-bottom: 14px; }
-.who { font-size: .85rem; color: var(--ink3); }
-.tagex {
-  position: absolute; top: 18px; right: 20px;
-  font-family: var(--font-mono), monospace; font-size: .6rem; letter-spacing: .13em;
-  color: var(--ink3); background: var(--sunk); padding: 3px 9px; border-radius: 8px;
-}
-
-/* ── Cinematic treatment ───────────────────────────────────────────────────
- *
- * "Cinematic" here means depth and staging, not spectacle. Three things do the
- * work: the hero frame is graded and vignetted so it reads as a shot rather
- * than a stock render, the copy arrives in sequence rather than all at once,
- * and the art drifts against the scroll so the page has a foreground and a
- * background.
- *
- * What it deliberately does not do is get louder. The reader is usually mid
- * worry about a trip, and drama at the expense of calm would undo the reason
- * the palette is warm and light in the first place.
- * ────────────────────────────────────────────────────────────────────────── */
-
-/* Grade. A touch more contrast and saturation than the source, a warm lift in
-   the highlights, and a vignette that pulls the eye back to the mascot. */
-.art img { filter: contrast(1.06) saturate(1.05); }
-/* Vignette, painted straight rather than with a blend mode. mix-blend-mode
-   isolates the whole art layer, which left a visible vertical seam where the
-   scrim met the untouched page. A plain overlay has no such side effect. */
-.vignette {
-  position: absolute; inset: 0; pointer-events: none; z-index: 1;
-  background: radial-gradient(110% 82% at 52% 46%, transparent 44%, rgba(40, 26, 14, .28) 100%);
-  /* Masked to the right, where the picture is actually visible. Without this
-     the vignette darkens the left of the art box too, and since the page
-     outside that box is untouched cream, the boundary shows as a faint vertical
-     seam running the whole height of the hero. */
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 34%, #000 62%);
-  mask-image: linear-gradient(90deg, transparent 0%, transparent 34%, #000 62%);
-}
+/* ── Narrow ──────────────────────────────────────────────────────────────── */
 
 /*
- * The opening sequence.
+ * The phone layout, which is where this page is actually read.
  *
- * A cut, not a fade in. The order is deliberate and it is the order a title
- * sequence uses: the frame settles first, light rakes across it, then the words
- * arrive from behind an edge, then the things you can press, then the small
- * print. Roughly 1.9 seconds end to end, but legible from about 0.9.
- *
- *   0.00  art begins settling from 1.06 and 8px of blur
- *   0.34  light sweep crosses the frame
- *   0.52  headline line one rises from behind its mask
- *   0.66  headline line two
- *   0.98  lede
- *   1.14  actions
- *   1.28  pills
- *   1.60  ambient loops take over: drift, bloom, signal, dust
- *
- * The handover at 1.6 matters. If the ambient loops start while the entrance is
- * still running they fight it, and the frame looks unstable rather than alive.
+ * Everything here exists because of something that went wrong on a real handset
+ * and not because of a breakpoint convention: the artwork was absolutely
+ * positioned and collapsed to 350 by 0, the headline sat at a desktop size and
+ * pushed its own container sideways, and the two buttons were laid out as a row
+ * that could not fit, so one of them hung off the screen. On a narrow screen
+ * this page is one column, nothing is positioned out of flow, and every
+ * interactive target is at least the width of a thumb.
  */
+@media (max-width: 980px) {
+  .heroShell { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  /* The picture goes under the words. Somebody on a phone gets the sentence
+     and the price without scrolling; the character is the reward for staying. */
+  .art { order: 2; margin-top: -18px; }
+  .copy { order: 1; max-width: none; }
+  .scene { max-width: 460px; margin: 0 auto; }
+  .hero { padding-top: clamp(104px, 22vw, 140px); }
+  .steps { grid-template-columns: minmax(0, 1fr); }
+  .footInner { grid-template-columns: minmax(0, 1fr); gap: 34px; }
+  .links { display: none; }
+  .navInner { gap: 14px; }
+  .login { margin-left: auto; }
+}
+
+@media (max-width: 560px) {
+  .page { font-size: 16px; }
+  .shell { padding: 0 18px; }
+  .copy h1 { font-size: clamp(34px, 10.5vw, 46px); letter-spacing: -.035em; }
+  .lede { font-size: 1rem; }
+  /* Stacked and full width. Two pill buttons side by side at this width leaves
+     each one too narrow to read its own label. */
+  .acts { flex-direction: column; align-items: stretch; gap: 11px; }
+  .btn { width: 100%; padding: 16px 22px; }
+  .close { flex-direction: column; align-items: flex-start; }
+  .close .btn { width: 100%; }
+  .cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dests { grid-template-columns: minmax(0, 1fr); }
+  .why { grid-template-columns: minmax(0, 1fr); }
+  .noteGrid { grid-template-columns: minmax(0, 1fr); }
+  /* The star canvas is atmosphere, and atmosphere is the first thing to cut on
+     a phone that is already deciding whether to keep loading this page. */
+  .motes { display: none; }
+}
+
 
 /*
  * ────────────────────────────────────────────────────────────────────────────
@@ -503,16 +542,16 @@
  *   rise2   opacity 0   translateY(20px)
  *   line1   translateY(76px) inside a clipping mask
  *
- * The hero image, the lede and the headline: all present, all invisible, and
+ * The character, the lede and the headline: all present, all invisible, and
  * they stay that way. This is what was showing up as "the character
  * disappeared", and it was never a broken image.
  *
  * So the hiding is gated on [data-motion="on"], set by a small inline script
  * only once the document is actually visible and reduced motion is off. No
  * attribute means no hiding, which means the failure mode of every mechanism
- * here — script blocked, hydration failed, tab never foregrounded, observer
- * never fired — is a page that is merely still, rather than a page that is
- * blank.
+ * here, whether the script was blocked, hydration failed, the tab was never
+ * foregrounded or an observer never fired, is a page that is merely still
+ * rather than a page that is blank.
  *
  * The rule to keep: an element may animate FROM hidden only when something has
  * confirmed the animation will actually run.
@@ -540,18 +579,55 @@
   transform: translateY(112%);
   animation: lineUp 1.05s cubic-bezier(.16, .84, .24, 1) forwards;
 }
-.line1 { animation-delay: .52s; }
-.line2 { animation-delay: .66s; }
+.line1 { animation-delay: .34s; }
+.line2 { animation-delay: .46s; }
 @keyframes lineUp { to { transform: none; } }
 
 /* Everything under the headline. Still a rise, because these are supporting
-   elements and giving them the same masked entrance as the headline would flatten
-   the hierarchy the sequence exists to build. */
+   elements and giving them the headline's masked entrance would flatten the
+   hierarchy the sequence exists to build. */
 :global([data-motion="on"]) .rise { opacity: 0; transform: translateY(20px); animation: rise 1s cubic-bezier(.22, 1, .36, 1) forwards; }
-.rise2 { animation-delay: .98s; }
-.rise3 { animation-delay: 1.14s; }
-.rise4 { animation-delay: 1.28s; }
+.rise2 { animation-delay: .74s; }
+.rise3 { animation-delay: .86s; }
+.rise4 { animation-delay: .98s; }
 @keyframes rise { to { opacity: 1; transform: none; } }
+
+/*
+ * The signal leaving the antenna.
+ *
+ * Three copies of one arc on a staggered loop. Opacity and scale only, so it
+ * composites on the GPU and never touches layout, and it is the only thing on
+ * the page that repeats forever. That is a deliberate budget of one.
+ */
+.wave { animation: emit 3.4s ease-out infinite; }
+.wave:nth-child(2) { animation-delay: 1.13s; }
+.wave:nth-child(3) { animation-delay: 2.26s; }
+/*
+ * The scale origin is written into the transform chain rather than set with
+ * transform-origin, on purpose. These paths live inside a translated and scaled
+ * group, and `transform-box: view-box` would resolve the origin against the
+ * outer viewBox instead of the 512 grid the geometry is drawn on, which puts
+ * the emission point somewhere out in space. Naming the antenna coordinate
+ * twice is uglier and is correct in every browser.
+ */
+@keyframes emit {
+  0%   { opacity: 0; transform: translate(256px, 88px) scale(.42) translate(-256px, -88px); }
+  22%  { opacity: .8; }
+  100% { opacity: 0; transform: translate(256px, 88px) scale(1.25) translate(-256px, -88px); }
+}
+
+/* The circle is centred on the antenna already, so this one can use its own
+   fill box and stay readable. */
+.spark { animation: spark 3.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes spark {
+  0%, 100% { opacity: .78; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.12); }
+}
+
+/* The orbits turn, very slowly, which is what keeps the scene from reading as
+   a flat illustration without asking anyone to notice motion. */
+.orbits { animation: turn 60s linear infinite; transform-box: view-box; transform-origin: 320px 332px; }
+@keyframes turn { to { transform: rotate(360deg); } }
 
 /*
  * The hero leaving.
@@ -563,10 +639,7 @@
  * is set from the same rAF as `--shift`, so there is one scroll listener on the
  * page rather than two fighting for frames.
  */
-/* The clipping box fades but never moves. Moving it exposes its own left edge
-   against the cream half of the hero. */
 .art { opacity: calc(1 - var(--exit, 0) * .45); }
-/* The mover, safely inside the clip. */
 .artInner {
   transform: translate3d(0, var(--shift, 0px), 0) scale(calc(1 + var(--exit, 0) * .07));
   will-change: transform;
@@ -609,11 +682,15 @@
 
 @media (prefers-reduced-motion: reduce) {
   .rise, .artIn, .artInner { opacity: 1; transform: none; animation: none; filter: none; }
-  .art { opacity: 1; }
+  .art { opacity: 1; transform: none; }
   .line { transform: none; animation: none; }
-  .art { transform: none; opacity: 1; }
-  .sweep, .grain, .motes { display: none; }
-  .bloom { animation: none; opacity: .7; }
+  .motes { display: none; }
+  /* The looping pieces stop and settle at something that reads as finished,
+     rather than at whatever frame nought happens to be. An arc at scale(.42)
+     and opacity 0 is invisible, so the resting state is stated explicitly. */
+  .wave { animation: none; opacity: .5; transform: none; }
+  .spark { animation: none; opacity: 1; transform: none; }
+  .orbits { animation: none; }
   :global(.is-hidden) { opacity: 1; transform: none; }
   .cascade > * { opacity: 1; transform: none; transition: none; }
 }
