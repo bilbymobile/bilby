@@ -5,10 +5,10 @@ import { liveDestinations, liveShopfront, heroClaim, money } from "@/lib/live-de
 import { url } from "@/lib/hosts";
 import styles from "./home.module.css";
 import { FieldNotes } from "./notes";
-import { HeroArt } from "./hero-art";
+import { Hero } from "./hero";
 import { Ticker } from "./ticker";
 import { SectionHead } from "./section-head";
-import { HeroParallax, Motes, Reveal } from "./motion";
+import { HeroParallax, Reveal } from "./motion";
 
 /**
  * The marketing landing page, served on the apex.
@@ -183,98 +183,22 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className={styles.hero} id="top">
-        <div className={`${styles.shell} ${styles.heroShell}`}>
-          <div className={styles.copy}>
-            {/*
-              Split into two lines by hand rather than left to wrap, because
-              each line is clipped and rises from behind its own edge. A browser
-              chosen break would put the mask in a different place at every
-              viewport width, and half the effect is that the breaks are
-              composed.
-            */}
-            <h1>
-              <span className={styles.lineWrap}>
-                <span className={`${styles.line} ${styles.line1}`}>{claim.line1}</span>
-              </span>
-              <span className={styles.lineWrap}>
-                <span className={`${styles.line} ${styles.line2}`}>{claim.line2}</span>
-              </span>
-            </h1>
-            <p className={`${styles.lede} ${styles.rise} ${styles.rise2}`}>
-              Set it up on the couch before you fly. Simple. Calm. Australian.
-            </p>
-
-            {/* Only rendered when the catalogue actually answered. A price is
-                the one thing on this page nobody should ever see a placeholder
-                for. */}
-            {from !== null ? (
-              <p className={`${styles.priceLine} ${styles.rise} ${styles.rise2}`}>
-                <b>{money(from, shop?.currency)}</b>
-                <span>the cheapest plan on sale today</span>
-              </p>
-            ) : null}
-
-            <div className={`${styles.acts} ${styles.rise} ${styles.rise3}`}>
-              <a className={`${styles.btn} ${styles.btnGo}`} href="#dests">
-                See where we go
-              </a>
-              <a className={`${styles.btn} ${styles.btnQuiet}`} href="#how">
-                How it works
-              </a>
-            </div>
-
-            <div className={`${styles.pills} ${styles.rise} ${styles.rise4}`}>
-              {/* Dropped entirely when there is nothing true to put in it. An
-                  empty pill is better than a pill reading "0 destinations". */}
-              {/* The dot pulses because this pill is the one reporting
-                  something live: it is read from the catalogue at render and it
-                  changes when stock changes. The other two are constants and
-                  get an icon rather than a signal. */}
-              {claim.pill ? (
-                <span className={styles.pill}>
-                  <span className={styles.dot} aria-hidden="true" />
-                  {claim.pill} on sale
-                </span>
-              ) : null}
-              <span className={styles.pill}>
-                <i>eSIM</i> Install before you fly
-              </span>
-              <span className={`${styles.pill} ${styles.pillOk}`}>
-                <i>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
-                </i>
-                Australian support
-              </span>
-            </div>
-          </div>
-
-          {/*
-            Decorative, and every word above it is in the DOM beside it rather
-            than inside it. The three nested boxes are not decoration: `.art`
-            clips and fades, `.artInner` carries the scroll, `.artIn` carries
-            the entrance, and putting the scroll and the entrance on one element
-            meant the entrance's fill mode silently won forever.
-          */}
-          <HeroParallax>
-            <div className={styles.art}>
-              <div className={styles.artInner}>
-                <div className={styles.artIn}>
-                  <Motes className={styles.motes} />
-                  <HeroArt />
-                  {/* A band of light crossing the frame every eleven seconds.
-                      Purely decorative, pinned inside the artwork box, and the
-                      only thing on the page that suggests the scene is being
-                      read rather than simply lit. */}
-                  <div className={styles.scan} aria-hidden="true" />
-                </div>
-              </div>
-            </div>
-          </HeroParallax>
-        </div>
-      </section>
+      {/* The film frame. HeroParallax supplies --shift and --exit from one
+          rAF; hero.tsx owns everything inside. */}
+      <HeroParallax>
+        <Hero
+          line1={claim.line1}
+          line2={claim.line2}
+          pill={claim.pill}
+          price={from !== null ? money(from, shop?.currency) : null}
+          stats={[
+            claim.pill ?? "Destinations coming",
+            from !== null ? `From ${money(from, shop?.currency)}` : "Prices on the plans page",
+            "No subscription",
+            "Australian support",
+          ]}
+        />
+      </HeroParallax>
 
       <Ticker items={tickerItems} />
 

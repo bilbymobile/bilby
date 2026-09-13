@@ -137,6 +137,23 @@
  * down. And it is already tight, so the negative tracking that made the grotesk
  * feel composed closes this one into a solid block.
  */
+/*
+ * Grain over the whole page.
+ *
+ * One fixed SVG turbulence layer at nine percent, which is the reference's own
+ * figure. It costs nothing, it never repaints, and it is the difference between
+ * flat dark panels and something that looks photographed. Inlined as a data URI
+ * so it is not a request.
+ */
+.page::after {
+  content: "";
+  position: fixed; inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: .09;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 .page h1,
 .page h2,
 .page h3 {
@@ -287,6 +304,16 @@
   -webkit-backdrop-filter: blur(14px) saturate(140%);
   border-bottom-color: var(--line);
 }
+/*
+ * The navigation sits inside the frame, below the top letterbox bar.
+ *
+ * Done with padding on the inner row rather than a margin on the header,
+ * because the hero is pulled up underneath the header by exactly the header's
+ * height: a margin moves the header AND the hero, so the bar and the nav end up
+ * on the same line however the numbers are chosen. Padding grows the header
+ * without moving the hero's anchor, and the compensating negative margin below
+ * is measured against the result.
+ */
 .navInner { display: flex; align-items: center; gap: 22px; }
 .brandLink {
   display: inline-flex; align-items: center; gap: 11px;
@@ -331,137 +358,311 @@
 
 /* ── Hero ────────────────────────────────────────────────────────────────── */
 
+/*
+ * A film frame, not a headline over a colour.
+ *
+ * 108vh rather than 100, so the letterbox bar at the bottom is always cut by
+ * the fold and the page reads as a shot that continues rather than a screen
+ * that ends. That single figure is the reference's, and it does more work than
+ * it looks like it should.
+ */
 .hero {
   position: relative;
-  /* Pulled up under the transparent header. */
-  margin-top: -68px;
-  padding: clamp(132px, 15vw, 190px) 0 clamp(60px, 7vw, 96px);
-  isolation: isolate;
+  /* No negative margin. The top letterbox is part of the header now, so the
+     frame simply starts where the header ends, at every width. */
+  min-height: 108vh;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+  background: #000;
+  isolation: isolate;
+}
+
+/* The moving plate: video, three scrims, and the drifting warmth. */
+.frame {
+  position: absolute; inset: 0; z-index: 0;
+  transform: translate3d(0, var(--shift, 0px), 0) scale(calc(1 + var(--exit, 0) * .18));
+  will-change: transform;
+}
+.plate {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  /* Half opacity is the reference's. It is why 720p is enough: at this opacity
+     behind two gradients there is no detail left to resolve. */
+  opacity: .5;
+  display: block;
+}
+.scrimDown {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,.75), rgba(0,0,0,.35) 55%, var(--void));
+}
+.scrimAcross {
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(0,0,0,.7), rgba(0,0,0,.2) 55%, rgba(0,0,0,.5));
+}
+.dawn {
+  position: absolute; inset: 0;
+  background: radial-gradient(60% 50% at 70% 30%, rgba(255, 180, 58, .16), transparent 70%);
 }
 
 /*
- * The light in the room.
+ * The letterbox.
  *
- * Three soft blobs at low opacity, painted as one element. This is what stops a
- * near black page reading as an unstyled document: the ground is not one colour
- * anywhere, so the eye reads depth before it reads anything else.
+ * Two solid black bars, 54px, carrying camera notes in mono at 30% tracking.
+ * They are the cheapest and most effective part of the whole design: a page
+ * with black bars top and bottom is a frame, and everything inside it reads as
+ * something that was shot.
  */
-.hero::before {
-  content: "";
-  position: absolute; inset: -20% -10% 0;
-  z-index: 0;
-  background:
-    radial-gradient(46% 40% at 78% 18%, rgba(255, 122, 61, .18), transparent 70%),
-    radial-gradient(40% 38% at 14% 30%, rgba(70, 241, 214, .10), transparent 70%),
-    radial-gradient(60% 44% at 50% 96%, rgba(45, 127, 232, .12), transparent 72%);
-  pointer-events: none;
+.letterboxTop, .letterboxBottom {
+  height: 54px;
+  background: #000;
+  display: flex; align-items: center;
+}
+/* In the header, so it needs to break out of the header's own side padding. */
+.letterboxTop { margin: -14px 0 14px; }
+.letterboxBottom { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; }
+.letterboxInner {
+  max-width: 1240px; margin: 0 auto; width: 100%;
+  padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px; letter-spacing: .3em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .5);
+}
+.rec { color: var(--hue-amber); display: inline-flex; align-items: center; gap: 7px; }
+.recDot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--hue-amber); display: inline-block;
+}
+:global([data-motion="on"]) .recDot { animation: pulseDot 2.4s ease-in-out infinite; }
+.arrow { display: inline-block; }
+:global([data-motion="on"]) .arrow { animation: nudge 1.6s ease-in-out infinite; }
+@keyframes nudge {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(3px); }
 }
 
 .heroShell {
-  position: relative; z-index: 3;
+  position: relative; z-index: 10;
+  flex: 1;
+  max-width: 1240px; margin: 0 auto; width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, .74fr);
-  gap: clamp(24px, 3vw, 44px);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  gap: clamp(24px, 3vw, 40px);
   align-items: center;
+  padding-top: clamp(48px, 7vw, 96px);
+  padding-bottom: 104px;
 }
 
 .copy { max-width: 760px; }
 
 /*
- * Sized to the longest line the catalogue can actually produce.
+ * Sized against our headline, not against the reference's.
  *
- * At 122px the second line read "8 DESTINATIONS." and the 8 fell onto a line of
- * its own, which looks like a design decision and is not one. The headline is
- * generated, so the copy is not a fixed length that can be tuned against: it is
- * "Japan.", or "8 destinations.", or "13 destinations.", depending on what is
- * switched on in the console.
+ * The reference sets this at 10rem because its headline is "HOP THE PLANET.",
+ * two short words on two lines, fixed forever. Ours is generated and runs to
+ * "Land connected in 8 destinations.", which at 158px took four lines and
+ * pushed the buttons, the fact strip and half the portrait below the fold.
  *
- * So the size comes down and the column goes up until the longest realistic
- * line fits. A condensed face makes that cheap: 96px of Bebas occupies roughly
- * the width of 70px of the grotesk, so the headline still reads as enormous.
+ * Copying a type size across two different sentences is not replication, it is
+ * cargo cult. What is worth copying is the intent: the headline should be the
+ * largest thing on the screen by a wide margin, and it still is.
  */
 .copy h1 {
-  font-size: clamp(52px, 7.4vw, 96px);
-  letter-spacing: .008em;
-  line-height: .92;
+  font-size: clamp(46px, 6.6vw, 96px);
+  line-height: .88;
+  letter-spacing: .004em;
   margin-bottom: 24px;
-  /* Each line is its own block inside a clipping mask, so a wrap inside one of
-     them cannot be prevented by balancing. Turning it off stops the browser
-     evening out lines that are already hand split. */
-  text-wrap: nowrap;
 }
-/* But never at the cost of clipping: if a single line genuinely cannot fit,
-   wrapping is better than overflowing off the side of the phone. */
-@supports not (text-wrap: nowrap) {
-  .copy h1 { text-wrap: normal; }
-}
-/* The second line takes the warm gradient. One line, not both: a headline
-   entirely in gradient is a hero from a template, and the contrast between an
-   ink line and a lit line is what makes the lit one mean something. */
-.line2 {
-  background: linear-gradient(96deg, var(--coral-soft), var(--mango) 55%, var(--coral));
+
+/* The second line takes the dawn gradient: cream into amber into cyan, the
+   three accents of the whole page in one sweep. */
+.dawnText {
+  background: linear-gradient(92deg, #F4EFE6 10%, #FFCF7D 45%, #6EE7FF 90%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  /* The clip leaves no colour for a system that ignores background-clip, so the
-     fallback is spelled out rather than left to chance. */
   -webkit-text-fill-color: transparent;
 }
 
-.lede { color: var(--ink2); font-size: clamp(1.02rem, 1.6vw, 1.17rem); max-width: 52ch; margin-bottom: 30px; }
+.lede {
+  color: rgba(255, 255, 255, .75);
+  font-size: clamp(1rem, 1.5vw, 1.14rem);
+  line-height: 1.65;
+  max-width: 40rem;
+  margin-bottom: 28px;
+}
+/* One phrase in the serif, mid sentence. The reference does this in its lede
+   too, and it is what ties the body copy to the headings. */
+.ledeAccent {
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: 1.24em;
+  color: var(--hue-amber);
+}
 
-.acts { display: flex; gap: 13px; flex-wrap: wrap; margin-bottom: 30px; }
+.acts { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 40px; }
 
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-  padding: 16px 28px; border-radius: 999px;
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-weight: 500; font-size: .76rem; letter-spacing: .13em; text-transform: uppercase;
+/* The primary action: a pill with a dark circular badge on its end that turns
+   45 degrees on hover. */
+.cta {
+  display: inline-flex; align-items: center; gap: 16px;
+  background: var(--hue-amber); color: #000;
+  border-radius: 999px;
+  padding: 8px 8px 8px 28px;
   text-decoration: none;
-  border: 1px solid transparent; cursor: pointer;
-  transition: transform .3s var(--ease), box-shadow .3s ease, background .3s ease;
-  white-space: nowrap;
+  transition: background .3s var(--ease);
 }
-.btnGo {
-  background: linear-gradient(96deg, var(--mango), var(--coral));
-  color: var(--on-warm);
-  box-shadow: 0 10px 30px rgba(255, 122, 61, .3);
+.cta:hover { background: #FFD07A; text-decoration: none; }
+.ctaLabel {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .72rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase;
 }
-.btnGo:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(255, 122, 61, .42); }
-.btnQuiet {
-  background: var(--glass); color: var(--ink);
-  border-color: var(--line2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+.ctaBadge {
+  width: 40px; height: 40px; border-radius: 50%; flex: none;
+  background: #000; color: var(--hue-amber);
+  display: grid; place-items: center;
+  transition: transform .3s var(--ease);
 }
-.btnQuiet:hover { background: var(--glass-hi); border-color: var(--chrome); transform: translateY(-2px); }
+.cta:hover .ctaBadge { transform: rotate(45deg); }
+.ctaQuiet {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .68rem; letter-spacing: .2em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .7);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, .3);
+  padding-bottom: 5px;
+  transition: color .3s ease, border-color .3s ease;
+}
+.ctaQuiet:hover { color: #fff; border-bottom-color: var(--hue-amber); text-decoration: none; }
 
-.pills { display: flex; gap: 10px; flex-wrap: wrap; }
+/* The fact strip. Four items, a rotated square each, above a hairline. */
+.stats {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px;
+  border-top: 1px solid rgba(255, 255, 255, .15);
+  padding-top: 24px;
+}
+.stat {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .6);
+  line-height: 1.5;
+}
+.statMark {
+  width: 6px; height: 6px; flex: none;
+  background: var(--hue-amber); transform: rotate(45deg);
+}
+
+/* Pills over the plate: glass rather than the page's card colour, because they
+   sit on a photograph and have to work over whatever frame is behind them. */
+.pills { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
 .pill {
   display: inline-flex; align-items: center; gap: 9px;
   padding: 9px 16px; border-radius: 999px;
-  background: var(--glass); border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: .69rem; letter-spacing: .13em; text-transform: uppercase;
-  color: var(--ink2); white-space: nowrap;
+  font-size: .67rem; letter-spacing: .2em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .88); white-space: nowrap;
 }
-.pill i { display: inline-flex; color: var(--sky); font-style: normal; font-size: .74rem; font-weight: 700; letter-spacing: .06em; }
-.pillOk i { color: var(--aurora); }
+.pillLive {
+  background: color-mix(in srgb, var(--hue-amber) 15%, transparent);
+  border-color: color-mix(in srgb, var(--hue-amber) 40%, transparent);
+  color: var(--hue-amber);
+}
+.pillFace { border-radius: 50%; object-fit: cover; }
 
-/* The price, stated plainly and taken from the catalogue. */
-.priceLine {
-  display: inline-flex; align-items: baseline; gap: 9px;
-  margin-bottom: 26px;
-  font-family: var(--font-mono), ui-monospace, Menlo, monospace;
+/* ── The portrait ────────────────────────────────────────────────────────── */
+
+.art { position: relative; z-index: 2; }
+.artInner { position: relative; max-width: 420px; margin: 0 auto; }
+.artIn { position: relative; }
+
+/* Rings behind the frame: two expanding, one dashed and slowly turning. */
+.rings { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.ring, .ringDash {
+  position: absolute; aspect-ratio: 1; border-radius: 50%;
 }
-.priceLine b {
+.ring {
+  width: 86%;
+  border: 1px solid color-mix(in srgb, var(--hue-amber) 60%, transparent);
+  opacity: 0;
+}
+.ringB { border-color: color-mix(in srgb, var(--hue-cyan) 50%, transparent); }
+:global([data-motion="on"]) .ring { animation: pingRing 2.8s ease-out infinite; }
+:global([data-motion="on"]) .ringB { animation-delay: 1.4s; }
+@keyframes pingRing {
+  0%   { opacity: .85; transform: scale(.72); }
+  100% { opacity: 0;   transform: scale(1.18); }
+}
+.ringDash {
+  width: 102%;
+  border: 1px dashed rgba(255, 255, 255, .15);
+}
+:global([data-motion="on"]) .ringDash { animation: spinSlower 34s linear infinite; }
+
+.poster {
+  position: relative;
+  margin: 0;
+  border-radius: 2.5rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .2);
+  /* The reference's own glow: an amber hairline, a warm bloom below, and a cool
+     one under that. Three shadows rather than one is what stops it reading as a
+     drop shadow and starts it reading as light. */
+  box-shadow:
+    0 0 0 1px rgba(255, 180, 58, .35),
+    0 18px 80px -12px rgba(255, 180, 58, .45),
+    0 8px 60px -8px rgba(110, 231, 255, .35);
+}
+:global([data-motion="on"]) .poster { animation: floatySoft 7s ease-in-out infinite; }
+.posterImg { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; display: block; }
+.posterScrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(0,0,0,.7), transparent 55%);
+}
+.chipTL, .chipTR {
+  position: absolute; top: 16px;
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase;
+  border-radius: 999px; padding: 6px 12px; white-space: nowrap;
+}
+.chipTL {
+  left: 16px;
+  background: rgba(0, 0, 0, .6);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, .2);
+  color: rgba(255, 255, 255, .9);
+}
+.chipTR { right: 16px; background: var(--hue-amber); color: #000; font-weight: 700; }
+.posterFoot {
+  position: absolute; left: 16px; right: 16px; bottom: 16px;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+}
+.posterFoot b {
+  display: block;
   font-family: var(--font-display), sans-serif;
-  font-size: clamp(38px, 4.6vw, 54px); font-weight: 400;
-  letter-spacing: .01em; color: var(--mango);
+  font-weight: 400; font-size: 1.9rem; letter-spacing: .04em; line-height: 1;
+  color: #fff;
 }
-.priceLine span { font-size: .84rem; color: var(--ink3); letter-spacing: .04em; }
-
+.posterFoot small {
+  display: block; margin-top: 4px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .6);
+}
+.bars {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9.5px; letter-spacing: .1em; white-space: nowrap;
+  color: var(--hue-cyan);
+  border: 1px solid color-mix(in srgb, var(--hue-cyan) 40%, transparent);
+  background: rgba(0, 0, 0, .5);
+  border-radius: 999px; padding: 6px 12px;
+}
 
 /* ── The hero artwork ────────────────────────────────────────────────────── */
 
@@ -703,43 +904,77 @@
  * interactive target is at least the width of a thumb.
  */
 @media (max-width: 980px) {
-  .heroShell { grid-template-columns: minmax(0, 1fr); gap: 18px; }
-  /* The picture goes under the words. Somebody on a phone gets the sentence
-     and the price without scrolling; the character is the reward for staying. */
-  .art { order: 2; margin-top: -18px; }
+  /*
+   * The phone layout, which is where this page is actually read.
+   *
+   * Every rule here exists because of something that went wrong on a real
+   * handset rather than because of a breakpoint convention. On the first pass
+   * of the film frame the fact strip ran underneath the portrait, the two
+   * poster chips overlapped each other, and the top letterbox bar disappeared
+   * behind the navigation.
+   */
+  .heroShell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    padding-top: 34px;
+    padding-bottom: 72px;
+  }
+  /* Words first. Somebody on a phone gets the sentence, the price and the
+     button without scrolling; the portrait is the reward for staying. */
   .copy { order: 1; max-width: none; }
-  .scene { max-width: 460px; margin: 0 auto; }
-  .hero { padding-top: clamp(104px, 22vw, 140px); }
+  /* Clear of the fact strip: the portrait floats 16px and its outer ring sits
+     a little proud of the frame, so a nominal gap is not a real one. */
+  .art { order: 2; margin-top: 38px; }
+  .artInner { max-width: 380px; }
+
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .acts { gap: 14px; margin-bottom: 30px; }
+
   .steps { grid-template-columns: minmax(0, 1fr); }
   .footInner { grid-template-columns: minmax(0, 1fr); gap: 34px; }
   .links { display: none; }
   .navInner { gap: 14px; }
   .login { margin-left: auto; }
+
+  /* The middle note is the first thing to go: three items in a 10px mono at
+     30% tracking do not fit across a phone, and the outer two carry the frame. */
+  .lbMid { display: none; }
+  .letterboxInner { padding: 0 18px; font-size: 9px; letter-spacing: .22em; }
 }
 
 @media (max-width: 560px) {
   .page { font-size: 16px; }
   .shell { padding: 0 18px; }
-  /* Bebas is condensed, so the phone size goes UP rather than down: at the
-     grotesk's 40px it reads as small print. The wrap guard comes off here
-     because at 390px wide a long destination name has nowhere else to go. */
-  .copy h1 { font-size: clamp(44px, 13.5vw, 62px); letter-spacing: .01em; text-wrap: balance; }
+  .copy h1 { font-size: clamp(38px, 11.4vw, 54px); letter-spacing: .01em; text-wrap: balance; }
   .lede { font-size: 1rem; }
+  .head h2 { font-size: clamp(32px, 10.4vw, 48px); }
+
   /* Stacked and full width. Two pill buttons side by side at this width leaves
      each one too narrow to read its own label. */
-  .acts { flex-direction: column; align-items: stretch; gap: 11px; }
+  .acts { flex-direction: column; align-items: stretch; }
+  .cta { width: 100%; justify-content: space-between; padding-left: 22px; }
+  .ctaLabel { font-size: .66rem; letter-spacing: .1em; }
+  .ctaQuiet { align-self: flex-start; }
   .btn { width: 100%; padding: 16px 22px; }
+
+  .stats { grid-template-columns: minmax(0, 1fr); gap: 13px; }
   .close { flex-direction: column; align-items: flex-start; }
   .close .btn { width: 100%; }
   .cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .dests { grid-template-columns: minmax(0, 1fr); }
-  .why { grid-template-columns: minmax(0, 1fr); }
-  .noteGrid { grid-template-columns: minmax(0, 1fr); }
+  .dests, .why, .noteGrid { grid-template-columns: minmax(0, 1fr); }
+
+  /* Two chips across a 340px card is roughly forty characters of tracked mono.
+     The left one names the mascot, which the picture already does. */
+  .chipTL { display: none; }
+  .chipTR { left: 14px; right: auto; }
+  .posterFoot b { font-size: 1.5rem; }
+  .poster { border-radius: 1.8rem; }
+  .lbEnd { display: none; }
+
   /* The star canvas is atmosphere, and atmosphere is the first thing to cut on
      a phone that is already deciding whether to keep loading this page. */
   .motes { display: none; }
 }
-
 
 /*
  * ────────────────────────────────────────────────────────────────────────────
@@ -1131,7 +1366,15 @@
   .tickerTrack { animation: none; transform: none; }
   .scan { animation: none; opacity: 0; }
   .ic { animation: none; transform: none; }
-  .orbitOuter, .orbitInner { animation: none; }
+  .ring, .ringB { animation: none; opacity: .35; transform: scale(1); }
+  .ringDash { animation: none; }
+  .poster { animation: none; }
+  .recDot { animation: none; }
+  .arrow { animation: none; }
+  /* A video is motion by definition, so it stops being one. The poster is a
+     real picture, so the frame is never empty. */
+  .plate { display: none; }
+  .frame { background: #0b0f1c center / cover url("/hero/hero-poster.webp"); transform: none; }
   :global(.is-hidden) { opacity: 1; transform: none; }
   .cascade > * { opacity: 1; transform: none; transition: none; }
 }
