@@ -5,29 +5,33 @@ import type { CapacitorConfig } from "@capacitor/cli";
  *
  * ## Why Capacitor and not a Trusted Web Activity
  *
- * A TWA is the usual answer for "put my web app on Play", and it would be the
- * right answer here except for one thing: a TWA renders fullscreen under
- * Chrome's control, so you cannot overlay native views on it. There is no
- * officially supported way to show AdMob rewarded ads in a TWA, and injecting
- * web ads into the wrapped page risks an AdMob policy violation.
+ * The original answer was advertising: a Trusted Web Activity renders fullscreen
+ * under Chrome's control, you cannot overlay a native view on it, and this
+ * product was going to be funded by rewarded video. That product does not
+ * exist. Bilby sells prepaid plans, there is no ad SDK in the build, and the
+ * admob dependency has been removed.
  *
- * The rewarded ad is not a feature of this product — it IS the product. So the
- * shell has to be one that can host a native ad view. That is Capacitor.
+ * So the original reason for choosing Capacitor over a TWA is gone, and this
+ * comment is not going to pretend otherwise. What remains in favour of a native
+ * shell is the eSIM install handoff to the system LPA and having somewhere to
+ * put an offline screen. Both are real and neither is the argument that was
+ * made here.
+ *
+ * This is worth deciding rather than inheriting. The Expo app is the Android
+ * plan now; whichever shell ships, it should ship because somebody chose it.
  *
  * ## Why server.url instead of a bundled build
  *
- * This app has server routes (SSV callback, ledger, supplier calls), so it
- * cannot be statically exported into the APK. The native shell therefore loads
- * the live deployment and contributes what only native code can: the AdMob
- * rewarded SDK.
+ * This app has server routes, so it cannot be statically exported into the APK.
+ * The native shell loads the live deployment.
  *
- * The trade-off, stated plainly: Play reviewers apply a minimum-functionality
- * bar to apps that are "just a website in a wrapper". This one clears it —
- * native rewarded ads, and the eSIM install handoff to the system LPA — but
- * make that visible in your store listing rather than describing the app as a
- * web wrapper. Also expect the app to need connectivity to start, which is
- * ironic for a connectivity product; ship an offline screen that explains it.
- */
+ * The trade off, stated plainly: Play reviewers apply a minimum functionality
+ * bar to apps that are "just a website in a wrapper". What clears it here is
+ * the eSIM install handoff to the system LPA and the plan library, so make
+ * those visible in the store listing rather than describing the app as a web
+ * wrapper. Also expect the app to need connectivity to start, which is ironic
+ * for a connectivity product; ship an offline screen that explains it.
+  */
 const config: CapacitorConfig = {
   appId: "com.bilbymobile.app",
   appName: "Bilby",

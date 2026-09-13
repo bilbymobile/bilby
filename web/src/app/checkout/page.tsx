@@ -146,6 +146,22 @@ export default async function CheckoutPage({
         )}
       </div>
 
+      {/*
+        The landing page promises that the full price is on the card "including
+        what happens if the eSIM never activates". It was not on the card. Two
+        sentences and a link are cheaper than a promise that outruns the
+        product.
+      */}
+      <div className="card">
+        <h2>If it never works</h2>
+        <p className="sub" style={{ marginBottom: 0 }}>
+          If this eSIM never installs, or installs and never connects at your
+          destination, you get your money back. We do not ask you to prove it
+          with screenshots. The detail, including the few things we cannot
+          refund, is in our <Link href="/refunds">refund policy</Link>.
+        </p>
+      </div>
+
       <div className="card">
         <h2>What happens next</h2>
         <p className="sub" style={{ marginBottom: 0 }}>

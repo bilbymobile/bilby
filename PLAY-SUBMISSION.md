@@ -5,7 +5,7 @@
 > point is that these answers and the published privacy policy cannot drift
 > apart, because Play treats a mismatch as a misrepresentation.
 
-Effective 15 August 2026 · package `com.bilbymobile.app`
+Effective 16 August 2026 · package `com.bilbymobile.bilby`
 
 ---
 
@@ -16,8 +16,6 @@ These must be live and reachable, because reviewers click them:
 - [ ] `https://bilbymobile.com/privacy`
 - [ ] `https://bilbymobile.com/terms`
 - [ ] `https://bilbymobile.com/refunds`
-- [ ] `https://bilbymobile.com/app-ads.txt` — must be the **apex** domain,
-      matching the developer website on your listing exactly
 - [ ] `hello@bilbymobile.com` — a real inbox someone reads
 
 ---
@@ -26,12 +24,12 @@ These must be live and reachable, because reviewers click them:
 
 | Field | Value |
 |---|---|
-| App name | Bilby — Free eSIM Data |
-| Short description | Free data abroad. Watch an ad, get online. Pay only for the days you need speed. |
+| App name | Bilby |
+| Short description | Travel data for Australians. Set it up before you fly, land connected, pay once. |
 | Category | Travel & Local |
 | Content rating | Everyone |
-| Contains ads | **Yes** — not declaring this is a removable offence |
-| In-app purchases | **No**, for the first release (free tier only) |
+| Contains ads | **No** — there is no ad SDK in the build |
+| In-app purchases | **No** — plans are bought on the web, not through Play |
 | Developer website | `https://bilbymobile.com` |
 | Privacy policy | `https://bilbymobile.com/privacy` |
 | Support email | hello@bilbymobile.com |
@@ -55,32 +53,19 @@ Full listing copy is in `brand/BRAND.md`.
 | Category | Type | Collected | Shared | Required | Purpose |
 |---|---|---|---|---|---|
 | Personal info | User IDs | Yes | No | Required | To keep track of your data balance and your eSIM without making you create an account.… |
-| Location | Approximate location | Yes | No | Required | Mobile data costs us different amounts in different countries, and ads are worth different… |
-| Device or other IDs | Device or other IDs | Yes | Yes — Google (AdMob) | Required | So Google can serve you a relevant ad and confirm to us that you actually watched it. Ad r… |
-| App activity | Other user-generated content | Yes | No | Required | To calculate your balance, enforce daily limits, and detect abuse. It is also our accounti… |
+| Location | Approximate location | Yes | No | Required | So the shop opens on a sensible destination before you have picked one, and so we know whi… |
+| Financial info | Purchase history | Yes | No | Required | To give you what you paid for, to support you when something goes wrong, and because it is… |
 | Device or other IDs | Device or other IDs | Yes | Yes — Our connectivity supplier, who operates the mobile network | Required | To load data onto the right eSIM, show you your remaining balance, and support you if it s… |
 
 **Purpose checkboxes to tick in the form**, mapped from the above:
 
 - *App functionality* — account ID, country, eSIM identifier
-- *Advertising or marketing* — advertising ID
-- *Fraud prevention, security and compliance* — earning history, account ID
+- *Purchase history* — what was bought, for support and as the accounting record
+- *Fraud prevention, security and compliance* — purchase history, account ID
 
 Do **not** tick *Analytics* or *Personalisation* unless you add tools that
 genuinely do those things. Over-declaring is not the safe option — it has to
 match the policy, and the policy says what the code does.
-
----
-
-## Ads declaration
-
-Play asks how ads are shown. The answers:
-
-- Ad format: **Rewarded video**, user-initiated only
-- Ads are never shown outside the app, on the lock screen, or in notifications
-- No interstitials on launch
-- Ads are not shown to users under 13 — set the AdMob content rating
-  accordingly and complete the target-audience section as adults only
 
 ---
 
@@ -89,49 +74,54 @@ Play asks how ads are shown. The answers:
 Worth reading once before you submit, because each of these costs a review cycle:
 
 1. **Minimum functionality.** Apps that look like a website in a wrapper get
-   rejected. This one clears the bar — native rewarded ads and the system
-   eSIM install handoff — but say so in the listing rather than describing it
-   as a web app.
-2. **Privacy policy that 404s or does not mention ads.** Both are instant
-   rejections. Ours covers AdMob explicitly.
-3. **Undeclared ads.** You have rewarded video. Tick the box.
-4. **Data Safety disagreeing with the privacy policy.** Solved structurally —
+   rejected. What clears the bar here is the system eSIM install handoff and
+   the plan library, so describe those in the listing rather than describing
+   it as a web app.
+2. **Payments.** Plans are bought on the web and the app links out to a
+   browser rather than embedding checkout. Play's Payments policy exempts
+   purchases consumed outside a Play distributed app, and connectivity is
+   consumed by the handset modem. Two rules keep that true and both are
+   load bearing: never open checkout in a webview, and never gate an app
+   feature behind a purchase.
+3. **Data Safety disagreeing with the privacy policy.** Solved structurally:
    both come from `lib/legal.ts`.
+4. **Declaring things the build does not do.** This kit used to declare
+   rewarded video ads and name the app "Free eSIM Data". There is no ad SDK
+   in the build and nothing about the product is free. Declaring ads you do
+   not serve is a misrepresentation in the same way that failing to declare
+   ads you do serve is, and the listing name has to describe the product.
 5. **Health or emergency claims.** Never imply the eSIM can be relied on for
-   emergency calls. It is data-only, and the terms say so explicitly.
+   emergency calls. It is data only, and the terms say so explicitly.
 
 ---
 
 ## Release build
 
-```powershell
-flutter build appbundle `
-  --dart-define=API_BASE=https://bilbymobile.com `
-  --dart-define=ADMOB_REWARDED_ID=<your real rewarded unit>
+```bash
+cd web
+npm run build
+npx cap sync android
+cd android && ./gradlew bundleRelease
 ```
 
-Two irreversible things — get them right the first time:
+Two irreversible things, so get them right the first time:
 
 - **Keystore.** Back it up somewhere you will still have in five years. Lose
   it and you can never update the app.
-- **`applicationId`.** `com.bilbymobile.app` is immutable once published.
+- **`applicationId`.** `com.bilbymobile.bilby` is immutable once published.
   Changing it later means a new listing with zero installs and zero reviews.
+
+Never ship a `BILBY_SHRINK=false` build to Play.
 
 ---
 
 ## Sequence, and why this order
 
-1. Deploy the web app so the legal pages resolve
-2. Submit to Play — **internal testing first**, then production
-3. Once live, create the AdMob app and link it to the Play listing
-4. Create a rewarded ad unit; set SSV callback to
-   `https://bilbymobile.com/api/ads/ssv`
-5. Publish `app-ads.txt`; allow 24h for the crawl
-6. Swap the test ad unit for the real one and ship an update
-
-**AdMob will not serve ads on an unpublished app**, so step 2 gates every
-dollar this business will ever make. It is the reason to submit before
-payments exist rather than after.
+1. Deploy the web app so the legal pages resolve. Play checks them.
+2. Submit to Play, internal testing first, then production.
+3. Keep the app in review while the shop is still closed. The listing can be
+   approved before `CHECKOUT_OPEN` is set; a reviewer who cannot buy anything
+   is not a problem, a reviewer who buys something simulated is.
 
 ---
 

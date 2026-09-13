@@ -106,11 +106,33 @@ const PRICING = [
     h: "Per trip, not per month",
     p: "It ends when your trip ends. There is no subscription to remember to cancel.",
   },
-  {
-    h: "Full speed throughout",
-    p: "No throttle after a hidden allowance. A slow eSIM you cannot use is the same as no eSIM.",
-  },
 ];
+
+/*
+ * The fourth card, which depends on what is actually for sale.
+ *
+ * It used to be a fixed promise: "Full speed throughout. No throttle after a
+ * hidden allowance." Fourteen of the fifty two plans on sale slow to 384 or
+ * 512 Kbps once a daily cap is reached, and each of them says so in its own
+ * subtitle, two clicks from the sentence denying it.
+ *
+ * The replacement is not a softer claim, it is a different and better one. A
+ * speed cap is not the problem; a speed cap you find out about in Tokyo is.
+ * "Nothing is hidden" is true whether or not a plan throttles, and it is the
+ * thing worth promising, so the page makes that promise and names the limit
+ * rather than denying limits exist.
+ */
+function speedCard(anyThrottled: boolean) {
+  return anyThrottled
+    ? {
+        h: "Any speed limit is on the card",
+        p: "Some plans run at full speed to a daily amount and slow down after it. Those say so, in the plan title and again before you pay. You will never discover a limit while you are away.",
+      }
+    : {
+        h: "Full speed throughout",
+        p: "Nothing on sale today slows down after a hidden allowance. If that ever changes, the plan will say so before you pay.",
+      };
+}
 
 /*
  * Static, and regenerated when the catalogue actually changes.
@@ -261,6 +283,19 @@ export default async function HomePage() {
               country we hope to cover, and every price is the one the shop charges, read from
               the same catalogue at the same moment.
             </p>
+            {/* Material, and a customer should meet it here rather than at the
+                payment step. It is derived, so it disappears by itself the day
+                a locally routed plan goes on sale. */}
+            {shop?.anyRoutedOverseas ? (
+              <p style={{ marginTop: 14 }}>
+                One thing to know before you get to the price. These plans reach the internet
+                through an exit point outside the country you are visiting. Almost everything
+                works normally, but some banking apps and some streaming services check where
+                your connection appears to come from and may refuse. Every plan says so on its
+                own card, and if your bank has to work while you are away, wait for the local
+                plans rather than buying one of these.
+              </p>
+            ) : null}
           </div></Reveal>
           {/*
             Only what is actually on sale. Listing a destination here that the
@@ -274,7 +309,11 @@ export default async function HomePage() {
                 <div className={styles.dest} key={d.iso}>
                   <div className={styles.swatch}>{d.iso}</div>
                   <h3>{d.name}</h3>
-                  <p>{d.blurb ?? "Local networks, full speed"}</p>
+                  {/* No fallback claiming "local networks". Every plan on sale
+                      today leaves the destination country to reach the internet,
+                      which is the opposite of local, and the curated blurb is
+                      the only text here anybody has actually checked. */}
+                  {d.blurb ? <p>{d.blurb}</p> : null}
                   <span className={styles.destPrice}>
                     {money(d.fromAmount, shop?.currency)} <small>and up</small>
                   </span>
@@ -305,7 +344,7 @@ export default async function HomePage() {
             </p>
           </div></Reveal>
           <Reveal delay={80}><div className={`${styles.why} ${styles.cascade}`}>
-            {PRICING.map((w) => (
+            {[...PRICING, speedCard(shop?.anyThrottled ?? false)].map((w) => (
               <div className={styles.wy} key={w.h}>
                 <h3>{w.h}</h3>
                 <p>{w.p}</p>
@@ -361,9 +400,13 @@ export default async function HomePage() {
           <Reveal><div className={styles.close}>
             <div>
               <h2>Sort the phone out before you sort the packing.</h2>
+              {/* No date, and no "shortly". When the shop opens depends on a
+                  supplier wallet and a handset test, neither of which has a
+                  date, and a timing claim with nothing behind it is a
+                  representation about a future matter like any other. */}
               <p>
-                Plans and prices are up. Card payments open shortly, so you can see exactly what
-                you will pay today and buy it the moment we switch it on.
+                Plans and prices are up, so you can see exactly what a trip will cost. Card
+                payments are not switched on yet. Nothing here can charge you today.
               </p>
             </div>
             <Link className={`${styles.btn} ${styles.btnGo}`} href="/plans">
