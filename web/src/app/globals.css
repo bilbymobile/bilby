@@ -15,7 +15,7 @@
  * reaching Google, and means the type cannot be the reason the page is slow on
  * a phone in an airport.
  *
- * Six files, 112 KB in total, and only the weights actually used. Adding a
+ * Eight files, 160 KB in total, and only the weights actually used. Adding a
  * weight means copying one more file into public/fonts and adding a block here;
  * there is no build step and nothing to remember on deploy.
  *
@@ -30,6 +30,30 @@
 @font-face {
   font-family: "Bebas Neue";
   src: url("/fonts/bebas-neue-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+ * The other half of every heading.
+ *
+ * This face is not an alternative to Bebas, it is its partner. Every heading in
+ * the reference is two lines in two faces: a line of condensed capitals, then a
+ * line of lowercase italic serif in that section's accent colour. Reading the
+ * deployment and the written guidelines as contradicting each other was my
+ * mistake; one documents the first line and the other documents the second.
+ */
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("/fonts/instrument-serif-latin-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("/fonts/instrument-serif-latin-400-normal.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;

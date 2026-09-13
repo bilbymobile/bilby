@@ -41,10 +41,20 @@
   --font-display: "Bebas Neue";
   --font-body: "Space Grotesk";
   --font-mono: "JetBrains Mono";
+  --font-serif: "Instrument Serif";
 
-  /* Ground, deepest to highest. */
-  --void: #04060F;
-  --abyss: #0A0E1F;
+  /*
+   * Ground and ink, sampled from the reference deployment.
+   *
+   * #060913 rather than the app's #04060F, and #F4EFE6 rather than #F4F6FF.
+   * Both differences are small and both are deliberate: the ground is a touch
+   * warmer and a touch lighter than true black, which stops an OLED phone
+   * showing the page as a void with text floating in it, and the ink is warm
+   * off white rather than cool, which is what lets a coral accent sit beside it
+   * without the two arguing.
+   */
+  --void: #060913;
+  --abyss: #0C1220;
   --deep: #10142A;
   --surface: #161B36;
   --raised: #1E2447;
@@ -53,15 +63,28 @@
   --line: rgba(255, 255, 255, .07);
   --line2: rgba(255, 255, 255, .12);
 
-  --ink: #F4F6FF;
+  --ink: #F4EFE6;
   --ink2: #B4BBD9;
   --ink3: #7A82A6;
 
-  --coral: #FF7A3D;
+  --coral: #FF9E5A;
   --coral-soft: #FFB088;
-  --mango: #FFB347;
+  --mango: #FFB43A;
   --aurora: #46F1D6;
   --sky: #5EC8FF;
+
+  /*
+   * Four accents, one per section, in the reference's own values.
+   *
+   * A single accent used everywhere is a brand colour. Four rotating through a
+   * long page is pacing: it tells a reader they have moved without a heading
+   * having to say so, and it is the reason the reference does not feel like one
+   * screen repeated nine times.
+   */
+  --hue-amber: #FFB43A;
+  --hue-cyan: #6EE7FF;
+  --hue-lime: #D9FF4B;
+  --hue-coral: #FF9E5A;
 
   /* Text drawn on a coral or mango fill. Named rather than written inline,
      because a hardcoded light ink is how a mango button ships unreadable. */
@@ -159,10 +182,93 @@
   background: linear-gradient(90deg, var(--aurora), transparent);
 }
 
-.head { max-width: 720px; margin-bottom: clamp(34px, 4vw, 54px); }
-.head h2 { font-size: clamp(38px, 5.4vw, 68px); margin-bottom: 18px; }
-.head p { color: var(--ink2); font-size: 1.06rem; max-width: 62ch; }
+/* ── The section header device ───────────────────────────────────────────── */
 
+.head { max-width: 860px; margin-bottom: clamp(34px, 4vw, 56px); }
+
+/*
+ * Each section owns a hue.
+ *
+ * Declared on the SECTION rather than on the header, because the numerals, the
+ * icon tiles and the notice panel all read it too, and a variable set on the
+ * header is invisible to its siblings. The first version put it on the header
+ * and the step numerals stayed amber inside a cyan section.
+ */
+.amber { --hue: var(--hue-amber); }
+.cyan  { --hue: var(--hue-cyan); }
+.lime  { --hue: var(--hue-lime); }
+.coral { --hue: var(--hue-coral); }
+
+/*
+ * The slate: pill, label, rule.
+ *
+ * Named slate rather than scene because `.scene` was already the hero artwork's
+ * SVG in this same module, declared two hundred lines further down, and it won.
+ * A CSS module scopes names per FILE, not per component, so two components
+ * sharing home.module.css share one namespace. The symptom was a header row
+ * that ignored `display: flex` entirely: no gap between the pill and the label,
+ * and a rule measuring zero pixels wide.
+ */
+.slate {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 20px;
+}
+.slateTag {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .66rem; letter-spacing: .2em; text-transform: uppercase;
+  padding: 6px 13px; border-radius: 999px;
+  color: var(--hue, var(--hue-amber));
+  border: 1px solid color-mix(in srgb, var(--hue, var(--hue-amber)) 42%, transparent);
+  background: color-mix(in srgb, var(--hue, var(--hue-amber)) 9%, transparent);
+  white-space: nowrap;
+}
+.slateLabel {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .66rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--ink3); white-space: nowrap;
+}
+/* The rule runs to the end of the column, which is what makes the row read as
+   a slate rather than as two chips sitting next to each other. */
+.slateRule {
+  height: 1px; flex: 1;
+  background: linear-gradient(90deg, var(--line2), transparent);
+}
+
+/*
+ * The two face heading.
+ *
+ * The capitals line is Bebas and inherits from .page h2. The second line is
+ * lowercase italic serif in the section hue, and it is deliberately NOT
+ * uppercased: the whole effect depends on the contrast between a line that
+ * shouts and a line that does not.
+ */
+.head h2 { font-size: clamp(40px, 6.4vw, 92px); margin-bottom: 18px; }
+/*
+ * The italic line carries its own metrics.
+ *
+ * Measured: at 92px the serif line box was 120px tall against the condensed
+ * face's 86px, because Instrument Serif has long ascenders and a deep descender
+ * and Bebas has almost neither. Inheriting one line-height for both faces put a
+ * visible hole between the two lines of every heading.
+ *
+ * It also reads larger at the same size, so it comes down slightly rather than
+ * matching. The two lines should feel like one heading, not like a heading and
+ * a pull quote.
+ */
+.accent {
+  display: inline-block;
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: .92em;
+  line-height: .82;
+  letter-spacing: -.012em;
+  text-transform: none;
+  color: var(--hue, var(--hue-amber));
+}
+
+.lead { color: var(--ink2); font-size: 1.06rem; max-width: 62ch; line-height: 1.66; }
+.head p { color: var(--ink2); font-size: 1.06rem; max-width: 62ch; }
 
 /* ── Header ──────────────────────────────────────────────────────────────── */
 
@@ -417,12 +523,38 @@
   font-size: 1.5rem; font-weight: 400; letter-spacing: .04em;
   width: 44px; height: 44px; border-radius: 13px;
   display: grid; place-items: center;
-  background: rgba(255, 122, 61, .12);
-  border: 1px solid rgba(255, 122, 61, .3);
-  color: var(--mango);
+  background: color-mix(in srgb, var(--hue, var(--hue-amber)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hue, var(--hue-amber)) 30%, transparent);
+  color: var(--hue, var(--hue-amber));
   margin-bottom: 18px;
 }
 
+
+/*
+ * A caveat that gets its own panel.
+ *
+ * The overseas routing note used to be a paragraph inside the section lead,
+ * which is the shape of something you hope will be skimmed. It is the single
+ * most material fact about every plan currently on sale, so it is bordered, it
+ * carries a label, and it sits between the heading and the prices rather than
+ * after them.
+ */
+.notice {
+  display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap;
+  padding: 22px 24px;
+  margin-bottom: 26px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--hue-amber) 30%, transparent);
+  background: color-mix(in srgb, var(--hue-amber) 6%, transparent);
+}
+.notice p { color: var(--ink2); font-size: .97rem; line-height: 1.65; flex: 1 1 420px; margin: 0; }
+.noticeTag {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .64rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--hue-amber); white-space: nowrap;
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--hue-amber) 38%, transparent);
+}
 
 /* ── Destinations ────────────────────────────────────────────────────────── */
 
@@ -468,11 +600,11 @@
 .wy h3 { font-size: 1.4rem; margin-bottom: 9px; }
 .wy p { color: var(--ink2); font-size: .95rem; }
 .ic {
-  width: 42px; height: 42px; border-radius: 13px;
+  width: 44px; height: 44px; border-radius: 14px;
   display: grid; place-items: center; margin-bottom: 16px;
-  background: rgba(70, 241, 214, .1);
-  border: 1px solid rgba(70, 241, 214, .26);
-  color: var(--aurora);
+  background: color-mix(in srgb, var(--hue, var(--hue-amber)) 11%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hue, var(--hue-amber)) 28%, transparent);
+  color: var(--hue, var(--hue-amber));
 }
 
 

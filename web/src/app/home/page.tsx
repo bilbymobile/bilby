@@ -7,6 +7,7 @@ import styles from "./home.module.css";
 import { FieldNotes } from "./notes";
 import { HeroArt } from "./hero-art";
 import { Ticker } from "./ticker";
+import { SectionHead } from "./section-head";
 import { HeroParallax, Motes, Reveal } from "./motion";
 
 /**
@@ -277,16 +278,18 @@ export default async function HomePage() {
 
       <Ticker items={tickerItems} />
 
-      <section className={`${styles.band} ${styles.bandSurface}`} id="how">
+      <section className={`${styles.band} ${styles.bandSurface} ${styles.cyan}`} id="how">
         <div className={styles.shell}>
-          <Reveal><div className={styles.head}>
-            <p className={styles.eyebrow}>How it works</p>
-            <h2>Three steps, and none of them happen at the airport.</h2>
-            <p>
-              The thing that goes wrong in this category is a traveller standing at arrivals at
-              eleven at night trying to install something. So Bilby moves all of it earlier.
-            </p>
-          </div></Reveal>
+          <Reveal><SectionHead
+            scene="Scene 01"
+            label="How it works"
+            caps="Three steps."
+            accent="none at the airport."
+            hue="cyan"
+          >
+            The thing that goes wrong in this category is a traveller standing at arrivals at
+            eleven at night trying to install something. So Bilby moves all of it earlier.
+          </SectionHead></Reveal>
           <Reveal delay={80}><div className={`${styles.steps} ${styles.cascade}`}>
             {STEPS.map((s) => (
               <div className={styles.step} key={s.n}>
@@ -299,30 +302,37 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className={styles.band} id="dests">
+      <section className={`${styles.band} ${styles.amber}`} id="dests">
         <div className={styles.shell}>
-          <Reveal><div className={styles.head}>
-            <p className={styles.eyebrow}>Destinations</p>
-            <h2>The places Australians actually fly to.</h2>
-            <p>
-              A short list on purpose. Every destination here is on sale right now, not a
-              country we hope to cover, and every price is the one the shop charges, read from
-              the same catalogue at the same moment.
-            </p>
-            {/* Material, and a customer should meet it here rather than at the
-                payment step. It is derived, so it disappears by itself the day
-                a locally routed plan goes on sale. */}
-            {shop?.anyRoutedOverseas ? (
-              <p style={{ marginTop: 14 }}>
-                One thing to know before you get to the price. These plans reach the internet
-                through an exit point outside the country you are visiting. Almost everything
-                works normally, but some banking apps and some streaming services check where
-                your connection appears to come from and may refuse. Every plan says so on its
-                own card, and if your bank has to work while you are away, wait for the local
-                plans rather than buying one of these.
+          <Reveal><SectionHead
+            scene="Scene 02"
+            label="Destinations"
+            caps="Pick your"
+            accent="next hop."
+            hue="amber"
+          >
+            A short list on purpose. Every destination here is on sale right now, not a
+            country we hope to cover, and every price is the one the shop charges, read from
+            the same catalogue at the same moment.
+          </SectionHead></Reveal>
+          {/* Material, and a customer should meet it here rather than at the
+              payment step. It is derived, so it disappears by itself the day a
+              locally routed plan goes on sale. Given its own panel rather than
+              left as a paragraph, because a caveat buried in a lead reads as
+              something we hoped you would skim. */}
+          {shop?.anyRoutedOverseas ? (
+            <Reveal><div className={styles.notice}>
+              <span className={styles.noticeTag}>Read this first</span>
+              <p>
+                These plans reach the internet through an exit point outside the country you are
+                visiting. Almost everything works normally, but some banking apps and some
+                streaming services check where your connection appears to come from and may
+                refuse. Every plan says so on its own card. If your bank has to work while you are
+                away, wait for the local plans rather than buying one of these.
               </p>
-            ) : null}
-          </div></Reveal>
+            </div></Reveal>
+          ) : null}
+
           {/*
             Only what is actually on sale. Listing a destination here that the
             shop cannot fill sends somebody to an empty shelf, which reads as
@@ -355,20 +365,18 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className={`${styles.band} ${styles.bandSurface}`} id="pricing">
+      <section className={`${styles.band} ${styles.bandSurface} ${styles.lime}`} id="pricing">
         <div className={styles.shell}>
-          <Reveal><div className={styles.head}>
-            <p className={styles.eyebrow}>Pricing</p>
-            <h2>
-              {from !== null
-                ? `One price, paid once, starting at ${money(from, shop?.currency)}.`
-                : "One price, paid once, and no surprises at the last screen."}
-            </h2>
-            <p>
-              Every plan is a single charge in Australian dollars. Below is how the pricing
-              behaves, and that part is not going to change as the catalogue grows.
-            </p>
-          </div></Reveal>
+          <Reveal><SectionHead
+            scene="Scene 04"
+            label="Pricing"
+            caps={from !== null ? `One price, from ${money(from, shop?.currency)}.` : "One price, paid once."}
+            accent="no plot twists."
+            hue="lime"
+          >
+            Every plan is a single charge in Australian dollars. Below is how the pricing
+            behaves, and that part is not going to change as the catalogue grows.
+          </SectionHead></Reveal>
           <Reveal delay={80}><div className={`${styles.why} ${styles.cascade}`}>
             {[...PRICING, speedCard(shop?.anyThrottled ?? false)].map((w) => (
               <div className={styles.wy} key={w.h}>
@@ -380,26 +388,19 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className={styles.band} id="help">
+      <section className={`${styles.band} ${styles.coral}`} id="help">
         <div className={styles.shell}>
-          <Reveal><div className={styles.head}>
-            <p className={styles.eyebrow}>Why Bilby</p>
-            {/*
-              This used to read "A small Australian business, which is the
-              point." Small was doing the opposite of its job. A traveller about
-              to depend on this for a fortnight overseas reads small as "may not
-              be there when I need them", and it buys nothing in exchange: it is
-              a fact about us rather than about them. Australian buys a great
-              deal, because it names a time zone, a body of law and somebody who
-              can be held to both.
-            */}
-            <h2>Australian, and answerable for it.</h2>
-            <p>
-              The big travel eSIM brands resell the same underlying networks we do. What differs is
-              the time zone the help desk sits in, whose law covers you when it goes wrong, and
-              whether a person reads what you actually wrote.
-            </p>
-          </div></Reveal>
+          <Reveal><SectionHead
+            scene="Scene 05"
+            label="Why Bilby"
+            caps="Australian, and"
+            accent="answerable for it."
+            hue="coral"
+          >
+            The big travel eSIM brands resell the same underlying networks we do. What differs is
+            the time zone the help desk sits in, whose law covers you when it goes wrong, and
+            whether a person reads what you actually wrote.
+          </SectionHead></Reveal>
           <Reveal delay={80}><div className={`${styles.why} ${styles.cascade}`}>
             {PROMISES.map((w) => (
               <div className={styles.wy} key={w.h}>
@@ -416,17 +417,19 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className={`${styles.band} ${styles.bandSurface}`} id="notes">
+      <section className={`${styles.band} ${styles.bandSurface} ${styles.amber}`} id="notes">
         <div className={styles.shell}>
-          <Reveal><div className={styles.head}>
-            <p className={styles.eyebrow}>Field notes</p>
-            <h2>Travellers write down what actually happened.</h2>
-            <p>
-              Not a star rating. A note: which airport, which network it picked up, and how long it
-              took between the plane door and the first bar of signal. The next person going there
-              reads it before they fly.
-            </p>
-          </div></Reveal>
+          <Reveal><SectionHead
+            scene="Scene 06"
+            label="Field notes"
+            caps="Travellers write"
+            accent="what actually happened."
+            hue="amber"
+          >
+            Not a star rating. A note: which airport, which network it picked up, and how long it
+            took between the plane door and the first bar of signal. The next person going there
+            reads it before they fly.
+          </SectionHead></Reveal>
           <Reveal delay={80}><FieldNotes /></Reveal>
         </div>
       </section>
