@@ -6,6 +6,7 @@ import { url } from "@/lib/hosts";
 import styles from "./home.module.css";
 import { FieldNotes } from "./notes";
 import { HeroArt } from "./hero-art";
+import { Ticker } from "./ticker";
 import { HeroParallax, Motes, Reveal } from "./motion";
 
 /**
@@ -160,6 +161,25 @@ export default async function HomePage() {
   const dests = shop?.destinations ?? [];
   const from = shop?.fromAmount ?? null;
 
+  /*
+   * What the ticker says.
+   *
+   * Assembled from the catalogue, in order of how much a stranger cares: where
+   * we go, what it costs, and then the three things that differentiate us and
+   * are true regardless of stock. Destinations are capped at eight so the strip
+   * stays a readout rather than becoming the page's longest list, and the count
+   * takes over once there are more than that.
+   */
+  const tickerItems: string[] = [
+    ...(dests.length > 8
+      ? [`${dests.length} destinations on sale`]
+      : dests.map((d) => d.name)),
+    ...(from !== null ? [`from ${money(from, shop?.currency)}`] : []),
+    "install before you fly",
+    "australian support",
+    "no subscription",
+  ];
+
   return (
     <>
       <section className={styles.hero} id="top">
@@ -206,15 +226,14 @@ export default async function HomePage() {
             <div className={`${styles.pills} ${styles.rise} ${styles.rise4}`}>
               {/* Dropped entirely when there is nothing true to put in it. An
                   empty pill is better than a pill reading "0 destinations". */}
+              {/* The dot pulses because this pill is the one reporting
+                  something live: it is read from the catalogue at render and it
+                  changes when stock changes. The other two are constants and
+                  get an icon rather than a signal. */}
               {claim.pill ? (
                 <span className={styles.pill}>
-                  <i>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="9" />
-                      <path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18" />
-                    </svg>
-                  </i>
-                  {claim.pill}
+                  <span className={styles.dot} aria-hidden="true" />
+                  {claim.pill} on sale
                 </span>
               ) : null}
               <span className={styles.pill}>
@@ -250,6 +269,8 @@ export default async function HomePage() {
           </HeroParallax>
         </div>
       </section>
+
+      <Ticker items={tickerItems} />
 
       <section className={`${styles.band} ${styles.bandSurface}`} id="how">
         <div className={styles.shell}>

@@ -1,4 +1,80 @@
 /*
+ * Type, self hosted.
+ *
+ * These used to come from fonts.googleapis.com at runtime, on every page load,
+ * from every visitor. The comment in layout.tsx explaining that choice was
+ * honest about the trade and wrong about the alternatives: it said next/font
+ * was rejected because it fetches from Google at BUILD time, so a build
+ * environment without egress to Google fails outright. True, and not the only
+ * way to self host.
+ *
+ * @fontsource publishes the same families to npm. The files arrive with
+ * `npm install`, from a registry the build can already reach, and ship inside
+ * the deployment. That removes a third party request from the critical path of
+ * the one page a stranger judges the business by, stops every visitor's address
+ * reaching Google, and means the type cannot be the reason the page is slow on
+ * a phone in an airport.
+ *
+ * Six files, 112 KB in total, and only the weights actually used. Adding a
+ * weight means copying one more file into public/fonts and adding a block here;
+ * there is no build step and nothing to remember on deploy.
+ *
+ * `font-display: swap` everywhere, deliberately. The alternative is `block`,
+ * which hides the text until the file lands, and this project has already
+ * shipped one bug where the words were present and invisible. A visitor reading
+ * the fallback for 200ms is a far better failure than a visitor reading
+ * nothing.
+ */
+
+/* Display. One weight, no lowercase, very condensed. Headlines only. */
+@font-face {
+  font-family: "Bebas Neue";
+  src: url("/fonts/bebas-neue-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Body, navigation, buttons. */
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/fonts/space-grotesk-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/fonts/space-grotesk-latin-500-normal.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/fonts/space-grotesk-latin-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Labels, prices, anything that wants to read as a readout rather than prose. */
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
  * One visual world, and only one.
  *
  * The shop, the legal pages and the console used to be three surfaces each
@@ -84,11 +160,22 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Headings take the display face, as they do in the app. */
+/*
+ * Headings take the display face, as they do in the app and on the apex.
+ *
+ * Bebas Neue has no lowercase, so anything set in it is capitals whether you
+ * meant it or not. That is why it is scoped to headings and why the sizes below
+ * are larger than they look: the face is condensed and tall, so at the grotesk's
+ * size it reads as smaller, not bigger.
+ */
 h1, h2, h3 {
-  font-family: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  letter-spacing: -.02em;
+  font-family: "Bebas Neue", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: .012em;
+  line-height: 1.02;
 }
+h1 { font-size: clamp(38px, 5.6vw, 56px); }
+h2 { font-size: clamp(26px, 3vw, 34px); }
 
 a { color: var(--text); text-decoration: none; }
 a:hover { text-decoration: underline; }

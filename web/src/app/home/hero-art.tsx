@@ -151,8 +151,16 @@ export function HeroArt() {
             fill="none"
           />
           <circle className={styles.spark} cx="256" cy="88" r="21" fill="#FFB347" />
-          <ellipse cx="168" cy="168" rx="44" ry="108" transform="rotate(-34 168 168)" />
-          <ellipse cx="344" cy="168" rx="44" ry="108" transform="rotate(34 344 168)" />
+          {/* Each ear is an ellipse inside a group. The group carries the
+              position and the splay; the ellipse carries the sway. Keeping
+              those on separate elements is what lets the CSS rotate the ear
+              about its own base instead of about the middle of the frame. */}
+          <g transform="rotate(-34 168 168)">
+            <ellipse className={styles.earL} cx="168" cy="168" rx="44" ry="108" />
+          </g>
+          <g transform="rotate(34 344 168)">
+            <ellipse className={styles.earR} cx="344" cy="168" rx="44" ry="108" />
+          </g>
           <path
             fillRule="evenodd"
             d="M256 148 C 341 148, 396 209, 396 288 C 396 372, 337 424, 256 424

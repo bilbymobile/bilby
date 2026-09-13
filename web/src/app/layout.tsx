@@ -10,39 +10,13 @@ import { LEGAL_ENTITY } from "@/lib/legal";
 import { checkoutOpen } from "@/lib/stripe";
 import "./globals.css";
 
-/**
- * Type.
+/*
+ * Type is self hosted. See the @font-face blocks at the top of globals.css for
+ * why, and for what replaced the runtime request to fonts.googleapis.com that
+ * used to live here.
  *
- * Loaded as a stylesheet rather than through next/font, deliberately.
- *
- * next/font is better on the merits: it self hosts the files, hashes them into
- * the build, removes a third party request from the critical path and stops
- * every visitor's address reaching Google. It also fetches from
- * fonts.googleapis.com **at build time**, which means any build environment
- * without egress to Google fails outright rather than degrading. That is a
- * poor trade for a project where the build has to keep working from more than
- * one place.
- *
- * The preconnect hints below recover most of the latency. Worth revisiting once
- * the build environment is settled: switching is deleting this block and
- * restoring the next/font imports, nothing else, because the rest of the CSS
- * reads the variables rather than the family names.
+ * The preconnect hints went with it. There is nothing to preconnect to.
  */
-const FONT_HREF =
-  "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700" +
-  "&family=Bebas+Neue" +
-  "&family=Instrument+Serif:ital@0;1" +
-  "&family=JetBrains+Mono:wght@400;500&display=swap";
-
-function FontLinks() {
-  return (
-    <>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-      <link rel="stylesheet" href={FONT_HREF} />
-    </>
-  );
-}
 
 export const metadata: Metadata = {
   title: {
@@ -180,7 +154,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     return (
       <html lang="en">
         <head>
-          <FontLinks />
           <MotionGate />
         </head>
         <body data-surface="console" style={{ margin: 0 }}>{children}</body>
@@ -192,7 +165,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     return (
       <html lang="en">
         <head>
-          <FontLinks />
           <MotionGate />
         </head>
         <body data-surface="marketing" style={{ margin: 0 }}>
@@ -205,7 +177,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <head>
-        <FontLinks />
         {/* Decides whether a page is allowed to hide anything behind an
             entrance animation. See motion-gate.tsx: without it, nothing hides.
             On every branch, because the landing page renders under the product
