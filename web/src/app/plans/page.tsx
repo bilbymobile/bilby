@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { currentUser } from "@/lib/session";
+import { databaseConfigured } from "@/lib/db";
+import { NoDatabase } from "../no-database";
 import { listCatalog } from "@/lib/platform";
 import { destinationName } from "@/lib/destinations";
 import { liveDestinations } from "@/lib/live-destinations";
@@ -26,6 +28,9 @@ export default async function PlansPage({
 }: {
   searchParams: Promise<{ country?: string }>;
 }) {
+  // Ask before querying. See lib/db.ts databaseConfigured and no-database.tsx.
+  if (!databaseConfigured()) return <NoDatabase what="The plans page" />;
+
   const { country } = await searchParams;
   const user = await currentUser();
   const iso = (country ?? user.destination ?? "JP").toUpperCase();

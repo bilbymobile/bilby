@@ -1,0 +1,696 @@
+/*
+ * Landing page styles.
+ *
+ * A CSS module rather than globals, because globals.css already owns .hero,
+ * .brand, .card, .note, .row and .shell for the product surface. Sharing those
+ * names cost an afternoon once already: a plan card silently inherited the
+ * field note card's background and read as a broken input. Module scoping makes
+ * that class of bug impossible rather than merely unlikely.
+ *
+ * Element selectors are NOT scoped by CSS modules, only class names, so every
+ * rule here descends from .page.
+ *
+ * ## One visual world
+ *
+ * Deep night ground, the bilby's coral and mango carrying every action, aurora
+ * reserved for signal and for "this is fine", sky blue for links. The values
+ * are not approximations of the Android app's palette, they are the same hex,
+ * so a customer crossing from the website to the web app to the phone crosses
+ * nothing at all.
+ *
+ * The previous version of this file was warm cream lit for a photographic hero.
+ * That hero is gone (see hero-art.tsx) and so is the reason for the cream.
+ */
+
+.page {
+  --font-display: "Space Grotesk";
+  --font-body: "Space Grotesk";
+  --font-mono: "JetBrains Mono";
+
+  /* Ground, deepest to highest. */
+  --void: #04060F;
+  --abyss: #0A0E1F;
+  --deep: #10142A;
+  --surface: #161B36;
+  --raised: #1E2447;
+  --chrome: #2A3162;
+
+  --line: rgba(255, 255, 255, .07);
+  --line2: rgba(255, 255, 255, .12);
+
+  --ink: #F4F6FF;
+  --ink2: #B4BBD9;
+  --ink3: #7A82A6;
+
+  --coral: #FF7A3D;
+  --coral-soft: #FFB088;
+  --mango: #FFB347;
+  --aurora: #46F1D6;
+  --sky: #5EC8FF;
+
+  /* Text drawn on a coral or mango fill. Named rather than written inline,
+     because a hardcoded light ink is how a mango button ships unreadable. */
+  --on-warm: #04060F;
+
+  --glass: rgba(255, 255, 255, .04);
+  --glass-hi: rgba(255, 255, 255, .07);
+
+  /* On a dark ground a drop shadow does not separate anything, because the
+     shadow and the page are both darkness. What lifts a surface here is the
+     one pixel of light along its top edge. The drop stays only to seat it. */
+  --shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 18px 44px rgba(0, 0, 0, .5);
+  --lift: inset 0 1px 0 rgba(255, 255, 255, .10), 0 28px 70px rgba(0, 0, 0, .6);
+
+  background: var(--void);
+  color: var(--ink);
+  font-family: var(--font-body), ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16.5px;
+  line-height: 1.66;
+  -webkit-font-smoothing: antialiased;
+  /* Horizontal only. `overflow: hidden` on both axes here would make the page
+     its own scroll container and break position: sticky in the header. */
+  overflow-x: clip;
+}
+
+.page h1,
+.page h2,
+.page h3 {
+  font-family: var(--font-display), ui-sans-serif, -apple-system, sans-serif;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -.03em;
+  line-height: 1.06;
+  text-wrap: balance;
+}
+.page p { margin: 0; }
+.page a { color: inherit; }
+.page img { max-width: 100%; display: block; }
+.page :focus-visible { outline: 2.5px solid var(--aurora); outline-offset: 3px; border-radius: 8px; }
+
+.shell { max-width: 1240px; margin: 0 auto; padding: 0 28px; width: 100%; }
+.band { padding: clamp(62px, 7.5vw, 108px) 0; position: relative; }
+
+/*
+ * The alternating band.
+ *
+ * On cream this was a lighter panel with a hairline above and below. On night
+ * the same job is done by lifting the ground one step and letting the seam be a
+ * gradient rather than a line: a hard 1px rule between two near blacks reads as
+ * a rendering artefact on an OLED phone, where both sides are genuinely off.
+ */
+.bandSurface {
+  background:
+    linear-gradient(180deg, var(--void) 0%, var(--abyss) 14%, var(--abyss) 86%, var(--void) 100%);
+}
+
+.eyebrow {
+  font-family: var(--font-mono), ui-monospace, Menlo, monospace;
+  font-size: .68rem; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--aurora);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+/* A short rule after the label rather than a bullet before it. It points at the
+   heading, which is where the eye should go next. */
+.eyebrow::after {
+  content: ""; height: 1px; flex: 1; max-width: 72px;
+  background: linear-gradient(90deg, var(--aurora), transparent);
+}
+
+.head { max-width: 720px; margin-bottom: clamp(34px, 4vw, 54px); }
+.head h2 { font-size: clamp(30px, 4.2vw, 50px); margin-bottom: 16px; }
+.head p { color: var(--ink2); font-size: 1.06rem; max-width: 62ch; }
+
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+
+.nav {
+  position: sticky; top: 0; z-index: 60;
+  padding: 14px 0;
+  /* Transparent until scrolled, so the hero starts at the top of the window
+     rather than under a bar. */
+  background: transparent;
+  transition: background .3s ease, backdrop-filter .3s ease, border-color .3s ease;
+  border-bottom: 1px solid transparent;
+}
+.navStuck {
+  background: rgba(4, 6, 15, .78);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-bottom-color: var(--line);
+}
+.navInner { display: flex; align-items: center; gap: 22px; }
+.brandLink {
+  display: inline-flex; align-items: center; gap: 11px;
+  font-weight: 700; font-size: 1.2rem; letter-spacing: -.02em;
+  text-decoration: none; color: var(--ink);
+}
+/* The mark takes the coral so the wordmark stays ink. Two warm things beside
+   each other at the same weight and neither one leads. */
+.brandLink svg { color: var(--coral); fill: currentColor; flex: none; }
+.links { display: flex; gap: 26px; margin-left: auto; font-size: .93rem; color: var(--ink2); }
+.links a { text-decoration: none; padding: 6px 0; position: relative; }
+.links a::after {
+  content: ""; position: absolute; left: 0; right: 100%; bottom: 0; height: 1px;
+  background: var(--coral); transition: right .28s cubic-bezier(.22, 1, .36, 1);
+}
+.links a:hover { color: var(--ink); }
+.links a:hover::after { right: 0; }
+.login {
+  padding: 10px 18px; border-radius: 999px;
+  border: 1px solid var(--line2); color: var(--ink);
+  text-decoration: none; font-size: .9rem; font-weight: 600;
+  background: var(--glass);
+  transition: background .2s ease, border-color .2s ease;
+}
+.login:hover { background: var(--glass-hi); border-color: var(--coral); }
+
+
+/* ── Hero ────────────────────────────────────────────────────────────────── */
+
+.hero {
+  position: relative;
+  /* Pulled up under the transparent header. */
+  margin-top: -68px;
+  padding: clamp(132px, 15vw, 190px) 0 clamp(60px, 7vw, 96px);
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/*
+ * The light in the room.
+ *
+ * Three soft blobs at low opacity, painted as one element. This is what stops a
+ * near black page reading as an unstyled document: the ground is not one colour
+ * anywhere, so the eye reads depth before it reads anything else.
+ */
+.hero::before {
+  content: "";
+  position: absolute; inset: -20% -10% 0;
+  z-index: 0;
+  background:
+    radial-gradient(46% 40% at 78% 18%, rgba(255, 122, 61, .18), transparent 70%),
+    radial-gradient(40% 38% at 14% 30%, rgba(70, 241, 214, .10), transparent 70%),
+    radial-gradient(60% 44% at 50% 96%, rgba(45, 127, 232, .12), transparent 72%);
+  pointer-events: none;
+}
+
+.heroShell {
+  position: relative; z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, .82fr);
+  gap: clamp(28px, 4vw, 56px);
+  align-items: center;
+}
+
+.copy { max-width: 640px; }
+
+.copy h1 {
+  font-size: clamp(42px, 6.6vw, 82px);
+  letter-spacing: -.04em;
+  margin-bottom: 22px;
+}
+/* The second line takes the warm gradient. One line, not both: a headline
+   entirely in gradient is a hero from a template, and the contrast between an
+   ink line and a lit line is what makes the lit one mean something. */
+.line2 {
+  background: linear-gradient(96deg, var(--coral-soft), var(--mango) 55%, var(--coral));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* The clip leaves no colour for a system that ignores background-clip, so the
+     fallback is spelled out rather than left to chance. */
+  -webkit-text-fill-color: transparent;
+}
+
+.lede { color: var(--ink2); font-size: clamp(1.02rem, 1.6vw, 1.17rem); max-width: 52ch; margin-bottom: 30px; }
+
+.acts { display: flex; gap: 13px; flex-wrap: wrap; margin-bottom: 30px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 15px 26px; border-radius: 999px;
+  font-weight: 600; font-size: .97rem; text-decoration: none;
+  border: 1px solid transparent; cursor: pointer;
+  transition: transform .18s cubic-bezier(.22, 1, .36, 1), box-shadow .25s ease, background .2s ease;
+  white-space: nowrap;
+}
+.btnGo {
+  background: linear-gradient(96deg, var(--mango), var(--coral));
+  color: var(--on-warm);
+  box-shadow: 0 10px 30px rgba(255, 122, 61, .3);
+}
+.btnGo:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(255, 122, 61, .42); }
+.btnQuiet {
+  background: var(--glass); color: var(--ink);
+  border-color: var(--line2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.btnQuiet:hover { background: var(--glass-hi); border-color: var(--chrome); transform: translateY(-2px); }
+
+.pills { display: flex; gap: 10px; flex-wrap: wrap; }
+.pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 15px; border-radius: 999px;
+  background: var(--glass); border: 1px solid var(--line);
+  font-size: .82rem; color: var(--ink2); white-space: nowrap;
+}
+.pill i { display: inline-flex; color: var(--sky); font-style: normal; font-size: .74rem; font-weight: 700; letter-spacing: .06em; }
+.pillOk i { color: var(--aurora); }
+
+/* The price, stated plainly and taken from the catalogue. */
+.priceLine {
+  display: inline-flex; align-items: baseline; gap: 9px;
+  margin-bottom: 26px;
+  font-family: var(--font-mono), ui-monospace, Menlo, monospace;
+}
+.priceLine b {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(28px, 3.4vw, 38px); font-weight: 700;
+  letter-spacing: -.03em; color: var(--mango);
+}
+.priceLine span { font-size: .84rem; color: var(--ink3); letter-spacing: .04em; }
+
+
+/* ── The hero artwork ────────────────────────────────────────────────────── */
+
+/*
+ * Three boxes, each for a reason that cost something to learn.
+ *
+ * `.art` clips and fades and must not move. `.artInner` carries the scroll, so
+ * it is safely inside the clip. `.artIn` carries the entrance, separate because
+ * a fill-mode forwards animation keeps overriding the properties it animated
+ * forever, and on one shared element the entrance silently won and the scroll
+ * did nothing at all.
+ */
+.art { position: relative; z-index: 2; }
+.artInner { position: relative; }
+.artIn { position: relative; }
+
+.scene { width: 100%; height: auto; display: block; overflow: visible; }
+
+.ink { filter: drop-shadow(0 0 26px rgba(255, 122, 61, .45)); }
+
+.orbits { stroke: var(--sky); opacity: .3; stroke-width: 1.4; }
+.orbit { stroke: var(--sky); }
+.orbitB { stroke: var(--aurora); opacity: .8; }
+
+.planet { }
+.coast { fill: none; stroke: var(--aurora); stroke-width: 1.6; opacity: .28; stroke-linecap: round; }
+
+.waves { stroke: var(--aurora); stroke-width: 9; stroke-linecap: round; }
+.wave { opacity: 0; }
+
+.spark { filter: drop-shadow(0 0 12px rgba(255, 179, 71, .9)); }
+
+/* The star field canvas. Pinned, decorative, and clamped in script as well,
+   because a canvas whose intrinsic size is set from its layout size can feed
+   itself and grow without limit. It reached 23130 by 11556 CSS pixels once. */
+.motes {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  display: block;
+  pointer-events: none; z-index: 1;
+}
+
+
+/* ── How it works ────────────────────────────────────────────────────────── */
+
+.steps { display: grid; gap: 20px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.step {
+  position: relative;
+  padding: 30px 26px 28px;
+  border-radius: 22px;
+  background: linear-gradient(165deg, var(--glass-hi), transparent 55%), var(--deep);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.step h3 { font-size: 1.16rem; margin-bottom: 9px; }
+.step p { color: var(--ink2); font-size: .96rem; }
+.num {
+  font-family: var(--font-mono), monospace;
+  font-size: .78rem; font-weight: 600; letter-spacing: .1em;
+  width: 38px; height: 38px; border-radius: 12px;
+  display: grid; place-items: center;
+  background: rgba(255, 122, 61, .12);
+  border: 1px solid rgba(255, 122, 61, .3);
+  color: var(--mango);
+  margin-bottom: 18px;
+}
+
+
+/* ── Destinations ────────────────────────────────────────────────────────── */
+
+.dests { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(214px, 1fr)); }
+.dest {
+  padding: 22px 20px;
+  border-radius: 20px;
+  background: var(--deep);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  transition: transform .28s cubic-bezier(.22, 1, .36, 1), border-color .28s ease, box-shadow .28s ease;
+}
+.dest:hover { transform: translateY(-4px); border-color: rgba(255, 122, 61, .42); box-shadow: var(--lift); }
+.dest h3 { font-size: 1.06rem; margin-bottom: 4px; }
+.dest p { color: var(--ink3); font-size: .86rem; line-height: 1.5; }
+.swatch {
+  font-family: var(--font-mono), monospace;
+  font-size: .74rem; font-weight: 600; letter-spacing: .12em;
+  display: inline-block; padding: 5px 10px; border-radius: 8px;
+  background: var(--raised); color: var(--ink2);
+  border: 1px solid var(--line);
+  margin-bottom: 14px;
+}
+.destPrice {
+  display: block; margin-top: 14px;
+  font-family: var(--font-mono), monospace;
+  font-size: .88rem; color: var(--mango); font-weight: 600;
+}
+.destPrice small { color: var(--ink3); font-weight: 400; letter-spacing: .04em; }
+
+
+/* ── Reasons, promises, pricing ──────────────────────────────────────────── */
+
+.why { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(258px, 1fr)); }
+.wy {
+  padding: 26px 24px;
+  border-radius: 20px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.wy h3 { font-size: 1.06rem; margin-bottom: 8px; }
+.wy p { color: var(--ink2); font-size: .95rem; }
+.ic {
+  width: 42px; height: 42px; border-radius: 13px;
+  display: grid; place-items: center; margin-bottom: 16px;
+  background: rgba(70, 241, 214, .1);
+  border: 1px solid rgba(70, 241, 214, .26);
+  color: var(--aurora);
+}
+
+
+/* ── Field notes ─────────────────────────────────────────────────────────── */
+
+.board {
+  border-radius: 24px;
+  border: 1px dashed var(--chrome);
+  background: var(--glass);
+  padding: clamp(28px, 4vw, 46px);
+}
+.empty { max-width: 560px; }
+.empty h3 { font-size: 1.3rem; margin-bottom: 10px; }
+.empty p { color: var(--ink2); margin-bottom: 22px; }
+.noteGrid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(262px, 1fr)); }
+.fnote {
+  padding: 22px;
+  border-radius: 18px;
+  background: var(--deep);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.where {
+  display: flex; justify-content: space-between; gap: 12px;
+  font-family: var(--font-mono), monospace;
+  font-size: .74rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink3); margin-bottom: 12px;
+}
+.where span:first-child { color: var(--sky); }
+.tagex {
+  display: inline-block; margin-bottom: 12px;
+  font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px;
+  background: rgba(255, 179, 71, .12); color: var(--mango);
+  border: 1px solid rgba(255, 179, 71, .3);
+}
+.fnote p { color: var(--ink); font-size: .96rem; }
+.who { color: var(--ink3) !important; font-size: .84rem !important; margin-top: 12px !important; }
+
+
+/* ── Closing ─────────────────────────────────────────────────────────────── */
+
+.close {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 30px; flex-wrap: wrap;
+  padding: clamp(34px, 4.5vw, 56px);
+  border-radius: 28px;
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(80% 160% at 88% 12%, rgba(255, 122, 61, .2), transparent 62%),
+    radial-gradient(70% 140% at 6% 92%, rgba(70, 241, 214, .12), transparent 60%),
+    var(--deep);
+  border: 1px solid var(--line2);
+  box-shadow: var(--lift);
+}
+.close > div { flex: 1 1 420px; }
+.close h2 { font-size: clamp(26px, 3.4vw, 40px); margin-bottom: 12px; max-width: 26ch; }
+.close p { color: var(--ink2); max-width: 52ch; }
+
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+
+.foot {
+  border-top: 1px solid var(--line);
+  padding: clamp(42px, 5vw, 64px) 0 44px;
+  background: var(--abyss);
+}
+.footInner { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr); gap: 40px; }
+.about p { color: var(--ink3); font-size: .9rem; margin-top: 14px; max-width: 40ch; }
+.contact { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; }
+.contact a { color: var(--sky); text-decoration: none; }
+.contact a:hover { text-decoration: underline; }
+.contact span { color: var(--chrome); }
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; }
+.cols > div { display: flex; flex-direction: column; gap: 10px; font-size: .92rem; }
+.cols b {
+  font-family: var(--font-mono), monospace;
+  font-size: .68rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink3); font-weight: 600; margin-bottom: 4px;
+}
+.cols a { color: var(--ink2); text-decoration: none; }
+.cols a:hover { color: var(--coral); }
+
+
+/* ── Narrow ──────────────────────────────────────────────────────────────── */
+
+/*
+ * The phone layout, which is where this page is actually read.
+ *
+ * Everything here exists because of something that went wrong on a real handset
+ * and not because of a breakpoint convention: the artwork was absolutely
+ * positioned and collapsed to 350 by 0, the headline sat at a desktop size and
+ * pushed its own container sideways, and the two buttons were laid out as a row
+ * that could not fit, so one of them hung off the screen. On a narrow screen
+ * this page is one column, nothing is positioned out of flow, and every
+ * interactive target is at least the width of a thumb.
+ */
+@media (max-width: 980px) {
+  .heroShell { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  /* The picture goes under the words. Somebody on a phone gets the sentence
+     and the price without scrolling; the character is the reward for staying. */
+  .art { order: 2; margin-top: -18px; }
+  .copy { order: 1; max-width: none; }
+  .scene { max-width: 460px; margin: 0 auto; }
+  .hero { padding-top: clamp(104px, 22vw, 140px); }
+  .steps { grid-template-columns: minmax(0, 1fr); }
+  .footInner { grid-template-columns: minmax(0, 1fr); gap: 34px; }
+  .links { display: none; }
+  .navInner { gap: 14px; }
+  .login { margin-left: auto; }
+}
+
+@media (max-width: 560px) {
+  .page { font-size: 16px; }
+  .shell { padding: 0 18px; }
+  .copy h1 { font-size: clamp(34px, 10.5vw, 46px); letter-spacing: -.035em; }
+  .lede { font-size: 1rem; }
+  /* Stacked and full width. Two pill buttons side by side at this width leaves
+     each one too narrow to read its own label. */
+  .acts { flex-direction: column; align-items: stretch; gap: 11px; }
+  .btn { width: 100%; padding: 16px 22px; }
+  .close { flex-direction: column; align-items: flex-start; }
+  .close .btn { width: 100%; }
+  .cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dests { grid-template-columns: minmax(0, 1fr); }
+  .why { grid-template-columns: minmax(0, 1fr); }
+  .noteGrid { grid-template-columns: minmax(0, 1fr); }
+  /* The star canvas is atmosphere, and atmosphere is the first thing to cut on
+     a phone that is already deciding whether to keep loading this page. */
+  .motes { display: none; }
+}
+
+
+/*
+ * ────────────────────────────────────────────────────────────────────────────
+ * Motion is an enhancement, never the thing that makes content visible.
+ *
+ * Every entrance below used to hide its element in the base style and rely on
+ * an animation or an IntersectionObserver to bring it back. That is fine while
+ * the animation runs and catastrophic when it does not, because these run once
+ * and never again.
+ *
+ * They do not run in a background tab. Chrome does not start the document
+ * timeline until the tab has been visible, so a page opened with a middle
+ * click, restored with a session, or loaded behind whatever the person was
+ * already reading sits at the 0% keyframe indefinitely. Measured on production,
+ * in a tab that had never been foregrounded:
+ *
+ *   document.timeline.currentTime  0        performance.now()  131141
+ *   artIn   opacity 0   scale(1.06)   playState running   currentTime 0
+ *   rise2   opacity 0   translateY(20px)
+ *   line1   translateY(76px) inside a clipping mask
+ *
+ * The character, the lede and the headline: all present, all invisible, and
+ * they stay that way. This is what was showing up as "the character
+ * disappeared", and it was never a broken image.
+ *
+ * So the hiding is gated on [data-motion="on"], set by a small inline script
+ * only once the document is actually visible and reduced motion is off. No
+ * attribute means no hiding, which means the failure mode of every mechanism
+ * here, whether the script was blocked, hydration failed, the tab was never
+ * foregrounded or an observer never fired, is a page that is merely still
+ * rather than a page that is blank.
+ *
+ * The rule to keep: an element may animate FROM hidden only when something has
+ * confirmed the animation will actually run.
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+
+:global([data-motion="on"]) .artIn { animation: artIn 1.9s cubic-bezier(.16, .84, .24, 1) forwards; }
+@keyframes artIn {
+  from { opacity: 0; transform: scale(1.06); filter: blur(8px); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
+
+/*
+ * Headline lines rise from behind a mask rather than fading up.
+ *
+ * A fade says the text loaded. A masked rise says something moved it, which is
+ * the whole difference between animated and cinematic. The wrapper clips and
+ * the inner span translates; the padding and equal negative margin exist so
+ * descenders are not sliced off by the very clip that makes the effect work.
+ */
+.lineWrap { display: block; overflow: hidden; padding-bottom: .14em; margin-bottom: -.14em; }
+.line { display: block; }
+:global([data-motion="on"]) .line {
+  transform: translateY(112%);
+  animation: lineUp 1.05s cubic-bezier(.16, .84, .24, 1) forwards;
+}
+.line1 { animation-delay: .34s; }
+.line2 { animation-delay: .46s; }
+@keyframes lineUp { to { transform: none; } }
+
+/* Everything under the headline. Still a rise, because these are supporting
+   elements and giving them the headline's masked entrance would flatten the
+   hierarchy the sequence exists to build. */
+:global([data-motion="on"]) .rise { opacity: 0; transform: translateY(20px); animation: rise 1s cubic-bezier(.22, 1, .36, 1) forwards; }
+.rise2 { animation-delay: .74s; }
+.rise3 { animation-delay: .86s; }
+.rise4 { animation-delay: .98s; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+
+/*
+ * The signal leaving the antenna.
+ *
+ * Three copies of one arc on a staggered loop. Opacity and scale only, so it
+ * composites on the GPU and never touches layout, and it is the only thing on
+ * the page that repeats forever. That is a deliberate budget of one.
+ */
+.wave { animation: emit 3.4s ease-out infinite; }
+.wave:nth-child(2) { animation-delay: 1.13s; }
+.wave:nth-child(3) { animation-delay: 2.26s; }
+/*
+ * The scale origin is written into the transform chain rather than set with
+ * transform-origin, on purpose. These paths live inside a translated and scaled
+ * group, and `transform-box: view-box` would resolve the origin against the
+ * outer viewBox instead of the 512 grid the geometry is drawn on, which puts
+ * the emission point somewhere out in space. Naming the antenna coordinate
+ * twice is uglier and is correct in every browser.
+ */
+@keyframes emit {
+  0%   { opacity: 0; transform: translate(256px, 88px) scale(.42) translate(-256px, -88px); }
+  22%  { opacity: .8; }
+  100% { opacity: 0; transform: translate(256px, 88px) scale(1.25) translate(-256px, -88px); }
+}
+
+/* The circle is centred on the antenna already, so this one can use its own
+   fill box and stay readable. */
+.spark { animation: spark 3.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes spark {
+  0%, 100% { opacity: .78; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.12); }
+}
+
+/* The orbits turn, very slowly, which is what keeps the scene from reading as
+   a flat illustration without asking anyone to notice motion. */
+.orbits { animation: turn 60s linear infinite; transform-box: view-box; transform-origin: 320px 332px; }
+@keyframes turn { to { transform: rotate(360deg); } }
+
+/*
+ * The hero leaving.
+ *
+ * Parallax alone reads as a trick once you notice it. Combining the shift with
+ * a slow push in and a fade turns scrolling off the hero into a shot ending
+ * rather than a picture sliding away, and it hands the eye to the next band
+ * instead of competing with it. `--exit` runs 0 to 1 over the first 720px and
+ * is set from the same rAF as `--shift`, so there is one scroll listener on the
+ * page rather than two fighting for frames.
+ */
+.art { opacity: calc(1 - var(--exit, 0) * .45); }
+.artInner {
+  transform: translate3d(0, var(--shift, 0px), 0) scale(calc(1 + var(--exit, 0) * .07));
+  will-change: transform;
+}
+
+/*
+ * Cascading children inside a revealed group.
+ *
+ * The Reveal wrapper brings the whole block in as one object. For a grid that
+ * is wrong: twelve cards appearing simultaneously reads as a render, and the
+ * same twelve arriving 70ms apart reads as a camera finding them. Delays stop
+ * mattering past about ten, so the ladder flattens rather than growing forever.
+ */
+:global([data-motion="on"]) .cascade > * {
+  opacity: 0; transform: translateY(26px);
+  transition: opacity .8s ease, transform .8s cubic-bezier(.22, 1, .36, 1);
+}
+:global(.is-revealed) .cascade > * { opacity: 1; transform: none; }
+.cascade > *:nth-child(1)  { transition-delay: .00s; }
+.cascade > *:nth-child(2)  { transition-delay: .07s; }
+.cascade > *:nth-child(3)  { transition-delay: .14s; }
+.cascade > *:nth-child(4)  { transition-delay: .21s; }
+.cascade > *:nth-child(5)  { transition-delay: .28s; }
+.cascade > *:nth-child(6)  { transition-delay: .35s; }
+.cascade > *:nth-child(7)  { transition-delay: .42s; }
+.cascade > *:nth-child(8)  { transition-delay: .49s; }
+.cascade > *:nth-child(9)  { transition-delay: .56s; }
+.cascade > *:nth-child(n+10) { transition-delay: .63s; }
+
+/* Scroll reveals. Global class names because they are applied by a shared
+   component that has no access to this module's hashes. */
+:global([data-motion="on"]) :global(.is-hidden) {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity .85s ease, transform .85s cubic-bezier(.22, 1, .36, 1);
+}
+:global(.is-revealed) {
+  opacity: 1; transform: none;
+  transition: opacity .85s ease, transform .85s cubic-bezier(.22, 1, .36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise, .artIn, .artInner { opacity: 1; transform: none; animation: none; filter: none; }
+  .art { opacity: 1; transform: none; }
+  .line { transform: none; animation: none; }
+  .motes { display: none; }
+  /* The looping pieces stop and settle at something that reads as finished,
+     rather than at whatever frame nought happens to be. An arc at scale(.42)
+     and opacity 0 is invisible, so the resting state is stated explicitly. */
+  .wave { animation: none; opacity: .5; transform: none; }
+  .spark { animation: none; opacity: 1; transform: none; }
+  .orbits { animation: none; }
+  :global(.is-hidden) { opacity: 1; transform: none; }
+  .cascade > * { opacity: 1; transform: none; transition: none; }
+}

@@ -98,6 +98,42 @@ export async function middleware(req: NextRequest) {
     return NextResponse.rewrite(new URL("/home", req.url));
   }
 
+  /*
+   * A preview's root is the landing page too.
+   *
+   * Preview hostnames resolve to the product role, which is right for what a
+   * preview is technically and wrong for what a preview is for. Somebody opens
+   * a branch URL to look at the public site, and they were getting the product
+   * home: a destination picker that reads the database. Previews have no
+   * database, because every environment variable on this project is scoped to
+   * Production, so the first thing a reviewer saw was a page explaining that a
+   * database is missing.
+   *
+   * That page is correct and it is still there for anyone who asks for a
+   * product route. It is just the wrong thing to greet a reviewer with.
+   *
+   * Only the root moves. `/plans`, `/esims` and `/checkout` are untouched, so a
+   * preview that DOES have a database can still exercise the whole product.
+   */
+  if (!isRealHost(req.headers.get("host")) && pathname === "/") {
+    /*
+     * The rewrite carries a header saying which chrome to wear.
+     *
+     * The layout picks the header and footer from the hostname, and on a
+     * preview the hostname says product. Without this the landing page renders
+     * inside the shop's navigation, which is not what the page looks like
+     * anywhere a customer will meet it, so the preview would be showing
+     * something nobody is going to ship.
+     *
+     * A header rather than a path check, because a layout cannot see the
+     * pathname reliably and guessing from one is how this sort of thing starts
+     * disagreeing with itself.
+     */
+    const headers = new Headers(req.headers);
+    headers.set("x-bilby-surface", "marketing");
+    return NextResponse.rewrite(new URL("/home", req.url), { request: { headers } });
+  }
+
   // The landing page has one address. Reaching it directly, or on the product
   // host, sends you to the canonical one instead of serving a duplicate.
   if (role === "marketing" && PRODUCT.some((p) => pathname === p || pathname.startsWith(p + "/"))) {

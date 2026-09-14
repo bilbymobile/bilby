@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { currentUser, effectiveDestination } from "@/lib/session";
+import { databaseConfigured } from "@/lib/db";
+import { NoDatabase } from "./no-database";
 import { entitlementsFor } from "@/lib/platform";
 import { DESTINATIONS, destinationName } from "@/lib/destinations";
 import { brand } from "@/lib/brand";
@@ -20,6 +22,8 @@ export const dynamic = "force-dynamic";
  * loop existed for.
  */
 export default async function HomePage() {
+  // Ask before querying. See lib/db.ts databaseConfigured and no-database.tsx.
+  if (!databaseConfigured()) return <NoDatabase what="Your account" />;
   const user = await currentUser();
   const dest = effectiveDestination(user);
   const ents = await entitlementsFor(user.id);

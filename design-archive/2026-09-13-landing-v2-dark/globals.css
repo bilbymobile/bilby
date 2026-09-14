@@ -1,0 +1,250 @@
+/*
+ * One visual world, and only one.
+ *
+ * The shop, the legal pages and the console used to be three surfaces each
+ * redefining the palette, and a surface that redefines a palette is a surface
+ * that can forget. Two of them did forget: the legal pages once rendered near
+ * white text on a light ground, and a customer pressing "Open the app" crossed
+ * from a warm landing page to a near black one and thought they had left the
+ * company.
+ *
+ * So there is one palette, defined once, and the marketing and console blocks
+ * below carry only what actually differs between them: measure, density and
+ * radius. No block redefines a colour. A surface that forgets to label itself
+ * renders as Bilby rather than as the opposite of Bilby, because Bilby is now
+ * the default rather than the thing being undone.
+ *
+ * The values are the app's, literally. website, web app and Android read the
+ * same hex out of the same design system, so the three are the same colours
+ * rather than approximately the same colours.
+ *
+ * Every foreground and background pair in here is measured by
+ * scripts/contrast.test.ts against WCAG AA. Editing a colour either keeps that
+ * passing or fails it.
+ */
+:root {
+  /* Ground, card, raised chip. Three steps of depth, not three greys: each is
+     a real colour so a stack of them still reads as one night sky rather than
+     as a photocopy fading. */
+  --bg: #04060F;
+  --surface: #10142A;
+  --surface-2: #1E2447;
+  --border: #2A3162;
+  --text: #F4F6FF;
+  --muted: #B4BBD9;
+
+  /* On a dark ground the action colour is the brightest thing on the screen,
+     which is the exact inverse of the rule a light theme follows and the reason
+     a palette swap is where contrast quietly breaks. Mango carries the button
+     because it clears 11:1 against the ink drawn on it; coral is the brand's
+     warmer partner and lives in gradients and accents beside it. */
+  --accent: #FFB347;
+  --accent-dim: #FF7A3D;
+  /* Text drawn ON the accent. A variable rather than a literal, because a
+     hardcoded light ink is how you ship white text on a mango button. */
+  --accent-ink: #04060F;
+  --ok: #46F1D6;
+  /* Links get their own token so that "this is fine" and "press this" are not
+     forced to be the same colour. Aurora is the success state; sky is the link.
+     Measured: 10.77 on the page, 9.68 on a card, 8.00 on a raised chip. */
+  --link: #5EC8FF;
+  --warn: #FFB347;
+  --danger: #FF6B6B;
+
+  /* Note inks are tints of their own hue rather than the hue itself. The pure
+     colour on a ten percent wash of itself is legible, but it vibrates; a tint
+     sits still and still says which kind of note this is. */
+  --note-ink: #FFD9A3;
+  --note-ok-ink: #A9F7EA;
+  --note-bad-ink: #FFB8B8;
+  --note-ok-bg: rgba(70, 241, 214, .10);
+  --note-warn-bg: rgba(255, 179, 71, .10);
+  --note-bad-bg: rgba(255, 107, 107, .10);
+
+  --radius: 14px;
+  --max: 940px;
+
+  /* Native form controls, scrollbars and the flash of ground before paint all
+     follow this rather than guessing. Without it a date input renders as a
+     white slab in the middle of a dark card. */
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  /* The same faces as the app. The shop was the one surface in the brand still
+     set in the system font, which reads as a different site even before you
+     notice the colours. */
+  font-family: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Headings take the display face, as they do in the app. */
+h1, h2, h3 {
+  font-family: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  letter-spacing: -.02em;
+}
+
+a { color: var(--text); text-decoration: none; }
+a:hover { text-decoration: underline; }
+/* Body links inside a card take the sky blue and an underline. Scoped to .card
+   on purpose: a bare `a` rule here is 0,1,1 and ties with `nav.links a`, which
+   is how the navigation went blue the last time somebody tried this. */
+.card a:not(.btn) { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+
+.shell { max-width: var(--max); margin: 0 auto; padding: 0 20px 72px; }
+
+header.nav {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 20px 0 28px; flex-wrap: wrap;
+}
+.brand { display: flex; align-items: baseline; gap: 10px; font-weight: 700; font-size: 20px; letter-spacing: -0.02em; }
+.brand .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); display: inline-block; }
+.brand small { color: var(--muted); font-weight: 500; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+nav.links { display: flex; gap: 18px; font-size: 14px; }
+nav.links a { color: var(--muted); }
+nav.links a:hover { color: var(--text); text-decoration: none; }
+
+.hero h1 {
+  font-size: clamp(28px, 5vw, 44px);
+  line-height: 1.08; letter-spacing: -0.03em; margin: 0 0 14px;
+}
+.hero p { color: var(--muted); font-size: 17px; line-height: 1.55; margin: 0 0 24px; max-width: 62ch; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  /* On a dark ground a shadow does not separate a card from the page, because
+     a shadow is darkness and the page is already dark. What lifts a card here
+     is the one pixel of light along its top edge. The drop shadow stays only to
+     seat the card, at an alpha that reads on OLED. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 18px 40px rgba(0, 0, 0, .45);
+}
+.card + .card { margin-top: 16px; }
+.card h2 { margin: 0 0 6px; font-size: 17px; letter-spacing: -0.01em; }
+.card p.sub { margin: 0 0 18px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+.grid { display: grid; gap: 16px; }
+@media (min-width: 720px) { .grid.two { grid-template-columns: 1fr 1fr; } }
+
+.balance {
+  display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px;
+}
+.balance .n { font-size: 52px; font-weight: 700; letter-spacing: -0.04em; color: var(--accent); font-variant-numeric: tabular-nums; }
+.balance .u { font-size: 18px; color: var(--muted); font-weight: 600; }
+
+.meter { height: 7px; background: var(--surface-2); border-radius: 99px; overflow: hidden; margin: 14px 0 8px; }
+.meter > i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-dim), var(--accent)); border-radius: 99px; transition: width .35s ease; }
+
+button, .btn {
+  appearance: none; border: 0; cursor: pointer; font: inherit; font-weight: 600;
+  border-radius: 10px; padding: 13px 20px; background: var(--accent); color: var(--accent-ink);
+  transition: filter .15s ease, opacity .15s ease; display: inline-block; text-align: center;
+}
+button:hover:not(:disabled), .btn:hover { filter: brightness(1.08); text-decoration: none; }
+button:disabled { opacity: .4; cursor: not-allowed; }
+button.ghost, .btn.ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.stat-row { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 18px; }
+.stat { min-width: 96px; }
+.stat .k { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 5px; }
+.stat .v { font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.note {
+  border-left: 2px solid var(--warn); background: var(--note-warn-bg);
+  padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 14px;
+  color: var(--note-ink); line-height: 1.5; margin-top: 16px;
+}
+.note.ok { border-color: var(--ok); background: var(--note-ok-bg); color: var(--note-ok-ink); }
+.note.bad { border-color: var(--danger); background: var(--note-bad-bg); color: var(--note-bad-ink); }
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--border); }
+th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr:last-child td { border-bottom: 0; }
+
+code, pre { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; }
+pre {
+  background: var(--surface-2); border: 1px solid var(--border);
+  padding: 14px; border-radius: 10px; overflow-x: auto; line-height: 1.55;
+}
+code.inline { background: var(--surface-2); padding: 2px 6px; border-radius: 5px; }
+
+/* The one white rectangle in the product, and it has to be. A QR code is read
+   by a camera that expects dark modules on a light field, and inverting it
+   means a customer standing in an airport cannot install their eSIM. The pad
+   around it is part of the code, not decoration. */
+.qr { background: #fff; padding: 14px; border-radius: 12px; display: inline-block; line-height: 0; }
+.lpa { word-break: break-all; }
+
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .05em;
+  /* A badge is a label, not a paragraph. "Opening soon" was wrapping to two
+     lines inside a table cell and reading as a broken button. */
+  white-space: nowrap;
+  text-transform: uppercase; padding: 4px 9px; border-radius: 99px;
+  background: var(--surface-2); color: var(--muted); border: 1px solid var(--border);
+}
+.badge.free { background: var(--note-ok-bg); color: var(--ok); border-color: transparent; }
+
+footer.foot { margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * The marketing surface.
+ *
+ * /terms, /privacy and /refunds are written once and served on two hosts, and
+ * long form legal text is read rather than scanned, so it gets a measure and a
+ * scale instead of inheriting the dashboard's 14px.
+ *
+ * What it does not get is a palette. This block used to redefine every colour
+ * token, which is how a Play reviewer following the privacy link once landed on
+ * a page whose headings had no contrast at all. Density and measure differ
+ * between a legal page and a dashboard. Colour does not.
+ * ──────────────────────────────────────────────────────────────────────────── */
+[data-surface="marketing"] {
+  --radius: 20px;
+  --max: 1240px;
+
+  background: var(--bg);
+  color: var(--text);
+}
+
+[data-surface="marketing"] .prose { padding: clamp(40px, 6vw, 76px) 0 clamp(30px, 4vw, 50px); }
+[data-surface="marketing"] .prose .hero h1 {
+  font-size: clamp(32px, 4.4vw, 52px); font-weight: 600; letter-spacing: -.035em;
+  color: var(--text); margin-bottom: 14px;
+}
+[data-surface="marketing"] .prose .hero p { font-size: 1.06rem; color: var(--muted); }
+[data-surface="marketing"] .card { padding: clamp(24px, 3vw, 34px); }
+[data-surface="marketing"] .card + .card { margin-top: 20px; }
+[data-surface="marketing"] .card h2 {
+  font-size: 1.22rem; font-weight: 600; margin-bottom: 12px; letter-spacing: -.02em;
+}
+[data-surface="marketing"] .card p,
+[data-surface="marketing"] .card li { font-size: 1rem; line-height: 1.7; }
+[data-surface="marketing"] .card ul { padding-left: 22px; }
+[data-surface="marketing"] .card li { margin-bottom: 8px; }
+/* Scoped to prose deliberately. An unscoped `a` rule here is 0,1,1 and ties
+   with the shell's own link rules, so the nav and the wordmark were taking the
+   link colour. Body links inside a legal document are the only ones that want a
+   colour of their own. */
+[data-surface="marketing"] .prose a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+[data-surface="marketing"] .prose { max-width: 78ch; margin: 0 auto; padding-inline: 24px; }
+
+/* The staff console. Same colours, denser, and it never sees a customer. */
+[data-surface="console"] {
+  --radius: 14px;
+  --max: 1180px;
+  background: var(--bg);
+  color: var(--text);
+}
