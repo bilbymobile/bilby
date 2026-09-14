@@ -1228,7 +1228,7 @@
 .card:hover .plateImg { transform: scale(1.045); }
 .plateScrim {
   position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(4, 6, 15, .92) 4%, rgba(4, 6, 15, .34) 46%, rgba(4, 6, 15, .12) 100%);
+  background: linear-gradient(to top, rgba(4, 6, 15, .86) 3%, rgba(4, 6, 15, .22) 44%, rgba(4, 6, 15, .04) 100%);
 }
 .cut, .tagLive, .tagSoon {
   position: absolute; top: 12px;

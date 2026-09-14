@@ -9,8 +9,6 @@ export interface FeaturedCard {
   iso: string;
   /** The country, as the shop names it. */
   country: string;
-  /** The city the photograph is of. */
-  city: string;
   /** Badge in the corner of the plate. */
   cut: string;
   region: Region;
@@ -115,7 +113,7 @@ export function Destinations({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={c.photo}
-                    alt={`${c.city}, ${c.country}`}
+                    alt={`${c.country}, drawn`}
                     loading="lazy"
                     decoding="async"
                     className={styles.plateImg}
@@ -128,8 +126,8 @@ export function Destinations({
                   {c.price ? `From ${c.price}` : "Not on sale yet"}
                 </span>
                 <span className={styles.plateName}>
-                  <b>{c.city}</b>
-                  <i>{c.country}</i>
+                  <b>{c.country}</b>
+                  <i>{TABS.find((t) => t.key === c.region)?.label}</i>
                 </span>
               </div>
               {c.blurb ? <p className={styles.cardNote}>{c.blurb}</p> : null}

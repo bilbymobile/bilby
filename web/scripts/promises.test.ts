@@ -33,9 +33,11 @@
  * it is pinned here. There is no third category called "we will remember".
  */
 
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { coverage } from "../src/lib/coverage";
+import { FEATURED, coverageName } from "../src/lib/destination-art";
+import { DESTINATIONS } from "../src/lib/destinations";
 
 import { run } from "../src/lib/db";
 import { upsertItem, setPrice } from "../src/lib/platform";
@@ -397,6 +399,67 @@ async function main() {
     "and says plainly that reach is not the same as what is on sale",
     /not the same as what is on sale/i.test(home),
   );
+
+  /* ---- The artwork is ours, and it is here ------------------------------- */
+
+  /*
+   * The cards were briefly hotlinked from a stock photo host, which put a third
+   * party in front of every visitor and left the pictures at the mercy of a URL
+   * nobody here controls. They are drawn now and served from our own origin.
+   * Both halves of that are worth pinning: a missing file is six grey
+   * rectangles on the busiest scene of the page, and a reintroduced remote URL
+   * is the privacy hole reopening quietly.
+   */
+  {
+    const artDir = resolve(import.meta.dirname, "..", "public", "destinations");
+    const missing: string[] = [];
+    const heavy: string[] = [];
+    for (const iso of FEATURED) {
+      const file = resolve(artDir, `${iso.toLowerCase()}.webp`);
+      try {
+        const { size } = statSync(file);
+        if (size < 2048) missing.push(`${iso} (${size} bytes)`);
+        if (size > 60 * 1024) heavy.push(`${iso} (${Math.round(size / 1024)} KB)`);
+      } catch {
+        missing.push(iso);
+      }
+    }
+    check(
+      `every featured destination has a plate (${FEATURED.length} checked)`,
+      missing.length === 0,
+      missing.join(", "),
+    );
+    check(
+      "and no plate is heavier than a photograph would have been",
+      heavy.length === 0,
+      heavy.join(", "),
+    );
+  }
+
+  /*
+   * And every featured destination resolves to a row in the coverage list, so
+   * the region label under its name is the supplier's answer rather than a
+   * default. The fuzzy name match this replaced put the United Arab Emirates in
+   * Asia Pacific and said nothing about it.
+   */
+  {
+    const names = new Set(reach.list.map((c) => c.name));
+    const unresolved = FEATURED.filter((iso) => {
+      const d = DESTINATIONS.find((x) => x.iso.toUpperCase() === iso);
+      return !d || !names.has(coverageName(iso, d.name));
+    });
+    check(
+      "every featured destination resolves to a country in the coverage list",
+      unresolved.length === 0,
+      unresolved.join(", "),
+    );
+  }
+
+  for (const rel of ["src/lib/destination-art.ts", "src/app/home/destinations.tsx"]) {
+    const body = read(rel);
+    const remote = body.match(/https?:\/\/[^"'`\s]+\.(?:jpe?g|png|webp|avif|gif)/i);
+    check(`${rel} loads no image from another origin`, remote === null, remote?.[0]);
+  }
 
   /* ---- Promises that are real, and have to stay ------------------------- */
 

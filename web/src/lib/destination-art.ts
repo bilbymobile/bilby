@@ -1,110 +1,95 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-
 /**
- * Photography for the destination cards.
+ * Artwork for the destination cards.
  *
- * ## Where the pictures come from
+ * ## Drawn here, not photographed anywhere
  *
- * The same place the reference deployment takes them: Pexels, whose licence
- * allows commercial use and modification without attribution. The reference
- * hotlinks them. So does this, for now, and that is a compromise rather than a
- * decision, for a reason worth writing down.
+ * These used to be stock photographs hotlinked from an image host, which is
+ * what the reference deployment does. Two things were wrong with that. Every
+ * visitor's address reached a third party before they had agreed to anything,
+ * which is the exact hole the fonts were self hosted to close. And the pictures
+ * lived at URLs nobody here controls, so the cards were one dead link away from
+ * six grey rectangles.
  *
- * Every other asset on this page is self hosted, and the fonts were moved off
- * Google specifically so that a stranger reading the landing page does not have
- * their address handed to a third party before they have agreed to anything.
- * A hotlinked photograph reopens exactly that hole, one request at a time. The
- * only thing stopping the files being pulled into `public/` right now is that
- * this build environment cannot reach the image host.
+ * They are now generated from `scripts/art/scenes.mjs`: a landform, a plant and
+ * one or two built shapes per country, composed from a shared vocabulary of
+ * primitives and rendered to WebP. Thirteen plates come to 156 KB, which is
+ * about one photograph.
  *
- * So the lookup is written so that fixing it needs no code. Drop a file at
- * `public/destinations/<iso lowercase>.webp` and it wins. Until then the remote
- * URL is used, and if that fails to load the card falls back to a tinted plate
- * with the flag on it, which is a card rather than a hole.
+ * That also settles copyright completely. There is no source image, no
+ * photographer, no licence to honour and nothing to attribute, because every
+ * line comes out of a function in this repository. Each scene is abstracted to
+ * a type rather than a portrait: a cone with a crater is a volcano, not any
+ * particular volcano; a dome on a drum is half the skylines in Europe. That
+ * abstraction is a legal position as much as an aesthetic one, since an
+ * original stylisation of a building type carries none of the rights a
+ * photograph of a specific building can.
  *
- * ## Six, not one hundred and ninety nine
- *
- * The grid below the cards lists every country in the supply. The cards do not,
- * and should not: a photograph is an editorial choice and a hundred and ninety
- * nine of them is a stock library, not a page. Six is what the reference shows
- * and six is what a reader can actually look at.
+ * To change one, edit its scene and run `node scripts/build-destination-art.mjs`.
  */
 export interface DestinationArt {
-  /** The city the photograph is of, which is not always the country's capital. */
+  /** The place the plate is of, which is not always the country's capital. */
   city: string;
   /** Two or three words in the reference's own voice, printed as a badge. */
   cut: string;
-  /** Remote photograph, used when no local file is present. */
-  remote: string;
 }
 
 const ART: Record<string, DestinationArt> = {
-  JP: {
-    city: "Tokyo",
-    cut: "Neon cut",
-    remote:
-      "https://images.pexels.com/photos/29352449/pexels-photo-29352449.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-  },
-  ID: {
-    city: "Bali",
-    cut: "Surf cut",
-    remote:
-      "https://images.pexels.com/photos/36593818/pexels-photo-36593818.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-  },
-  SG: {
-    city: "Singapore",
-    cut: "Night market",
-    remote:
-      "https://images.pexels.com/photos/31048512/pexels-photo-31048512.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-  },
-  AE: {
-    city: "Dubai",
-    cut: "Dune and glass",
-    remote:
-      "https://images.pexels.com/photos/5577693/pexels-photo-5577693.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-  },
-  US: {
-    city: "New York",
-    cut: "Wide angle",
-    remote:
-      "https://images.pexels.com/photos/19146746/pexels-photo-19146746.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-  },
-  GB: {
-    city: "London",
-    cut: "Grey and gold",
-    remote:
-      "https://images.pexels.com/photos/13915404/pexels-photo-13915404.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
-  },
+  JP: { city: "Japan", cut: "Dawn cone" },
+  ID: { city: "Indonesia", cut: "Two volcanoes" },
+  SG: { city: "Singapore", cut: "Night crown" },
+  TH: { city: "Thailand", cut: "Temple light" },
+  VN: { city: "Vietnam", cut: "Still bay" },
+  CN: { city: "China", cut: "Long wall" },
+  AE: { city: "UAE", cut: "Dune and glass" },
+  PK: { city: "Pakistan", cut: "High passes" },
+  IT: { city: "Italy", cut: "Dome and cypress" },
+  GB: { city: "United Kingdom", cut: "Cold river" },
+  US: { city: "United States", cut: "Wide span" },
+  AU: { city: "Australia", cut: "Red centre" },
+  NZ: { city: "New Zealand", cut: "Fiord mirror" },
 };
 
-/** The order the cards appear in. Asia first: it is where our supply is deepest. */
-export const FEATURED = ["JP", "ID", "SG", "AE", "GB", "US"] as const;
+/**
+ * The order the cards appear in.
+ *
+ * Asia first, because that is where the supply is deepest and where an
+ * Australian outbound traveller goes most. The rest reads as a route rather
+ * than an alphabet.
+ */
+export const FEATURED = [
+  "JP", "ID", "SG", "TH", "VN", "CN", "AE", "PK", "IT", "GB", "US", "AU", "NZ",
+] as const;
+
+/**
+ * What the supplier calls each of these, where it differs from what we do.
+ *
+ * The grid used to find a destination's region by matching our name against the
+ * coverage list, which worked for twelve of the thirteen and put the United
+ * Arab Emirates in Asia Pacific, because we call it "UAE" and the supplier does
+ * not. A fuzzy match that is right most of the time is worse than no match at
+ * all: it fails silently, on one card, in a label nobody reads twice.
+ *
+ * `promises.test.ts` now fails the build if any featured destination cannot be
+ * resolved to a row in the coverage list.
+ */
+export const COVERAGE_NAME: Record<string, string> = {
+  AE: "United Arab Emirates",
+  CN: "China mainland",
+  GB: "United Kingdom",
+  US: "United States",
+};
+
+/** The supplier's name for a destination, which is usually just ours. */
+export function coverageName(iso: string, ours: string): string {
+  return COVERAGE_NAME[iso.toUpperCase()] ?? ours;
+}
 
 export function art(iso: string): DestinationArt | undefined {
   return ART[iso.toUpperCase()];
 }
 
-/**
- * The image URL for a destination, preferring a file we serve ourselves.
- *
- * Checked at module load rather than per request: `public/` does not change
- * between requests, and Next caches that directory at startup anyway, so a
- * file added while the server is running is invisible until it restarts.
- */
+/** Served from our own origin, always. There is no remote fallback any more. */
 export function photo(iso: string): string | null {
   const key = iso.toUpperCase();
-  const entry = ART[key];
-  if (!entry) return null;
-
-  const local = `/destinations/${key.toLowerCase()}.webp`;
-  for (const base of [join(process.cwd(), "public"), join(process.cwd(), "web", "public")]) {
-    if (existsSync(join(base, local))) return local;
-  }
-  return entry.remote;
-}
-
-/** True when every card is served from our own origin. Printed under the grid. */
-export function allSelfHosted(): boolean {
-  return FEATURED.every((iso) => photo(iso)?.startsWith("/") === true);
+  return ART[key] ? `/destinations/${key.toLowerCase()}.webp` : null;
 }

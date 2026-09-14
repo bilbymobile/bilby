@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { liveDestinations, liveShopfront, heroClaim, money } from "@/lib/live-destinations";
 import { coverage } from "@/lib/coverage";
-import { FEATURED, art, photo } from "@/lib/destination-art";
+import { FEATURED, art, coverageName, photo } from "@/lib/destination-art";
 import { DESTINATIONS } from "@/lib/destinations";
 import { url } from "@/lib/hosts";
 import styles from "./home.module.css";
@@ -183,15 +183,12 @@ export default async function HomePage() {
     const d = DESTINATIONS.find((x) => x.iso.toUpperCase() === iso);
     const a = art(iso);
     if (!d || !a) return [];
-    const row = reach.list.find(
-      (c) => c.name === d.name || c.name.startsWith(d.name),
-    );
+    const row = reach.list.find((c) => c.name === coverageName(iso, d.name));
     const amount = priced.get(iso);
     return [
       {
         iso,
         country: d.name,
-        city: a.city,
         cut: a.cut,
         region: row?.region ?? ("apac" as const),
         photo: photo(iso),
@@ -319,9 +316,10 @@ export default async function HomePage() {
             accent="next hop."
             hue="amber"
           >
-            Six places to start, and under them the whole list our supply reaches. A card
-            carries a price only when that plan is genuinely on sale, and the price is the one
-            the shop charges, read from the same catalogue at the same moment.
+            The places we can provision, each one drawn rather than photographed, and under
+            them the whole list our supply reaches. A card carries a price only when that plan
+            is genuinely on sale, and the price is the one the shop charges, read from the same
+            catalogue at the same moment.
           </SectionHead></Reveal>
           {/* Material, and a customer should meet it here rather than at the
               payment step. It is derived, so it disappears by itself the day a
