@@ -60,22 +60,22 @@ async function main() {
   const none = heroClaim([]);
   check(
     "nothing on sale makes no claim about how many",
-    !/\d/.test(none.line1 + none.line2) && none.pill === null,
+    none.pill === null,
     `${none.line1} ${none.line2}`,
   );
 
   const broken = heroClaim(null);
   check(
     "an unreadable catalogue makes no claim either, rather than claiming zero",
-    !/\d/.test(broken.line1 + broken.line2) && broken.pill === null,
+    broken.pill === null,
     `${broken.line1} ${broken.line2}`,
   );
 
   const one = heroClaim([jp]);
   check(
-    'one destination is named, not counted',
-    one.line2 === "Japan." && one.pill === "Japan",
-    `${one.line1} ${one.line2}`,
+    "one destination is named in the pill, not counted",
+    one.pill === "Japan",
+    String(one.pill),
   );
   check(
     'and never reads "1 destinations"',
@@ -84,9 +84,25 @@ async function main() {
 
   const two = heroClaim([jp, th]);
   check(
-    "two or more are counted",
-    two.line2 === "2 destinations." && two.pill === "2 destinations",
-    `${two.line1} ${two.line2}`,
+    "two or more are counted in the pill",
+    two.pill === "2 destinations",
+    String(two.pill),
+  );
+
+  /*
+   * And the headline itself is the same sentence in all four states.
+   *
+   * This is the check that stops the inventory creeping back into the one line
+   * a stranger repeats. It reads as trivial. It is the reason the headline
+   * cannot quietly become "Land connected in 2 destinations." again the next
+   * time somebody makes the page feel more alive.
+   */
+  const shapes = [heroClaim(null), heroClaim([]), one, two];
+  check(
+    "the headline is fixed, and carries no number in any state",
+    shapes.every((s) => s.line1 === shapes[0].line1 && s.line2 === shapes[0].line2) &&
+      !/\d/.test(shapes[0].line1 + shapes[0].line2),
+    shapes.map((s) => `${s.line1} ${s.line2}`).join(" | "),
   );
 
   /* ---- The half that talks to the database ----------------------------- */
@@ -120,7 +136,7 @@ async function main() {
   check("activating one SKU adds exactly its country", oneLive?.length === 1 && oneLive[0].iso === "JP");
   check(
     "and the headline follows without anybody editing the page",
-    heroClaim(oneLive).line2 === "Japan.",
+    heroClaim(oneLive).pill === "Japan",
   );
 
   // Two SKUs, same country. A destination is a place, not a product line.

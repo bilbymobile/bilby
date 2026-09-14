@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { liveDestinations, liveShopfront, heroClaim, money } from "@/lib/live-destinations";
+import { coverage } from "@/lib/coverage";
 import { url } from "@/lib/hosts";
 import styles from "./home.module.css";
 import { FieldNotes } from "./notes";
 import { Hero } from "./hero";
+import { Counters } from "./counters";
 import { Ticker } from "./ticker";
 import { SectionHead } from "./section-head";
 import { HeroParallax, Reveal } from "./motion";
@@ -161,6 +163,38 @@ export default async function HomePage() {
   const shop = await liveShopfront();
   const dests = shop?.destinations ?? [];
   const from = shop?.fromAmount ?? null;
+  const reach = coverage();
+
+  const counters = [
+    ...(reach.countries > 0
+      ? [
+          {
+            value: reach.countries,
+            label: "Countries and territories",
+            note: `Coverage available to us, read ${reach.readOn}. Not the same as what is on sale.`,
+          },
+        ]
+      : []),
+    {
+      value: dests.length,
+      label: dests.length === 1 ? "Destination on sale" : "Destinations on sale",
+      note: "Live in the shop right now. This number moves the day a plan is activated.",
+    },
+    {
+      value: shop?.planCount ?? 0,
+      label: shop?.planCount === 1 ? "Plan to choose from" : "Plans to choose from",
+      note: "Sizes and validity periods across those destinations.",
+    },
+    ...(reach.groups > 0
+      ? [
+          {
+            value: reach.groups,
+            label: "Regional and global passes",
+            note: "Multi country bundles in the same supply, none of them on sale yet.",
+          },
+        ]
+      : []),
+  ];
 
   /*
    * What the ticker says.
@@ -201,6 +235,20 @@ export default async function HomePage() {
       </HeroParallax>
 
       <Ticker items={tickerItems} />
+
+      {/*
+        The numbers strip, in the reference's position and with the reference's
+        purpose, which is to put four measured figures between the film and the
+        sales pitch.
+
+        What it does not do is measure the same thing twice. Reach and stock are
+        different facts and this is the strip where conflating them would be
+        easiest and most rewarding: "199 destinations" instead of "199 countries
+        we can reach, 1 on sale". The wording keeps them apart on purpose, and
+        the cells sit in that order so a reader meets the ceiling and the shelf
+        in the same glance rather than one without the other.
+      */}
+      <Counters items={counters} />
 
       <section className={`${styles.band} ${styles.bandSurface} ${styles.cyan}`} id="how">
         <div className={styles.shell}>

@@ -207,7 +207,23 @@ h1 { font-size: clamp(38px, 5.6vw, 56px); }
 h2 { font-size: clamp(26px, 3vw, 34px); }
 
 a { color: var(--text); text-decoration: none; }
-a:hover { text-decoration: underline; }
+/*
+ * No blanket underline on hover.
+ *
+ * The landing page draws its own hover rule: a one pixel coral line that sweeps
+ * in from the left under a navigation item. A global `a:hover { underline }`
+ * drew the browser's own line underneath that one, in the text colour, so every
+ * link in the header and the footer grew two underlines of different colours at
+ * the same moment. Nothing in the stylesheet said "draw two". One rule simply
+ * did not know the other existed.
+ *
+ * Links that need to be distinguishable inside running text still carry a
+ * permanent underline, which is stated where those links are styled. That is
+ * not decoration: inside a paragraph, colour alone is not enough to mark a link
+ * for a reader who cannot separate the two hues, and WCAG 1.4.1 says so. In
+ * navigation, a button row or a footer column, position already marks the link
+ * and the underline is free to go.
+ */
 /* Body links inside a card take the sky blue and an underline. Scoped to .card
    on purpose: a bare `a` rule here is 0,1,1 and ties with `nav.links a`, which
    is how the navigation went blue the last time somebody tried this. */

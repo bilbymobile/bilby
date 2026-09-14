@@ -35,6 +35,7 @@
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { coverage } from "../src/lib/coverage";
 
 import { run } from "../src/lib/db";
 import { upsertItem, setPrice } from "../src/lib/platform";
@@ -297,6 +298,73 @@ async function main() {
     const hit = OVERCLAIM.find((re) => re.test(body));
     check(`${name} claims no reach it cannot support`, hit === undefined, hit && body.match(hit)?.[0]);
   }
+
+  /* ---- Reach, when we are allowed to state it ---------------------------- */
+
+  /*
+   * The ban above is on a reach number nobody can source. It is not a ban on
+   * ever saying how far the supply goes, and the distinction matters now that
+   * the landing page carries a counter that does.
+   *
+   * The rule is provenance. A figure on the page has to come from the dated
+   * coverage file in `suppliers/`, captured from the partner console on a
+   * stated day, and the page has to read it rather than repeat it. That is why
+   * the regex above still fails on a literal "190+ countries" while the strip
+   * showing 199 passes: one of them can be checked and the other cannot.
+   *
+   * Three things are worth failing a build over.
+   */
+  const reach = coverage();
+
+  check(
+    `the coverage file loaded and names countries (${reach.countries})`,
+    reach.countries > 0 && reach.names.length === reach.countries,
+    `${reach.countries} counted, ${reach.names.length} named`,
+  );
+
+  /*
+   * A truncated export is the realistic failure here, and it fails quietly: the
+   * file still parses, the page still renders, the number is simply too small
+   * and nobody notices because nobody knows what it should be. The rate card
+   * already in the repository was truncated exactly this way and says so in its
+   * own header. So: the list has to be alphabetical and unbroken from A to Z,
+   * which a truncated capture will not be.
+   */
+  const sorted = [...reach.names].sort((a, b) => a.localeCompare(b, "en"));
+  check(
+    "the coverage list is complete rather than a truncated page of an export",
+    reach.names.join("|") === sorted.join("|") &&
+      /^A/i.test(reach.names[0] ?? "") &&
+      /^[W-Z]/i.test(reach.names.at(-1) ?? ""),
+    `${reach.names[0]} ... ${reach.names.at(-1)}`,
+  );
+
+  check(
+    "the coverage figure was read on a day that has already happened",
+    new Date(`${reach.readOn} UTC`).getTime() <= Date.now(),
+    reach.readOn,
+  );
+
+  /*
+   * And the page takes the number from that file rather than keeping its own
+   * copy. A page that hardcodes 199 is correct today and wrong on the day the
+   * supplier adds a country, with nothing to catch it.
+   */
+  check(
+    "the landing page reads the coverage figure rather than restating it",
+    /from "@\/lib\/coverage"/.test(read("src/app/home/page.tsx")),
+  );
+
+  /*
+   * Reach and stock are different facts, and the counter strip is where
+   * conflating them would be easiest. Whatever the wording becomes, the cell
+   * carrying the reach figure has to say somewhere that it is not the same as
+   * what is on sale.
+   */
+  check(
+    "and says plainly that reach is not the same as what is on sale",
+    /not the same as what is on sale/i.test(home),
+  );
 
   /* ---- Promises that are real, and have to stay ------------------------- */
 

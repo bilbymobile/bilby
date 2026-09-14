@@ -876,8 +876,8 @@
 .footInner { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr); gap: 40px; }
 .about p { color: var(--ink3); font-size: .9rem; margin-top: 14px; max-width: 40ch; }
 .contact { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; }
-.contact a { color: var(--sky); text-decoration: none; }
-.contact a:hover { text-decoration: underline; }
+.contact a { color: var(--sky); text-decoration: none; transition: color .2s ease; }
+.contact a:hover { color: var(--hue-amber); }
 .contact span { color: var(--chrome); }
 .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; }
 .cols > div { display: flex; flex-direction: column; gap: 10px; font-size: .92rem; }
@@ -1164,6 +1164,64 @@
 }
 .tickerItem b { color: var(--mango); font-weight: 500; }
 .tickerSep { color: var(--chrome); }
+
+
+/* ── The numbers strip ───────────────────────────────────────────────────────
+ *
+ * Four measured figures, directly under the ticker, in the reference's own
+ * position. It is a rule of four cells rather than a row of cards: cards would
+ * make each number an object, and what this strip wants to read as is an
+ * instrument panel where the four are one reading.
+ *
+ * The dividers are drawn with a border on the cell rather than a separate
+ * element, so the row can wrap to two by two on a phone and the borders wrap
+ * with it instead of hanging in space.
+ * ─────────────────────────────────────────────────────────────────────────── */
+.counters {
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(120% 140% at 50% 0%, rgba(255, 180, 58, .05), transparent 62%),
+    rgba(255, 255, 255, .015);
+}
+.countersInner {
+  max-width: 1240px; margin: 0 auto; padding: 0 28px; width: 100%;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.count {
+  padding: clamp(26px, 3vw, 40px) clamp(14px, 2vw, 28px);
+  display: flex; flex-direction: column; gap: 7px;
+  border-left: 1px solid var(--line);
+}
+.count:first-child { border-left: 0; }
+.countN {
+  font-family: var(--font-display), "Space Grotesk", ui-sans-serif, sans-serif;
+  font-size: clamp(40px, 5vw, 66px);
+  line-height: .9;
+  letter-spacing: .01em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  /* Without this the row twitches sideways on every frame of the count up, as
+     the digits change width. Tabular numerals fix the glyph width; this fixes
+     the number of glyphs, by holding the cell at the width of its widest state. */
+  min-height: 1em;
+}
+.countK {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--hue-amber);
+}
+.countNote { font-size: .84rem; line-height: 1.5; color: var(--ink3); max-width: 30ch; }
+
+@media (max-width: 860px) {
+  .countersInner { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .count:nth-child(odd) { border-left: 0; }
+  .count:nth-child(n + 3) { border-top: 1px solid var(--line); }
+}
+@media (max-width: 430px) {
+  .countersInner { grid-template-columns: 1fr; }
+  .count { border-left: 0; }
+  .count + .count { border-top: 1px solid var(--line); }
+}
 
 /*
  * The signal leaving the antenna.

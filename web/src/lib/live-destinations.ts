@@ -55,15 +55,31 @@ export async function liveDestinations(): Promise<Destination[] | null> {
 }
 
 /**
- * How the hero sentence ends.
+ * The headline, and the one pill under it that carries a number.
+ *
+ * ## The headline stopped naming the stock
+ *
+ * It used to end in the catalogue: "Land connected in Japan." with one
+ * destination, "Land connected in 8 destinations." with eight. That was honest
+ * and it was the wrong sentence, for a reason that only shows up later. A
+ * headline is the one line a stranger repeats to somebody else, and a headline
+ * built out of inventory rewrites itself every time a SKU is activated. At two
+ * destinations it reads as a shop that has barely opened. At a hundred and
+ * ninety it reads as a list. Neither is a brand.
+ *
+ * So the headline is fixed and says what the product is for, and the numbers
+ * move underneath it, in the pill and in the counters, where a number changing
+ * is information rather than an identity crisis.
+ *
+ * ## The pill still tells the truth about stock
  *
  * Three shapes, because "1 destinations" is wrong and "0 destinations" is worse
  * than saying nothing:
  *
- *   null  ->  "Land connected, not hunting for wifi."
- *   []    ->  "Land connected, not hunting for wifi."
- *   [JP]  ->  "Land connected in Japan."
- *   many  ->  "Land connected in 8 destinations."
+ *   null  ->  no pill
+ *   []    ->  no pill
+ *   [JP]  ->  "Japan"
+ *   many  ->  "8 destinations"
  *
  * Naming the single destination is not a workaround for bad grammar, it is
  * better copy. "1 destination" reads as a shop that has not opened; "Japan"
@@ -76,21 +92,12 @@ export function heroClaim(live: Destination[] | null): {
   /** Short label for the pill, or null when there is nothing honest to put there. */
   pill: string | null;
 } {
-  if (!live || live.length === 0) {
-    // Deliberately not "before you fly": the lede two lines below already says
-    // that, and a headline that echoes the sentence under it reads like a
-    // placeholder. This state is rare but it is reachable on a live site when
-    // the catalogue cannot be read, so it has to stand on its own.
-    return { line1: "Land connected,", line2: "not hunting for wifi.", pill: null };
-  }
-  if (live.length === 1) {
-    return { line1: "Land connected in", line2: `${live[0].name}.`, pill: live[0].name };
-  }
-  return {
-    line1: "Land connected in",
-    line2: `${live.length} destinations.`,
-    pill: `${live.length} destinations`,
-  };
+  const line1 = "Hop the";
+  const line2 = "planet.";
+
+  if (!live || live.length === 0) return { line1, line2, pill: null };
+  if (live.length === 1) return { line1, line2, pill: live[0].name };
+  return { line1, line2, pill: `${live.length} destinations` };
 }
 
 /**
