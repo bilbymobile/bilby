@@ -25,6 +25,26 @@ export function Nav() {
 
   return (
     <header className={`${styles.nav} ${stuck ? styles.navStuck : ""}`}>
+      {/*
+        The top letterbox bar lives here rather than inside the hero.
+        
+        It belongs to the hero visually, but the shell renders this header
+        before its children, so a bar inside the hero can only sit above the
+        navigation by pulling the hero up with a negative margin equal to the
+        header's height. That height is not one number: the header is shorter on
+        a phone, so the same margin that lined up on a desktop pulled the hero
+        off the top of a phone screen and put the pills behind the wordmark.
+        Rendering it here makes the arithmetic unnecessary.
+      */}
+      <div className={styles.letterboxTop}>
+        <div className={styles.letterboxInner}>
+          <span>Bilby · travel eSIM for Australians</span>
+          <span className={styles.lbMid}>Install before you fly</span>
+          <span className={styles.rec}>
+            <i className={styles.recDot} aria-hidden="true" /> Rec
+          </span>
+        </div>
+      </div>
       <div className={`${styles.shell} ${styles.navInner}`}>
         <Link className={styles.brandLink} href="/">
           <Mark size={34} fill="var(--coral)" eye="var(--aurora)" />

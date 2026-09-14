@@ -5,8 +5,10 @@ import { liveDestinations, liveShopfront, heroClaim, money } from "@/lib/live-de
 import { url } from "@/lib/hosts";
 import styles from "./home.module.css";
 import { FieldNotes } from "./notes";
-import { HeroArt } from "./hero-art";
-import { HeroParallax, Motes, Reveal } from "./motion";
+import { Hero } from "./hero";
+import { Ticker } from "./ticker";
+import { SectionHead } from "./section-head";
+import { HeroParallax, Reveal } from "./motion";
 
 /**
  * The marketing landing page, served on the apex.
@@ -160,107 +162,58 @@ export default async function HomePage() {
   const dests = shop?.destinations ?? [];
   const from = shop?.fromAmount ?? null;
 
+  /*
+   * What the ticker says.
+   *
+   * Assembled from the catalogue, in order of how much a stranger cares: where
+   * we go, what it costs, and then the three things that differentiate us and
+   * are true regardless of stock. Destinations are capped at eight so the strip
+   * stays a readout rather than becoming the page's longest list, and the count
+   * takes over once there are more than that.
+   */
+  const tickerItems: string[] = [
+    ...(dests.length > 8
+      ? [`${dests.length} destinations on sale`]
+      : dests.map((d) => d.name)),
+    ...(from !== null ? [`from ${money(from, shop?.currency)}`] : []),
+    "install before you fly",
+    "australian support",
+    "no subscription",
+  ];
+
   return (
     <>
-      <section className={styles.hero} id="top">
-        <div className={`${styles.shell} ${styles.heroShell}`}>
-          <div className={styles.copy}>
-            {/*
-              Split into two lines by hand rather than left to wrap, because
-              each line is clipped and rises from behind its own edge. A browser
-              chosen break would put the mask in a different place at every
-              viewport width, and half the effect is that the breaks are
-              composed.
-            */}
-            <h1>
-              <span className={styles.lineWrap}>
-                <span className={`${styles.line} ${styles.line1}`}>{claim.line1}</span>
-              </span>
-              <span className={styles.lineWrap}>
-                <span className={`${styles.line} ${styles.line2}`}>{claim.line2}</span>
-              </span>
-            </h1>
-            <p className={`${styles.lede} ${styles.rise} ${styles.rise2}`}>
-              Set it up on the couch before you fly. Simple. Calm. Australian.
-            </p>
+      {/* The film frame. HeroParallax supplies --shift and --exit from one
+          rAF; hero.tsx owns everything inside. */}
+      <HeroParallax>
+        <Hero
+          line1={claim.line1}
+          line2={claim.line2}
+          pill={claim.pill}
+          price={from !== null ? money(from, shop?.currency) : null}
+          stats={[
+            claim.pill ?? "Destinations coming",
+            from !== null ? `From ${money(from, shop?.currency)}` : "Prices on the plans page",
+            "No subscription",
+            "Australian support",
+          ]}
+        />
+      </HeroParallax>
 
-            {/* Only rendered when the catalogue actually answered. A price is
-                the one thing on this page nobody should ever see a placeholder
-                for. */}
-            {from !== null ? (
-              <p className={`${styles.priceLine} ${styles.rise} ${styles.rise2}`}>
-                <b>{money(from, shop?.currency)}</b>
-                <span>the cheapest plan on sale today</span>
-              </p>
-            ) : null}
+      <Ticker items={tickerItems} />
 
-            <div className={`${styles.acts} ${styles.rise} ${styles.rise3}`}>
-              <a className={`${styles.btn} ${styles.btnGo}`} href="#dests">
-                See where we go
-              </a>
-              <a className={`${styles.btn} ${styles.btnQuiet}`} href="#how">
-                How it works
-              </a>
-            </div>
-
-            <div className={`${styles.pills} ${styles.rise} ${styles.rise4}`}>
-              {/* Dropped entirely when there is nothing true to put in it. An
-                  empty pill is better than a pill reading "0 destinations". */}
-              {claim.pill ? (
-                <span className={styles.pill}>
-                  <i>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="9" />
-                      <path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18" />
-                    </svg>
-                  </i>
-                  {claim.pill}
-                </span>
-              ) : null}
-              <span className={styles.pill}>
-                <i>eSIM</i> Install before you fly
-              </span>
-              <span className={`${styles.pill} ${styles.pillOk}`}>
-                <i>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
-                </i>
-                Australian support
-              </span>
-            </div>
-          </div>
-
-          {/*
-            Decorative, and every word above it is in the DOM beside it rather
-            than inside it. The three nested boxes are not decoration: `.art`
-            clips and fades, `.artInner` carries the scroll, `.artIn` carries
-            the entrance, and putting the scroll and the entrance on one element
-            meant the entrance's fill mode silently won forever.
-          */}
-          <HeroParallax>
-            <div className={styles.art}>
-              <div className={styles.artInner}>
-                <div className={styles.artIn}>
-                  <Motes className={styles.motes} />
-                  <HeroArt />
-                </div>
-              </div>
-            </div>
-          </HeroParallax>
-        </div>
-      </section>
-
-      <section className={`${styles.band} ${styles.bandSurface}`} id="how">
+      <section className={`${styles.band} ${styles.bandSurface} ${styles.cyan}`} id="how">
         <div className={styles.shell}>
-          <Reveal><div className={styles.head}>
-            <p className={styles.eyebrow}>How it works</p>
-            <h2>Three steps, and none of them happen at the airport.</h2>
-            <p>
-              The thing that goes wrong in this category is a traveller standing at arrivals at
-              eleven at night trying to install something. So Bilby moves all of it earlier.
-            </p>
-          </div></Reveal>
+          <Reveal><SectionHead
+            scene="Scene 01"
+            label="How it works"
+            caps="Three steps."
+            accent="none at the airport."
+            hue="cyan"
+          >
+            The thing that goes wrong in this category is a traveller standing at arrivals at
+            eleven at night trying to install something. So Bilby moves all of it earlier.
+          </SectionHead></Reveal>
           <Reveal delay={80}><div className={`${styles.steps} ${styles.cascade}`}>
             {STEPS.map((s) => (
               <div className={styles.step} key={s.n}>
@@ -273,30 +226,37 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className={styles.band} id="dests">
+      <section className={`${styles.band} ${styles.amber}`} id="dests">
         <div className={styles.shell}>
-          <Reveal><div className={styles.head}>
-            <p className={styles.eyebrow}>Destinations</p>
-            <h2>The places Australians actually fly to.</h2>
-            <p>
-              A short list on purpose. Every destination here is on sale right now, not a
-              country we hope to cover, and every price is the one the shop charges, read from
-              the same catalogue at the same moment.
-            </p>
-            {/* Material, and a customer should meet it here rather than at the
-                payment step. It is derived, so it disappears by itself the day
-                a locally routed plan goes on sale. */}
-            {shop?.anyRoutedOverseas ? (
-              <p style={{ marginTop: 14 }}>
-                One thing to know before you get to the price. These plans reach the internet
-                through an exit point outside the country you are visiting. Almost everything
-                works normally, but some banking apps and some streaming services check where
-                your connection appears to come from and may refuse. Every plan says so on its
-                own card, and if your bank has to work while you are away, wait for the local
-                plans rather than buying one of these.
+          <Reveal><SectionHead
+            scene="Scene 02"
+            label="Destinations"
+            caps="Pick your"
+            accent="next hop."
+            hue="amber"
+          >
+            A short list on purpose. Every destination here is on sale right now, not a
+            country we hope to cover, and every price is the one the shop charges, read from
+            the same catalogue at the same moment.
+          </SectionHead></Reveal>
+          {/* Material, and a customer should meet it here rather than at the
+              payment step. It is derived, so it disappears by itself the day a
+              locally routed plan goes on sale. Given its own panel rather than
+              left as a paragraph, because a caveat buried in a lead reads as
+              something we hoped you would skim. */}
+          {shop?.anyRoutedOverseas ? (
+            <Reveal><div className={styles.notice}>
+              <span className={styles.noticeTag}>Read this first</span>
+              <p>
+                These plans reach the internet through an exit point outside the country you are
+                visiting. Almost everything works normally, but some banking apps and some
+                streaming services check where your connection appears to come from and may
+                refuse. Every plan says so on its own card. If your bank has to work while you are
+                away, wait for the local plans rather than buying one of these.
               </p>
-            ) : null}
-          </div></Reveal>
+            </div></Reveal>
+          ) : null}
+
           {/*
             Only what is actually on sale. Listing a destination here that the
             shop cannot fill sends somebody to an empty shelf, which reads as
@@ -329,20 +289,18 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className={`${styles.band} ${styles.bandSurface}`} id="pricing">
+      <section className={`${styles.band} ${styles.bandSurface} ${styles.lime}`} id="pricing">
         <div className={styles.shell}>
-          <Reveal><div className={styles.head}>
-            <p className={styles.eyebrow}>Pricing</p>
-            <h2>
-              {from !== null
-                ? `One price, paid once, starting at ${money(from, shop?.currency)}.`
-                : "One price, paid once, and no surprises at the last screen."}
-            </h2>
-            <p>
-              Every plan is a single charge in Australian dollars. Below is how the pricing
-              behaves, and that part is not going to change as the catalogue grows.
-            </p>
-          </div></Reveal>
+          <Reveal><SectionHead
+            scene="Scene 04"
+            label="Pricing"
+            caps={from !== null ? `One price, from ${money(from, shop?.currency)}.` : "One price, paid once."}
+            accent="no plot twists."
+            hue="lime"
+          >
+            Every plan is a single charge in Australian dollars. Below is how the pricing
+            behaves, and that part is not going to change as the catalogue grows.
+          </SectionHead></Reveal>
           <Reveal delay={80}><div className={`${styles.why} ${styles.cascade}`}>
             {[...PRICING, speedCard(shop?.anyThrottled ?? false)].map((w) => (
               <div className={styles.wy} key={w.h}>
@@ -354,16 +312,19 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className={styles.band} id="help">
+      <section className={`${styles.band} ${styles.coral}`} id="help">
         <div className={styles.shell}>
-          <Reveal><div className={styles.head}>
-            <p className={styles.eyebrow}>Why Bilby</p>
-            <h2>A small Australian business, which is the point.</h2>
-            <p>
-              The large travel eSIM brands are support desks in another time zone reselling the same
-              underlying networks. What differs is who picks up when it goes wrong.
-            </p>
-          </div></Reveal>
+          <Reveal><SectionHead
+            scene="Scene 05"
+            label="Why Bilby"
+            caps="Australian, and"
+            accent="answerable for it."
+            hue="coral"
+          >
+            The big travel eSIM brands resell the same underlying networks we do. What differs is
+            the time zone the help desk sits in, whose law covers you when it goes wrong, and
+            whether a person reads what you actually wrote.
+          </SectionHead></Reveal>
           <Reveal delay={80}><div className={`${styles.why} ${styles.cascade}`}>
             {PROMISES.map((w) => (
               <div className={styles.wy} key={w.h}>
@@ -380,17 +341,19 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className={`${styles.band} ${styles.bandSurface}`} id="notes">
+      <section className={`${styles.band} ${styles.bandSurface} ${styles.amber}`} id="notes">
         <div className={styles.shell}>
-          <Reveal><div className={styles.head}>
-            <p className={styles.eyebrow}>Field notes</p>
-            <h2>Travellers write down what actually happened.</h2>
-            <p>
-              Not a star rating. A note: which airport, which network it picked up, and how long it
-              took between the plane door and the first bar of signal. The next person going there
-              reads it before they fly.
-            </p>
-          </div></Reveal>
+          <Reveal><SectionHead
+            scene="Scene 06"
+            label="Field notes"
+            caps="Travellers write"
+            accent="what actually happened."
+            hue="amber"
+          >
+            Not a star rating. A note: which airport, which network it picked up, and how long it
+            took between the plane door and the first bar of signal. The next person going there
+            reads it before they fly.
+          </SectionHead></Reveal>
           <Reveal delay={80}><FieldNotes /></Reveal>
         </div>
       </section>

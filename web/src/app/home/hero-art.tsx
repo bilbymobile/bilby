@@ -106,19 +106,31 @@ export function HeroArt() {
 
       {/* Two orbits, tilted and not concentric. Concentric ellipses read as a
           target; offset ones read as two bodies on different paths. */}
+      {/*
+        Two orbits, tilted, not concentric, and turning opposite ways.
+
+        Each sits in its own group because the two rotate independently: one
+        ring turning is a ring turning, two turning against each other at
+        different speeds is parallax, and parallax is the cheapest depth cue
+        there is.
+      */}
       <g className={styles.orbits} fill="none">
-        <ellipse
-          className={styles.orbit}
-          cx="320" cy="332" rx="288" ry="96"
-          transform="rotate(-13 320 332)"
-          strokeDasharray="26 20"
-        />
-        <ellipse
-          className={`${styles.orbit} ${styles.orbitB}`}
-          cx="320" cy="352" rx="236" ry="132"
-          transform="rotate(11 320 352)"
-          strokeDasharray="4 26"
-        />
+        <g className={styles.orbitOuter}>
+          <ellipse
+            className={styles.orbit}
+            cx="320" cy="332" rx="288" ry="96"
+            transform="rotate(-13 320 332)"
+            strokeDasharray="26 20"
+          />
+        </g>
+        <g className={styles.orbitInner}>
+          <ellipse
+            className={`${styles.orbit} ${styles.orbitB}`}
+            cx="320" cy="352" rx="236" ry="132"
+            transform="rotate(11 320 352)"
+            strokeDasharray="4 26"
+          />
+        </g>
       </g>
 
       {/* The planet. Its centre is far below the frame, so what shows is a
@@ -151,8 +163,16 @@ export function HeroArt() {
             fill="none"
           />
           <circle className={styles.spark} cx="256" cy="88" r="21" fill="#FFB347" />
-          <ellipse cx="168" cy="168" rx="44" ry="108" transform="rotate(-34 168 168)" />
-          <ellipse cx="344" cy="168" rx="44" ry="108" transform="rotate(34 344 168)" />
+          {/* Each ear is an ellipse inside a group. The group carries the
+              position and the splay; the ellipse carries the sway. Keeping
+              those on separate elements is what lets the CSS rotate the ear
+              about its own base instead of about the middle of the frame. */}
+          <g transform="rotate(-34 168 168)">
+            <ellipse className={styles.earL} cx="168" cy="168" rx="44" ry="108" />
+          </g>
+          <g transform="rotate(34 344 168)">
+            <ellipse className={styles.earR} cx="344" cy="168" rx="44" ry="108" />
+          </g>
           <path
             fillRule="evenodd"
             d="M256 148 C 341 148, 396 209, 396 288 C 396 372, 337 424, 256 424

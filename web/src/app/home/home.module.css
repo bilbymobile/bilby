@@ -23,13 +23,38 @@
  */
 
 .page {
-  --font-display: "Space Grotesk";
+  /*
+   * Three faces, and each has one job.
+   *
+   * Bebas Neue is the display face the reference deployment uses and the Expo
+   * app declares. It is condensed, tall and has no lowercase at all, so every
+   * heading set in it is capitals whether or not anybody chose that. The
+   * headline on this page is generated from the catalogue, which means the
+   * sentence changes but the shouting does not, and that is a thing to have
+   * decided rather than discovered.
+   *
+   * The written brand guidelines in the launch pack call for Instrument Serif
+   * over Inter. The deployment those guidelines claim to document is set in
+   * Bebas Neue over Space Grotesk, and so is the app. Two out of three agreed
+   * with each other, so the document lost.
+   */
+  --font-display: "Bebas Neue";
   --font-body: "Space Grotesk";
   --font-mono: "JetBrains Mono";
+  --font-serif: "Instrument Serif";
 
-  /* Ground, deepest to highest. */
-  --void: #04060F;
-  --abyss: #0A0E1F;
+  /*
+   * Ground and ink, sampled from the reference deployment.
+   *
+   * #060913 rather than the app's #04060F, and #F4EFE6 rather than #F4F6FF.
+   * Both differences are small and both are deliberate: the ground is a touch
+   * warmer and a touch lighter than true black, which stops an OLED phone
+   * showing the page as a void with text floating in it, and the ink is warm
+   * off white rather than cool, which is what lets a coral accent sit beside it
+   * without the two arguing.
+   */
+  --void: #060913;
+  --abyss: #0C1220;
   --deep: #10142A;
   --surface: #161B36;
   --raised: #1E2447;
@@ -38,15 +63,28 @@
   --line: rgba(255, 255, 255, .07);
   --line2: rgba(255, 255, 255, .12);
 
-  --ink: #F4F6FF;
+  --ink: #F4EFE6;
   --ink2: #B4BBD9;
   --ink3: #7A82A6;
 
-  --coral: #FF7A3D;
+  --coral: #FF9E5A;
   --coral-soft: #FFB088;
-  --mango: #FFB347;
+  --mango: #FFB43A;
   --aurora: #46F1D6;
   --sky: #5EC8FF;
+
+  /*
+   * Four accents, one per section, in the reference's own values.
+   *
+   * A single accent used everywhere is a brand colour. Four rotating through a
+   * long page is pacing: it tells a reader they have moved without a heading
+   * having to say so, and it is the reason the reference does not feel like one
+   * screen repeated nine times.
+   */
+  --hue-amber: #FFB43A;
+  --hue-cyan: #6EE7FF;
+  --hue-lime: #D9FF4B;
+  --hue-coral: #FF9E5A;
 
   /* Text drawn on a coral or mango fill. Named rather than written inline,
      because a hardcoded light ink is how a mango button ships unreadable. */
@@ -54,6 +92,24 @@
 
   --glass: rgba(255, 255, 255, .04);
   --glass-hi: rgba(255, 255, 255, .07);
+
+  /*
+   * Motion, to the brand guidelines' spec rather than to whatever each rule
+   * felt like at the time.
+   *
+   *   Duration  300 to 500ms for most transitions
+   *   Easing    cubic-bezier(.16, 1, .3, 1), a smooth deceleration
+   *   Entrance  fade plus a subtle upward translate of 12px
+   *   Never     bouncy springs, spinning loaders, flashy transitions
+   *
+   * The page previously used four different easings and entrance distances
+   * between 20 and 26px, all of them chosen individually and none of them
+   * wrong, which is exactly how a page ends up feeling slightly incoherent
+   * without anybody being able to say why.
+   */
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --dur: .42s;
+  --rise: 12px;
 
   /* On a dark ground a drop shadow does not separate anything, because the
      shadow and the page are both darkness. What lifts a surface here is the
@@ -72,14 +128,40 @@
   overflow-x: clip;
 }
 
+/*
+ * Bebas wants the opposite of what the grotesk wanted.
+ *
+ * It is a single 400 weight, so `font-weight: 700` does nothing but invite a
+ * browser to synthesise a bold and smear the stems. It is condensed, so at the
+ * grotesk's size it reads visibly smaller and the sizes below go up rather than
+ * down. And it is already tight, so the negative tracking that made the grotesk
+ * feel composed closes this one into a solid block.
+ */
+/*
+ * Grain over the whole page.
+ *
+ * One fixed SVG turbulence layer at nine percent, which is the reference's own
+ * figure. It costs nothing, it never repaints, and it is the difference between
+ * flat dark panels and something that looks photographed. Inlined as a data URI
+ * so it is not a request.
+ */
+.page::after {
+  content: "";
+  position: fixed; inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: .09;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 .page h1,
 .page h2,
 .page h3 {
-  font-family: var(--font-display), ui-sans-serif, -apple-system, sans-serif;
+  font-family: var(--font-display), "Space Grotesk", ui-sans-serif, sans-serif;
   margin: 0;
-  font-weight: 700;
-  letter-spacing: -.03em;
-  line-height: 1.06;
+  font-weight: 400;
+  letter-spacing: .012em;
+  line-height: .94;
   text-wrap: balance;
 }
 .page p { margin: 0; }
@@ -117,10 +199,93 @@
   background: linear-gradient(90deg, var(--aurora), transparent);
 }
 
-.head { max-width: 720px; margin-bottom: clamp(34px, 4vw, 54px); }
-.head h2 { font-size: clamp(30px, 4.2vw, 50px); margin-bottom: 16px; }
-.head p { color: var(--ink2); font-size: 1.06rem; max-width: 62ch; }
+/* ── The section header device ───────────────────────────────────────────── */
 
+.head { max-width: 860px; margin-bottom: clamp(34px, 4vw, 56px); }
+
+/*
+ * Each section owns a hue.
+ *
+ * Declared on the SECTION rather than on the header, because the numerals, the
+ * icon tiles and the notice panel all read it too, and a variable set on the
+ * header is invisible to its siblings. The first version put it on the header
+ * and the step numerals stayed amber inside a cyan section.
+ */
+.amber { --hue: var(--hue-amber); }
+.cyan  { --hue: var(--hue-cyan); }
+.lime  { --hue: var(--hue-lime); }
+.coral { --hue: var(--hue-coral); }
+
+/*
+ * The slate: pill, label, rule.
+ *
+ * Named slate rather than scene because `.scene` was already the hero artwork's
+ * SVG in this same module, declared two hundred lines further down, and it won.
+ * A CSS module scopes names per FILE, not per component, so two components
+ * sharing home.module.css share one namespace. The symptom was a header row
+ * that ignored `display: flex` entirely: no gap between the pill and the label,
+ * and a rule measuring zero pixels wide.
+ */
+.slate {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 20px;
+}
+.slateTag {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .66rem; letter-spacing: .2em; text-transform: uppercase;
+  padding: 6px 13px; border-radius: 999px;
+  color: var(--hue, var(--hue-amber));
+  border: 1px solid color-mix(in srgb, var(--hue, var(--hue-amber)) 42%, transparent);
+  background: color-mix(in srgb, var(--hue, var(--hue-amber)) 9%, transparent);
+  white-space: nowrap;
+}
+.slateLabel {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .66rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--ink3); white-space: nowrap;
+}
+/* The rule runs to the end of the column, which is what makes the row read as
+   a slate rather than as two chips sitting next to each other. */
+.slateRule {
+  height: 1px; flex: 1;
+  background: linear-gradient(90deg, var(--line2), transparent);
+}
+
+/*
+ * The two face heading.
+ *
+ * The capitals line is Bebas and inherits from .page h2. The second line is
+ * lowercase italic serif in the section hue, and it is deliberately NOT
+ * uppercased: the whole effect depends on the contrast between a line that
+ * shouts and a line that does not.
+ */
+.head h2 { font-size: clamp(40px, 6.4vw, 92px); margin-bottom: 18px; }
+/*
+ * The italic line carries its own metrics.
+ *
+ * Measured: at 92px the serif line box was 120px tall against the condensed
+ * face's 86px, because Instrument Serif has long ascenders and a deep descender
+ * and Bebas has almost neither. Inheriting one line-height for both faces put a
+ * visible hole between the two lines of every heading.
+ *
+ * It also reads larger at the same size, so it comes down slightly rather than
+ * matching. The two lines should feel like one heading, not like a heading and
+ * a pull quote.
+ */
+.accent {
+  display: inline-block;
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: .92em;
+  line-height: .82;
+  letter-spacing: -.012em;
+  text-transform: none;
+  color: var(--hue, var(--hue-amber));
+}
+
+.lead { color: var(--ink2); font-size: 1.06rem; max-width: 62ch; line-height: 1.66; }
+.head p { color: var(--ink2); font-size: 1.06rem; max-width: 62ch; }
 
 /* ── Header ──────────────────────────────────────────────────────────────── */
 
@@ -139,27 +304,52 @@
   -webkit-backdrop-filter: blur(14px) saturate(140%);
   border-bottom-color: var(--line);
 }
+/*
+ * The navigation sits inside the frame, below the top letterbox bar.
+ *
+ * Done with padding on the inner row rather than a margin on the header,
+ * because the hero is pulled up underneath the header by exactly the header's
+ * height: a margin moves the header AND the hero, so the bar and the nav end up
+ * on the same line however the numbers are chosen. Padding grows the header
+ * without moving the hero's anchor, and the compensating negative margin below
+ * is measured against the result.
+ */
 .navInner { display: flex; align-items: center; gap: 22px; }
 .brandLink {
   display: inline-flex; align-items: center; gap: 11px;
-  font-weight: 700; font-size: 1.2rem; letter-spacing: -.02em;
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
+  font-weight: 400; font-size: 1.72rem; letter-spacing: .03em;
+  line-height: 1;
   text-decoration: none; color: var(--ink);
 }
 /* The mark takes the coral so the wordmark stays ink. Two warm things beside
    each other at the same weight and neither one leads. */
 .brandLink svg { color: var(--coral); fill: currentColor; flex: none; }
-.links { display: flex; gap: 26px; margin-left: auto; font-size: .93rem; color: var(--ink2); }
+/*
+ * Uppercase mono with wide tracking, which is the single cheapest thing that
+ * makes a page read as editorial rather than as an app. It works because it is
+ * the opposite of the headline: the display face is enormous and condensed, so
+ * the navigation has to be small and open or the two fight.
+ */
+.links {
+  display: flex; gap: 28px; margin-left: auto;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink2);
+}
 .links a { text-decoration: none; padding: 6px 0; position: relative; }
 .links a::after {
   content: ""; position: absolute; left: 0; right: 100%; bottom: 0; height: 1px;
-  background: var(--coral); transition: right .28s cubic-bezier(.22, 1, .36, 1);
+  background: var(--coral); transition: right .3s var(--ease);
 }
 .links a:hover { color: var(--ink); }
 .links a:hover::after { right: 0; }
 .login {
-  padding: 10px 18px; border-radius: 999px;
+  padding: 11px 20px; border-radius: 999px;
   border: 1px solid var(--line2); color: var(--ink);
-  text-decoration: none; font-size: .9rem; font-weight: 600;
+  text-decoration: none; font-weight: 500;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
   background: var(--glass);
   transition: background .2s ease, border-color .2s ease;
 }
@@ -168,110 +358,311 @@
 
 /* ── Hero ────────────────────────────────────────────────────────────────── */
 
+/*
+ * A film frame, not a headline over a colour.
+ *
+ * 108vh rather than 100, so the letterbox bar at the bottom is always cut by
+ * the fold and the page reads as a shot that continues rather than a screen
+ * that ends. That single figure is the reference's, and it does more work than
+ * it looks like it should.
+ */
 .hero {
   position: relative;
-  /* Pulled up under the transparent header. */
-  margin-top: -68px;
-  padding: clamp(132px, 15vw, 190px) 0 clamp(60px, 7vw, 96px);
-  isolation: isolate;
+  /* No negative margin. The top letterbox is part of the header now, so the
+     frame simply starts where the header ends, at every width. */
+  min-height: 108vh;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+  background: #000;
+  isolation: isolate;
+}
+
+/* The moving plate: video, three scrims, and the drifting warmth. */
+.frame {
+  position: absolute; inset: 0; z-index: 0;
+  transform: translate3d(0, var(--shift, 0px), 0) scale(calc(1 + var(--exit, 0) * .18));
+  will-change: transform;
+}
+.plate {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  /* Half opacity is the reference's. It is why 720p is enough: at this opacity
+     behind two gradients there is no detail left to resolve. */
+  opacity: .5;
+  display: block;
+}
+.scrimDown {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,.75), rgba(0,0,0,.35) 55%, var(--void));
+}
+.scrimAcross {
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(0,0,0,.7), rgba(0,0,0,.2) 55%, rgba(0,0,0,.5));
+}
+.dawn {
+  position: absolute; inset: 0;
+  background: radial-gradient(60% 50% at 70% 30%, rgba(255, 180, 58, .16), transparent 70%);
 }
 
 /*
- * The light in the room.
+ * The letterbox.
  *
- * Three soft blobs at low opacity, painted as one element. This is what stops a
- * near black page reading as an unstyled document: the ground is not one colour
- * anywhere, so the eye reads depth before it reads anything else.
+ * Two solid black bars, 54px, carrying camera notes in mono at 30% tracking.
+ * They are the cheapest and most effective part of the whole design: a page
+ * with black bars top and bottom is a frame, and everything inside it reads as
+ * something that was shot.
  */
-.hero::before {
-  content: "";
-  position: absolute; inset: -20% -10% 0;
-  z-index: 0;
-  background:
-    radial-gradient(46% 40% at 78% 18%, rgba(255, 122, 61, .18), transparent 70%),
-    radial-gradient(40% 38% at 14% 30%, rgba(70, 241, 214, .10), transparent 70%),
-    radial-gradient(60% 44% at 50% 96%, rgba(45, 127, 232, .12), transparent 72%);
-  pointer-events: none;
+.letterboxTop, .letterboxBottom {
+  height: 54px;
+  background: #000;
+  display: flex; align-items: center;
+}
+/* In the header, so it needs to break out of the header's own side padding. */
+.letterboxTop { margin: -14px 0 14px; }
+.letterboxBottom { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; }
+.letterboxInner {
+  max-width: 1240px; margin: 0 auto; width: 100%;
+  padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px; letter-spacing: .3em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .5);
+}
+.rec { color: var(--hue-amber); display: inline-flex; align-items: center; gap: 7px; }
+.recDot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--hue-amber); display: inline-block;
+}
+:global([data-motion="on"]) .recDot { animation: pulseDot 2.4s ease-in-out infinite; }
+.arrow { display: inline-block; }
+:global([data-motion="on"]) .arrow { animation: nudge 1.6s ease-in-out infinite; }
+@keyframes nudge {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(3px); }
 }
 
 .heroShell {
-  position: relative; z-index: 3;
+  position: relative; z-index: 10;
+  flex: 1;
+  max-width: 1240px; margin: 0 auto; width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, .82fr);
-  gap: clamp(28px, 4vw, 56px);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  gap: clamp(24px, 3vw, 40px);
   align-items: center;
+  padding-top: clamp(48px, 7vw, 96px);
+  padding-bottom: 104px;
 }
 
-.copy { max-width: 640px; }
+.copy { max-width: 760px; }
 
+/*
+ * Sized against our headline, not against the reference's.
+ *
+ * The reference sets this at 10rem because its headline is "HOP THE PLANET.",
+ * two short words on two lines, fixed forever. Ours is generated and runs to
+ * "Land connected in 8 destinations.", which at 158px took four lines and
+ * pushed the buttons, the fact strip and half the portrait below the fold.
+ *
+ * Copying a type size across two different sentences is not replication, it is
+ * cargo cult. What is worth copying is the intent: the headline should be the
+ * largest thing on the screen by a wide margin, and it still is.
+ */
 .copy h1 {
-  font-size: clamp(42px, 6.6vw, 82px);
-  letter-spacing: -.04em;
-  margin-bottom: 22px;
+  font-size: clamp(46px, 6.6vw, 96px);
+  line-height: .88;
+  letter-spacing: .004em;
+  margin-bottom: 24px;
 }
-/* The second line takes the warm gradient. One line, not both: a headline
-   entirely in gradient is a hero from a template, and the contrast between an
-   ink line and a lit line is what makes the lit one mean something. */
-.line2 {
-  background: linear-gradient(96deg, var(--coral-soft), var(--mango) 55%, var(--coral));
+
+/* The second line takes the dawn gradient: cream into amber into cyan, the
+   three accents of the whole page in one sweep. */
+.dawnText {
+  background: linear-gradient(92deg, #F4EFE6 10%, #FFCF7D 45%, #6EE7FF 90%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  /* The clip leaves no colour for a system that ignores background-clip, so the
-     fallback is spelled out rather than left to chance. */
   -webkit-text-fill-color: transparent;
 }
 
-.lede { color: var(--ink2); font-size: clamp(1.02rem, 1.6vw, 1.17rem); max-width: 52ch; margin-bottom: 30px; }
-
-.acts { display: flex; gap: 13px; flex-wrap: wrap; margin-bottom: 30px; }
-
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-  padding: 15px 26px; border-radius: 999px;
-  font-weight: 600; font-size: .97rem; text-decoration: none;
-  border: 1px solid transparent; cursor: pointer;
-  transition: transform .18s cubic-bezier(.22, 1, .36, 1), box-shadow .25s ease, background .2s ease;
-  white-space: nowrap;
+.lede {
+  color: rgba(255, 255, 255, .75);
+  font-size: clamp(1rem, 1.5vw, 1.14rem);
+  line-height: 1.65;
+  max-width: 40rem;
+  margin-bottom: 28px;
 }
-.btnGo {
-  background: linear-gradient(96deg, var(--mango), var(--coral));
-  color: var(--on-warm);
-  box-shadow: 0 10px 30px rgba(255, 122, 61, .3);
+/* One phrase in the serif, mid sentence. The reference does this in its lede
+   too, and it is what ties the body copy to the headings. */
+.ledeAccent {
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: 1.24em;
+  color: var(--hue-amber);
 }
-.btnGo:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(255, 122, 61, .42); }
-.btnQuiet {
-  background: var(--glass); color: var(--ink);
-  border-color: var(--line2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.btnQuiet:hover { background: var(--glass-hi); border-color: var(--chrome); transform: translateY(-2px); }
 
-.pills { display: flex; gap: 10px; flex-wrap: wrap; }
+.acts { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 40px; }
+
+/* The primary action: a pill with a dark circular badge on its end that turns
+   45 degrees on hover. */
+.cta {
+  display: inline-flex; align-items: center; gap: 16px;
+  background: var(--hue-amber); color: #000;
+  border-radius: 999px;
+  padding: 8px 8px 8px 28px;
+  text-decoration: none;
+  transition: background .3s var(--ease);
+}
+.cta:hover { background: #FFD07A; text-decoration: none; }
+.ctaLabel {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .72rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase;
+}
+.ctaBadge {
+  width: 40px; height: 40px; border-radius: 50%; flex: none;
+  background: #000; color: var(--hue-amber);
+  display: grid; place-items: center;
+  transition: transform .3s var(--ease);
+}
+.cta:hover .ctaBadge { transform: rotate(45deg); }
+.ctaQuiet {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .68rem; letter-spacing: .2em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .7);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, .3);
+  padding-bottom: 5px;
+  transition: color .3s ease, border-color .3s ease;
+}
+.ctaQuiet:hover { color: #fff; border-bottom-color: var(--hue-amber); text-decoration: none; }
+
+/* The fact strip. Four items, a rotated square each, above a hairline. */
+.stats {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px;
+  border-top: 1px solid rgba(255, 255, 255, .15);
+  padding-top: 24px;
+}
+.stat {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .6);
+  line-height: 1.5;
+}
+.statMark {
+  width: 6px; height: 6px; flex: none;
+  background: var(--hue-amber); transform: rotate(45deg);
+}
+
+/* Pills over the plate: glass rather than the page's card colour, because they
+   sit on a photograph and have to work over whatever frame is behind them. */
+.pills { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
 .pill {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 8px 15px; border-radius: 999px;
-  background: var(--glass); border: 1px solid var(--line);
-  font-size: .82rem; color: var(--ink2); white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 9px 16px; border-radius: 999px;
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .67rem; letter-spacing: .2em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .88); white-space: nowrap;
 }
-.pill i { display: inline-flex; color: var(--sky); font-style: normal; font-size: .74rem; font-weight: 700; letter-spacing: .06em; }
-.pillOk i { color: var(--aurora); }
+.pillLive {
+  background: color-mix(in srgb, var(--hue-amber) 15%, transparent);
+  border-color: color-mix(in srgb, var(--hue-amber) 40%, transparent);
+  color: var(--hue-amber);
+}
+.pillFace { border-radius: 50%; object-fit: cover; }
 
-/* The price, stated plainly and taken from the catalogue. */
-.priceLine {
-  display: inline-flex; align-items: baseline; gap: 9px;
-  margin-bottom: 26px;
-  font-family: var(--font-mono), ui-monospace, Menlo, monospace;
+/* ── The portrait ────────────────────────────────────────────────────────── */
+
+.art { position: relative; z-index: 2; }
+.artInner { position: relative; max-width: 420px; margin: 0 auto; }
+.artIn { position: relative; }
+
+/* Rings behind the frame: two expanding, one dashed and slowly turning. */
+.rings { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.ring, .ringDash {
+  position: absolute; aspect-ratio: 1; border-radius: 50%;
 }
-.priceLine b {
+.ring {
+  width: 86%;
+  border: 1px solid color-mix(in srgb, var(--hue-amber) 60%, transparent);
+  opacity: 0;
+}
+.ringB { border-color: color-mix(in srgb, var(--hue-cyan) 50%, transparent); }
+:global([data-motion="on"]) .ring { animation: pingRing 2.8s ease-out infinite; }
+:global([data-motion="on"]) .ringB { animation-delay: 1.4s; }
+@keyframes pingRing {
+  0%   { opacity: .85; transform: scale(.72); }
+  100% { opacity: 0;   transform: scale(1.18); }
+}
+.ringDash {
+  width: 102%;
+  border: 1px dashed rgba(255, 255, 255, .15);
+}
+:global([data-motion="on"]) .ringDash { animation: spinSlower 34s linear infinite; }
+
+.poster {
+  position: relative;
+  margin: 0;
+  border-radius: 2.5rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .2);
+  /* The reference's own glow: an amber hairline, a warm bloom below, and a cool
+     one under that. Three shadows rather than one is what stops it reading as a
+     drop shadow and starts it reading as light. */
+  box-shadow:
+    0 0 0 1px rgba(255, 180, 58, .35),
+    0 18px 80px -12px rgba(255, 180, 58, .45),
+    0 8px 60px -8px rgba(110, 231, 255, .35);
+}
+:global([data-motion="on"]) .poster { animation: floatySoft 7s ease-in-out infinite; }
+.posterImg { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; display: block; }
+.posterScrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(0,0,0,.7), transparent 55%);
+}
+.chipTL, .chipTR {
+  position: absolute; top: 16px;
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase;
+  border-radius: 999px; padding: 6px 12px; white-space: nowrap;
+}
+.chipTL {
+  left: 16px;
+  background: rgba(0, 0, 0, .6);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, .2);
+  color: rgba(255, 255, 255, .9);
+}
+.chipTR { right: 16px; background: var(--hue-amber); color: #000; font-weight: 700; }
+.posterFoot {
+  position: absolute; left: 16px; right: 16px; bottom: 16px;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+}
+.posterFoot b {
+  display: block;
   font-family: var(--font-display), sans-serif;
-  font-size: clamp(28px, 3.4vw, 38px); font-weight: 700;
-  letter-spacing: -.03em; color: var(--mango);
+  font-weight: 400; font-size: 1.9rem; letter-spacing: .04em; line-height: 1;
+  color: #fff;
 }
-.priceLine span { font-size: .84rem; color: var(--ink3); letter-spacing: .04em; }
-
+.posterFoot small {
+  display: block; margin-top: 4px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .6);
+}
+.bars {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9.5px; letter-spacing: .1em; white-space: nowrap;
+  color: var(--hue-cyan);
+  border: 1px solid color-mix(in srgb, var(--hue-cyan) 40%, transparent);
+  background: rgba(0, 0, 0, .5);
+  border-radius: 999px; padding: 6px 12px;
+}
 
 /* ── The hero artwork ────────────────────────────────────────────────────── */
 
@@ -326,19 +717,45 @@
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
 }
-.step h3 { font-size: 1.16rem; margin-bottom: 9px; }
+.step h3 { font-size: 1.5rem; margin-bottom: 10px; }
 .step p { color: var(--ink2); font-size: .96rem; }
 .num {
-  font-family: var(--font-mono), monospace;
-  font-size: .78rem; font-weight: 600; letter-spacing: .1em;
-  width: 38px; height: 38px; border-radius: 12px;
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.5rem; font-weight: 400; letter-spacing: .04em;
+  width: 44px; height: 44px; border-radius: 13px;
   display: grid; place-items: center;
-  background: rgba(255, 122, 61, .12);
-  border: 1px solid rgba(255, 122, 61, .3);
-  color: var(--mango);
+  background: color-mix(in srgb, var(--hue, var(--hue-amber)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hue, var(--hue-amber)) 30%, transparent);
+  color: var(--hue, var(--hue-amber));
   margin-bottom: 18px;
 }
 
+
+/*
+ * A caveat that gets its own panel.
+ *
+ * The overseas routing note used to be a paragraph inside the section lead,
+ * which is the shape of something you hope will be skimmed. It is the single
+ * most material fact about every plan currently on sale, so it is bordered, it
+ * carries a label, and it sits between the heading and the prices rather than
+ * after them.
+ */
+.notice {
+  display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap;
+  padding: 22px 24px;
+  margin-bottom: 26px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--hue-amber) 30%, transparent);
+  background: color-mix(in srgb, var(--hue-amber) 6%, transparent);
+}
+.notice p { color: var(--ink2); font-size: .97rem; line-height: 1.65; flex: 1 1 420px; margin: 0; }
+.noticeTag {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .64rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--hue-amber); white-space: nowrap;
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--hue-amber) 38%, transparent);
+}
 
 /* ── Destinations ────────────────────────────────────────────────────────── */
 
@@ -349,10 +766,10 @@
   background: var(--deep);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
-  transition: transform .28s cubic-bezier(.22, 1, .36, 1), border-color .28s ease, box-shadow .28s ease;
+  transition: transform var(--dur) var(--ease), border-color var(--dur) ease, box-shadow var(--dur) ease;
 }
 .dest:hover { transform: translateY(-4px); border-color: rgba(255, 122, 61, .42); box-shadow: var(--lift); }
-.dest h3 { font-size: 1.06rem; margin-bottom: 4px; }
+.dest h3 { font-size: 1.42rem; margin-bottom: 5px; }
 .dest p { color: var(--ink3); font-size: .86rem; line-height: 1.5; }
 .swatch {
   font-family: var(--font-mono), monospace;
@@ -381,14 +798,14 @@
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
-.wy h3 { font-size: 1.06rem; margin-bottom: 8px; }
+.wy h3 { font-size: 1.4rem; margin-bottom: 9px; }
 .wy p { color: var(--ink2); font-size: .95rem; }
 .ic {
-  width: 42px; height: 42px; border-radius: 13px;
+  width: 44px; height: 44px; border-radius: 14px;
   display: grid; place-items: center; margin-bottom: 16px;
-  background: rgba(70, 241, 214, .1);
-  border: 1px solid rgba(70, 241, 214, .26);
-  color: var(--aurora);
+  background: color-mix(in srgb, var(--hue, var(--hue-amber)) 11%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hue, var(--hue-amber)) 28%, transparent);
+  color: var(--hue, var(--hue-amber));
 }
 
 
@@ -401,7 +818,7 @@
   padding: clamp(28px, 4vw, 46px);
 }
 .empty { max-width: 560px; }
-.empty h3 { font-size: 1.3rem; margin-bottom: 10px; }
+.empty h3 { font-size: 1.7rem; margin-bottom: 12px; }
 .empty p { color: var(--ink2); margin-bottom: 22px; }
 .noteGrid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(262px, 1fr)); }
 .fnote {
@@ -445,7 +862,7 @@
   box-shadow: var(--lift);
 }
 .close > div { flex: 1 1 420px; }
-.close h2 { font-size: clamp(26px, 3.4vw, 40px); margin-bottom: 12px; max-width: 26ch; }
+.close h2 { font-size: clamp(34px, 4.6vw, 58px); margin-bottom: 14px; max-width: 26ch; }
 .close p { color: var(--ink2); max-width: 52ch; }
 
 
@@ -487,40 +904,77 @@
  * interactive target is at least the width of a thumb.
  */
 @media (max-width: 980px) {
-  .heroShell { grid-template-columns: minmax(0, 1fr); gap: 18px; }
-  /* The picture goes under the words. Somebody on a phone gets the sentence
-     and the price without scrolling; the character is the reward for staying. */
-  .art { order: 2; margin-top: -18px; }
+  /*
+   * The phone layout, which is where this page is actually read.
+   *
+   * Every rule here exists because of something that went wrong on a real
+   * handset rather than because of a breakpoint convention. On the first pass
+   * of the film frame the fact strip ran underneath the portrait, the two
+   * poster chips overlapped each other, and the top letterbox bar disappeared
+   * behind the navigation.
+   */
+  .heroShell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    padding-top: 34px;
+    padding-bottom: 72px;
+  }
+  /* Words first. Somebody on a phone gets the sentence, the price and the
+     button without scrolling; the portrait is the reward for staying. */
   .copy { order: 1; max-width: none; }
-  .scene { max-width: 460px; margin: 0 auto; }
-  .hero { padding-top: clamp(104px, 22vw, 140px); }
+  /* Clear of the fact strip: the portrait floats 16px and its outer ring sits
+     a little proud of the frame, so a nominal gap is not a real one. */
+  .art { order: 2; margin-top: 38px; }
+  .artInner { max-width: 380px; }
+
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .acts { gap: 14px; margin-bottom: 30px; }
+
   .steps { grid-template-columns: minmax(0, 1fr); }
   .footInner { grid-template-columns: minmax(0, 1fr); gap: 34px; }
   .links { display: none; }
   .navInner { gap: 14px; }
   .login { margin-left: auto; }
+
+  /* The middle note is the first thing to go: three items in a 10px mono at
+     30% tracking do not fit across a phone, and the outer two carry the frame. */
+  .lbMid { display: none; }
+  .letterboxInner { padding: 0 18px; font-size: 9px; letter-spacing: .22em; }
 }
 
 @media (max-width: 560px) {
   .page { font-size: 16px; }
   .shell { padding: 0 18px; }
-  .copy h1 { font-size: clamp(34px, 10.5vw, 46px); letter-spacing: -.035em; }
+  .copy h1 { font-size: clamp(38px, 11.4vw, 54px); letter-spacing: .01em; text-wrap: balance; }
   .lede { font-size: 1rem; }
+  .head h2 { font-size: clamp(32px, 10.4vw, 48px); }
+
   /* Stacked and full width. Two pill buttons side by side at this width leaves
      each one too narrow to read its own label. */
-  .acts { flex-direction: column; align-items: stretch; gap: 11px; }
+  .acts { flex-direction: column; align-items: stretch; }
+  .cta { width: 100%; justify-content: space-between; padding-left: 22px; }
+  .ctaLabel { font-size: .66rem; letter-spacing: .1em; }
+  .ctaQuiet { align-self: flex-start; }
   .btn { width: 100%; padding: 16px 22px; }
+
+  .stats { grid-template-columns: minmax(0, 1fr); gap: 13px; }
   .close { flex-direction: column; align-items: flex-start; }
   .close .btn { width: 100%; }
   .cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .dests { grid-template-columns: minmax(0, 1fr); }
-  .why { grid-template-columns: minmax(0, 1fr); }
-  .noteGrid { grid-template-columns: minmax(0, 1fr); }
+  .dests, .why, .noteGrid { grid-template-columns: minmax(0, 1fr); }
+
+  /* Two chips across a 340px card is roughly forty characters of tracked mono.
+     The left one names the mascot, which the picture already does. */
+  .chipTL { display: none; }
+  .chipTR { left: 14px; right: auto; }
+  .posterFoot b { font-size: 1.5rem; }
+  .poster { border-radius: 1.8rem; }
+  .lbEnd { display: none; }
+
   /* The star canvas is atmosphere, and atmosphere is the first thing to cut on
      a phone that is already deciding whether to keep loading this page. */
   .motes { display: none; }
 }
-
 
 /*
  * ────────────────────────────────────────────────────────────────────────────
@@ -558,7 +1012,6 @@
  * ────────────────────────────────────────────────────────────────────────────
  */
 
-:global([data-motion="on"]) .artIn { animation: artIn 1.9s cubic-bezier(.16, .84, .24, 1) forwards; }
 @keyframes artIn {
   from { opacity: 0; transform: scale(1.06); filter: blur(8px); }
   60%  { opacity: 1; }
@@ -577,20 +1030,140 @@
 .line { display: block; }
 :global([data-motion="on"]) .line {
   transform: translateY(112%);
-  animation: lineUp 1.05s cubic-bezier(.16, .84, .24, 1) forwards;
+  animation: lineUp .62s var(--ease) forwards;
 }
-.line1 { animation-delay: .34s; }
-.line2 { animation-delay: .46s; }
+.line1 { animation-delay: .16s; }
+.line2 { animation-delay: .26s; }
 @keyframes lineUp { to { transform: none; } }
 
 /* Everything under the headline. Still a rise, because these are supporting
    elements and giving them the headline's masked entrance would flatten the
    hierarchy the sequence exists to build. */
-:global([data-motion="on"]) .rise { opacity: 0; transform: translateY(20px); animation: rise 1s cubic-bezier(.22, 1, .36, 1) forwards; }
-.rise2 { animation-delay: .74s; }
-.rise3 { animation-delay: .86s; }
-.rise4 { animation-delay: .98s; }
+:global([data-motion="on"]) .rise { opacity: 0; transform: translateY(var(--rise)); animation: rise .5s var(--ease) forwards; }
+.rise2 { animation-delay: .58s; }
+.rise3 { animation-delay: .68s; }
+.rise4 { animation-delay: .78s; }
 @keyframes rise { to { opacity: 1; transform: none; } }
+
+/*
+ * ────────────────────────────────────────────────────────────────────────────
+ * The ambient layer.
+ *
+ * Five loops, lifted from the reference deployment's own stylesheet and kept at
+ * its durations, because the durations are most of what makes it feel calm
+ * rather than busy. Nothing here is on the critical path and nothing here makes
+ * any content visible.
+ *
+ * What is deliberately NOT lifted is the count. That page runs twenty five
+ * concurrent animations over a full bleed photograph with session recording
+ * loaded, and asking Chrome for a screenshot of it timed out after thirty
+ * seconds with the renderer unresponsive. The complaint that started this
+ * entire redesign was a slow page on a phone. So: five loops, every one of them
+ * opacity or transform so it composites on the GPU and never touches layout,
+ * and every one of them stopped under reduced motion.
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+
+/*
+ * The light in the room moves.
+ *
+ * Thirty pixels over fourteen seconds is slow enough that nobody sees it
+ * happen; what they see is that the page is not a flat asset. This is the
+ * single highest value animation on the page for the cost.
+ */
+:global([data-motion="on"]) .hero::before { animation: dawnDrift 14s ease-in-out infinite; }
+@keyframes dawnDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(30px, -20px) scale(1.08); }
+}
+
+/*
+ * The character floats, and tilts slightly as it does.
+ *
+ * The tilt is what separates this from a lift: a pure vertical translate reads
+ * as a UI element animating, and two degrees of rotation reads as something
+ * suspended. Seven seconds, offset from every other cycle on the page so they
+ * never resynchronise into a visible pulse.
+ */
+:global([data-motion="on"]) .artIn { animation: artIn 1.1s var(--ease) forwards, floatySoft 7s ease-in-out 1.1s infinite; }
+@keyframes floatySoft {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50%      { transform: translateY(-16px) rotate(1.2deg); }
+}
+
+/*
+ * The ears, independently, and on different cycles so the two never line up.
+ *
+ * Each ellipse sits inside a group that carries its position and its 34 degree
+ * splay, so the CSS here only ever adds a small rotation on top. That split
+ * matters: written as one transform the sway would have to restate the splay in
+ * every keyframe, and `transform-box: view-box` would then resolve the origin
+ * against the outer frame and swing the ear across the page.
+ *
+ * fill-box puts the origin inside the ellipse, and 88% down puts the pivot near
+ * the base where an ear actually hinges rather than through its middle.
+ */
+.earL, .earR { transform-box: fill-box; transform-origin: 50% 88%; }
+:global([data-motion="on"]) .earL { animation: earSway 5.5s ease-in-out infinite; }
+:global([data-motion="on"]) .earR { animation: earSway 6.3s ease-in-out infinite reverse; }
+@keyframes earSway {
+  0%, 100% { transform: rotate(-2.5deg); }
+  50%      { transform: rotate(2.5deg); }
+}
+
+/* A live indicator. It pulses because it is reporting something true. */
+.dot {
+  width: 7px; height: 7px; border-radius: 50%; flex: none;
+  background: var(--aurora);
+  box-shadow: 0 0 10px rgba(70, 241, 214, .8);
+}
+:global([data-motion="on"]) .dot { animation: pulseDot 2.4s ease-in-out infinite; }
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .4; transform: scale(.7); }
+}
+
+/*
+ * The ticker.
+ *
+ * Two identical copies of the strip side by side, translating to exactly minus
+ * fifty percent, which lands the second copy precisely where the first began.
+ * That is why it must be `-50%` of the track and not a pixel value: any other
+ * number leaves a visible jump at the loop point, and the jump is the only
+ * thing anybody would notice.
+ *
+ * `aria-hidden` on the duplicate, in the markup, so a screen reader does not
+ * read the whole strip twice.
+ */
+.ticker {
+  position: relative;
+  overflow: hidden;
+  border-block: 1px solid var(--line);
+  background: rgba(255, 255, 255, .02);
+  padding: 11px 0;
+  /* The ends fade into the page rather than stopping at an edge. */
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.tickerTrack {
+  display: flex;
+  width: max-content;
+  gap: 0;
+}
+:global([data-motion="on"]) .tickerTrack { animation: marquee 42s linear infinite; }
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.tickerRun { display: flex; align-items: center; gap: 34px; padding-right: 34px; }
+.tickerItem {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .72rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink3); white-space: nowrap;
+}
+.tickerItem b { color: var(--mango); font-weight: 500; }
+.tickerSep { color: var(--chrome); }
 
 /*
  * The signal leaving the antenna.
@@ -599,9 +1172,9 @@
  * composites on the GPU and never touches layout, and it is the only thing on
  * the page that repeats forever. That is a deliberate budget of one.
  */
-.wave { animation: emit 3.4s ease-out infinite; }
-.wave:nth-child(2) { animation-delay: 1.13s; }
-.wave:nth-child(3) { animation-delay: 2.26s; }
+.wave { animation: emit 2.8s ease-out infinite; }
+.wave:nth-child(2) { animation-delay: .93s; }
+.wave:nth-child(3) { animation-delay: 1.86s; }
 /*
  * The scale origin is written into the transform chain rather than set with
  * transform-origin, on purpose. These paths live inside a translated and scaled
@@ -610,24 +1183,120 @@
  * the emission point somewhere out in space. Naming the antenna coordinate
  * twice is uglier and is correct in every browser.
  */
+/*
+ * The reference calls this ping-ring and runs it at 2.8 seconds from .72 to
+ * 1.18. Those numbers are kept exactly: a ring that starts too small reads as
+ * appearing rather than expanding, and one that ends too large reads as a
+ * ripple in water rather than a signal.
+ */
 @keyframes emit {
-  0%   { opacity: 0; transform: translate(256px, 88px) scale(.42) translate(-256px, -88px); }
-  22%  { opacity: .8; }
-  100% { opacity: 0; transform: translate(256px, 88px) scale(1.25) translate(-256px, -88px); }
+  0%   { opacity: .85; transform: translate(256px, 88px) scale(.72) translate(-256px, -88px); }
+  100% { opacity: 0;   transform: translate(256px, 88px) scale(1.18) translate(-256px, -88px); }
 }
 
 /* The circle is centred on the antenna already, so this one can use its own
    fill box and stay readable. */
-.spark { animation: spark 3.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.spark { animation: spark 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes spark {
   0%, 100% { opacity: .78; transform: scale(1); }
   50%      { opacity: 1; transform: scale(1.12); }
 }
 
-/* The orbits turn, very slowly, which is what keeps the scene from reading as
-   a flat illustration without asking anyone to notice motion. */
-.orbits { animation: turn 60s linear infinite; transform-box: view-box; transform-origin: 320px 332px; }
-@keyframes turn { to { transform: rotate(360deg); } }
+/*
+ * The orbits turn, and they turn opposite ways.
+ *
+ * One rotating ring is a rotating ring. Two rotating opposite ways at different
+ * speeds is parallax, and parallax is the cheapest depth cue there is. The
+ * reference pairs spin-slow with spin-slower for exactly this reason, and the
+ * 34 second figure is its own.
+ *
+ * A spinning ring is not a spinning loader. The guidelines ban the latter, and
+ * the distinction is whether it is reporting progress: these are decoration on
+ * a scene and they are still turning when everything has finished loading.
+ */
+.orbitOuter { animation: spinSlow 46s linear infinite; transform-box: view-box; transform-origin: 320px 332px; }
+.orbitInner { animation: spinSlower 34s linear infinite; transform-box: view-box; transform-origin: 320px 352px; }
+@keyframes spinSlow   { to { transform: rotate(360deg); } }
+@keyframes spinSlower { to { transform: rotate(-360deg); } }
+
+/*
+ * A scan passing over the character.
+ *
+ * One band of light crossing the artwork every eleven seconds. It is the only
+ * animation on this page that suggests the scene is being read by something
+ * rather than simply lit, which is the right note for a connectivity product,
+ * and at four percent opacity nobody consciously sees a band: they see that the
+ * picture is alive.
+ *
+ * Confined to the artwork frame. A scanline across the whole page would be a
+ * screensaver.
+ */
+.scan {
+  position: absolute; left: 0; right: 0; height: 22%;
+  pointer-events: none; z-index: 2;
+  background: linear-gradient(180deg, transparent, rgba(94, 200, 255, .05) 45%, transparent);
+  /*
+   * Masked on the horizontal too, not only faded top and bottom.
+   *
+   * Without this the band is a full width rectangle with two hard vertical
+   * edges, and against the character's glow those edges read as a grey panel
+   * sitting on the artwork rather than as light passing over it. A scan that
+   * announces its own bounding box is worse than no scan.
+   */
+  mask-image: radial-gradient(60% 100% at 50% 50%, #000, transparent 78%);
+  -webkit-mask-image: radial-gradient(60% 100% at 50% 50%, #000, transparent 78%);
+  /* Parked above the frame and moved with a transform, never with `top`. */
+  top: 0;
+  opacity: 0;
+  will-change: transform;
+}
+:global([data-motion="on"]) .scan { animation: scanline 11s linear infinite; }
+/*
+ * Driven by translate rather than by `top`, which is what the reference
+ * animates.
+ *
+ * `top` is a layout property: every frame asks the browser to position the
+ * element again, and it cannot be handed to the compositor. Measured on this
+ * page the difference was not visible, because the band is absolutely
+ * positioned inside a positioned ancestor and there is almost nothing for the
+ * layout pass to do. That is luck rather than design. A transform is free on
+ * any page, and this one is the only animation here that was not already.
+ */
+@keyframes scanline {
+  0%       { transform: translateY(-100%); opacity: 0; }
+  12%, 78% { opacity: 1; }
+  100%     { transform: translateY(455%); opacity: 0; }
+}
+
+/*
+ * The icon tiles breathe.
+ *
+ * Twelve pixels, no rotation, and staggered so the four never move together.
+ * The reference keeps `floaty` and `floaty-soft` as separate keyframes for this
+ * distinction: the soft one tilts and belongs to something suspended, the plain
+ * one only lifts and belongs to something sitting on a surface.
+ *
+ * On the icons rather than on the cards. Four floating cards is a page that
+ * will not hold still while somebody reads it.
+ */
+:global([data-motion="on"]) .ic { animation: floaty 6.4s ease-in-out infinite; }
+.wy:nth-child(2) .ic { animation-delay: .8s; }
+.wy:nth-child(3) .ic { animation-delay: 1.6s; }
+.wy:nth-child(4) .ic { animation-delay: 2.4s; }
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+}
+
+/*
+ * `bounce` is in the reference's stylesheet and is deliberately not here.
+ *
+ * The brand guidelines list "bouncy springs" under Never, alongside spinning
+ * loaders and flashy transitions, and a bounce is the one piece of the
+ * reference's vocabulary that contradicts the document it came with. Where the
+ * two disagree on a matter of taste rather than of fact, the written rule wins,
+ * because it is the one somebody can point at later.
+ */
 
 /*
  * The hero leaving.
@@ -654,30 +1323,30 @@
  * mattering past about ten, so the ladder flattens rather than growing forever.
  */
 :global([data-motion="on"]) .cascade > * {
-  opacity: 0; transform: translateY(26px);
-  transition: opacity .8s ease, transform .8s cubic-bezier(.22, 1, .36, 1);
+  opacity: 0; transform: translateY(var(--rise));
+  transition: opacity var(--dur) ease, transform var(--dur) var(--ease);
 }
 :global(.is-revealed) .cascade > * { opacity: 1; transform: none; }
 .cascade > *:nth-child(1)  { transition-delay: .00s; }
-.cascade > *:nth-child(2)  { transition-delay: .07s; }
-.cascade > *:nth-child(3)  { transition-delay: .14s; }
-.cascade > *:nth-child(4)  { transition-delay: .21s; }
-.cascade > *:nth-child(5)  { transition-delay: .28s; }
-.cascade > *:nth-child(6)  { transition-delay: .35s; }
-.cascade > *:nth-child(7)  { transition-delay: .42s; }
-.cascade > *:nth-child(8)  { transition-delay: .49s; }
-.cascade > *:nth-child(9)  { transition-delay: .56s; }
-.cascade > *:nth-child(n+10) { transition-delay: .63s; }
+.cascade > *:nth-child(2)  { transition-delay: .05s; }
+.cascade > *:nth-child(3)  { transition-delay: .10s; }
+.cascade > *:nth-child(4)  { transition-delay: .15s; }
+.cascade > *:nth-child(5)  { transition-delay: .20s; }
+.cascade > *:nth-child(6)  { transition-delay: .25s; }
+.cascade > *:nth-child(7)  { transition-delay: .30s; }
+.cascade > *:nth-child(8)  { transition-delay: .35s; }
+.cascade > *:nth-child(9)  { transition-delay: .40s; }
+.cascade > *:nth-child(n+10) { transition-delay: .45s; }
 
 /* Scroll reveals. Global class names because they are applied by a shared
    component that has no access to this module's hashes. */
 :global([data-motion="on"]) :global(.is-hidden) {
-  opacity: 0; transform: translateY(24px);
-  transition: opacity .85s ease, transform .85s cubic-bezier(.22, 1, .36, 1);
+  opacity: 0; transform: translateY(var(--rise));
+  transition: opacity var(--dur) ease, transform var(--dur) var(--ease);
 }
 :global(.is-revealed) {
   opacity: 1; transform: none;
-  transition: opacity .85s ease, transform .85s cubic-bezier(.22, 1, .36, 1);
+  transition: opacity var(--dur) ease, transform var(--dur) var(--ease);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -690,7 +1359,22 @@
      and opacity 0 is invisible, so the resting state is stated explicitly. */
   .wave { animation: none; opacity: .5; transform: none; }
   .spark { animation: none; opacity: 1; transform: none; }
-  .orbits { animation: none; }
+  .hero::before { animation: none; transform: none; }
+  .earL, .earR { animation: none; transform: none; }
+  .dot { animation: none; opacity: 1; transform: none; }
+  /* The track stops where it started, which is the readable half. */
+  .tickerTrack { animation: none; transform: none; }
+  .scan { animation: none; opacity: 0; }
+  .ic { animation: none; transform: none; }
+  .ring, .ringB { animation: none; opacity: .35; transform: scale(1); }
+  .ringDash { animation: none; }
+  .poster { animation: none; }
+  .recDot { animation: none; }
+  .arrow { animation: none; }
+  /* A video is motion by definition, so it stops being one. The poster is a
+     real picture, so the frame is never empty. */
+  .plate { display: none; }
+  .frame { background: #0b0f1c center / cover url("/hero/hero-poster.webp"); transform: none; }
   :global(.is-hidden) { opacity: 1; transform: none; }
   .cascade > * { opacity: 1; transform: none; transition: none; }
 }
