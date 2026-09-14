@@ -33,15 +33,15 @@ export const comparisonRows: ComparisonRow[] = [
   { f: "Validity start", typical: "Often ticks from purchase", bilby: "Starts at first use — buy early, lose nothing" },
   { f: "Refunds", typical: "Complicated or profile-locked", bilby: "Cancel & refund before activation" },
   { f: "Top-ups", typical: "Force a brand-new profile", bilby: "Top up the same profile — data + validity" },
-  { f: "Plan types", typical: "Fixed packs only", bilby: "Fixed, day-pass unlimited & regional bundles" },
+  { f: "Plan types", typical: "One-size bundles that never quite fit", bilby: "The size that fits the trip · top up anytime" },
   { f: "Support", typical: "Bots & ticket queues", bilby: "Humans 24/7 · under a minute, day or night" },
   { f: "Fine print", typical: "Buried on page 14", bilby: "Fair-use policy shown before you pay" },
 ];
 
 export const tiers = [
   {
-    name: "JOEY", price: 9, tag: "Pay-per-trip · Global", desc: "For the weekend hop. Fixed packs in 150+ countries, guided by Bilby.",
-    feats: ["Fixed data packs, 1–50 GB", "Validity 7–30 days", "Hotspot included", "5G where available", "Top up the same profile"],
+    name: "JOEY", price: 9, tag: "Pay-per-trip · Global", desc: "For the weekend hop. Prepaid data in 150+ countries, guided by Bilby.",
+    feats: ["Prepaid data for one trip", "Validity 7–30 days", "Hotspot included", "5G where available", "Top up the same profile"],
     cta: "Start hopping", hot: false,
   },
   {
@@ -76,7 +76,7 @@ export const faqs = [
   { q: "Is BilbyMobile data-only?", a: "Yes — every plan is data-only: no calls, no SMS, no phone number and no emergency calling. Your Bilby eSIM rides alongside your home SIM (dual-SIM), so your number, WhatsApp and 2FA codes keep working. Please keep another way to reach emergency services." },
   { q: "When does my plan start?", a: "Only when you land. Validity runs from first connection to a supported network — not from purchase. Buy Tokyo today, fly in November, the countdown starts at touchdown." },
   { q: "What if my plans change?", a: "Every plan can be cancelled for a full refund before it is activated. And if your eSIM profile expires before you travel (profiles must be installed within 180 days of issue), contact us and we will reissue it free of charge." },
-  { q: "What plan types are there?", a: "Global fixed packs are live first: 150+ countries from $4.99. Regional bundles (Europe, Asia-Pacific, Americas) and day-pass unlimited plans ride the same profile. Business pooling with a team console opens next." },
+  { q: "What plan types are there?", a: "Global plans are live first: 150+ countries from $4.99. Regional bundles (Europe, Asia-Pacific, Americas) and day-pass options ride the same profile. Business pooling with a team console opens next." },
   { q: "Can I share data / hotspot?", a: "Every tier includes hotspot — Mob includes 100 GB of hotspot per month. You can also top up an active profile with more data and validity instead of installing a new eSIM." },
 ];
 

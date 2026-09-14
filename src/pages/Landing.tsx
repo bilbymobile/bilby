@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -58,7 +58,7 @@ function Destinations() {
         {list.map((d, i) => (
           <Reveal key={d.id + d.city} delay={(i % 3) * 0.08}>
             <Link to="/app" className="card-sheen group block rounded-3xl overflow-hidden border border-white/10 bg-[#0c1220] hover:border-[#FFB43A]/60 transition-colors">
-              <div className="relative h-60 overflow-hidden">
+              <div className="relative h-60 overflow-hidden photo-flash" style={{ "--flash-delay": `${i * 1.1}s` } as CSSProperties}>
                 <img src={d.img} alt={d.city} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.2s]" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0c1220] via-transparent to-black/30" />
                 <span className="absolute top-4 left-4 font-monox text-[10px] tracking-[0.2em] bg-black/60 backdrop-blur border border-white/20 rounded-full px-3 py-1.5">{d.tag}</span>
@@ -96,6 +96,9 @@ function Bilby() {
             <span className="ping-ring absolute w-[78%] aspect-square rounded-full border border-[#FFB43A]/60" />
             <span className="ping-ring absolute w-[78%] aspect-square rounded-full border border-[#6EE7FF]/50" style={{ animationDelay: "1.4s" }} />
             <span className="spin-slower absolute w-[94%] aspect-square rounded-full border border-dashed border-white/15" />
+            <span className="signal-ring w-[86%] aspect-square" />
+            <span className="signal-ring amber w-[100%] aspect-square" style={{ animationDelay: "1.1s" }} />
+            <span className="signal-ring w-[114%] aspect-square" style={{ animationDelay: "2.2s" }} />
           </div>
           <div className="floaty-soft relative rounded-[2.5rem] overflow-hidden border border-white/20 bilby-glow max-w-[440px] mx-auto">
             <img src="/images/bilby-hero.png" alt="Bilby, the BilbyMobile mascot, hopping over Australia beaming 5G signal" className="w-full aspect-[4/5] object-cover" />
@@ -425,7 +428,7 @@ export default function Landing() {
       <Bilby />
       <HowItWorks />
       <WhyBilby />
-      <Marquee fast outline items={["FIXED PACKS", "DAY PASSES", "REGIONAL BUNDLES", "TOP-UPS ANYTIME", "REFUND BEFORE ACTIVATION", "150+ COUNTRIES"]} />
+      <Marquee fast outline items={["FROM $4.99", "ACTIVATES AT TOUCHDOWN", "TOP-UPS ANYTIME", "REFUND BEFORE ACTIVATION", "150+ COUNTRIES", "HUMANS 24/7"]} />
       <Passes />
       <Apps />
       <Squad />

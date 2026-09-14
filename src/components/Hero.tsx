@@ -58,6 +58,9 @@ export default function Hero() {
               <span className="ping-ring absolute w-[86%] aspect-square rounded-full border border-[#FFB43A]/60" />
               <span className="ping-ring absolute w-[86%] aspect-square rounded-full border border-[#6EE7FF]/50" style={{ animationDelay: "1.4s" }} />
               <span className="spin-slower absolute w-[102%] aspect-square rounded-full border border-dashed border-white/15" />
+              <span className="signal-ring w-[94%] aspect-square" />
+              <span className="signal-ring amber w-[108%] aspect-square" style={{ animationDelay: "1.1s" }} />
+              <span className="signal-ring w-[122%] aspect-square" style={{ animationDelay: "2.2s" }} />
             </div>
             <div className="floaty-soft relative rounded-[2.5rem] overflow-hidden border border-white/20 bilby-glow">
               <img src="/images/bilby-hero.png" alt="Bilby — the BilbyMobile mascot hopping over Australia beaming 5G signal" className="w-full aspect-[4/5] object-cover" />

@@ -99,3 +99,32 @@ body {
 .tick { font-variant-numeric: tabular-nums; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
+
+
+/* --- signal waves emanating from Bilby --- */
+@keyframes signal-out {
+  0% { transform: translate(-50%, -50%) scale(.55); opacity: 0; }
+  14% { opacity: .9; }
+  100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
+.signal-ring {
+  position: absolute; left: 50%; top: 50%;
+  border-radius: 9999px; pointer-events: none;
+  border: 2px solid rgba(110, 231, 255, .5);
+  animation: signal-out 3.2s cubic-bezier(.22, .61, .36, 1) infinite;
+}
+.signal-ring.amber { border-color: rgba(255, 180, 58, .55); }
+
+/* --- periodic light sweep across photos --- */
+@keyframes photo-flash {
+  0% { transform: translateX(-140%) skewX(-16deg); }
+  42%, 100% { transform: translateX(240%) skewX(-16deg); }
+}
+.photo-flash { position: relative; }
+.photo-flash::after {
+  content: ""; position: absolute; inset: -2px; z-index: 6; pointer-events: none;
+  background: linear-gradient(100deg, transparent 25%, rgba(255, 236, 200, .32) 50%, transparent 75%);
+  transform: translateX(-140%) skewX(-16deg);
+  animation: photo-flash 5.6s ease-in-out infinite;
+  animation-delay: var(--flash-delay, 0s);
+}
