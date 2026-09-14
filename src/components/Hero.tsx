@@ -1,6 +1,6 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import { ArrowDown, Play, ShieldCheck, Star } from "lucide-react";
+import { ArrowDown, Play, ShieldCheck, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Hero() {
@@ -19,15 +19,15 @@ export default function Hero() {
         <div className="absolute inset-0 dawn-drift bg-[radial-gradient(60%_50%_at_70%_30%,rgba(255,180,58,0.16),transparent_70%)]" />
       </motion.div>
 
-      <div className="letterbox-top"><div className="max-w-7xl mx-auto px-5 md:px-8 h-full flex items-center justify-between font-monox text-[10px] tracking-[0.3em] text-white/50"><span>BILBYMOBILE PRESENTS · MEET BILBY</span><span className="hidden md:inline">GLOBAL TRAVEL ESIM · 190+ COUNTRIES</span><span className="text-[#FFB43A]">● REC</span></div></div>
+      <div className="letterbox-top"><div className="max-w-7xl mx-auto px-5 md:px-8 h-full flex items-center justify-between font-monox text-[10px] tracking-[0.3em] text-white/50"><span>BILBYMOBILE PRESENTS · MEET BILBY</span><span className="hidden md:inline">GLOBAL TRAVEL ESIM · 150+ COUNTRIES</span><span className="text-[#FFB43A]">● REC</span></div></div>
 
       <div className="relative z-10 flex-1 flex items-center max-w-7xl mx-auto w-full px-5 md:px-8 pt-36 pb-16">
         <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-10 items-center w-full">
           <div>
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="flex flex-wrap items-center gap-3 mb-7">
               <span className="font-monox text-[11px] tracking-[0.2em] bg-white/10 border border-white/20 backdrop-blur rounded-full px-4 py-2 flex items-center gap-2"><img src="/images/bilby-hero.png" alt="" className="w-5 h-5 rounded-full object-cover" /> BILBY IS CLEARED FOR TAKEOFF</span>
-              <span className="font-monox text-[11px] tracking-[0.2em] bg-[#FFB43A]/15 border border-[#FFB43A]/40 text-[#FFB43A] rounded-full px-4 py-2 flex items-center gap-1.5"><Star className="w-3 h-3 fill-current" /> 4.9 · 86K REVIEWS</span>
-              <span className="hidden md:inline font-monox text-[11px] tracking-[0.2em] bg-white/10 border border-white/20 rounded-full px-4 py-2 items-center gap-1.5"><ShieldCheck className="w-3 h-3" /> VPN + AD-BLOCK INSIDE</span>
+              <span className="font-monox text-[11px] tracking-[0.2em] bg-[#FFB43A]/15 border border-[#FFB43A]/40 text-[#FFB43A] rounded-full px-4 py-2 flex items-center gap-1.5"><Zap className="w-3 h-3 fill-current" /> PREPAID · NO SUBSCRIPTION</span>
+              <span className="hidden md:inline font-monox text-[11px] tracking-[0.2em] bg-white/10 border border-white/20 rounded-full px-4 py-2 items-center gap-1.5"><ShieldCheck className="w-3 h-3" /> REFUND BEFORE ACTIVATION</span>
             </motion.div>
 
             <h1 className="font-display leading-[0.86] tracking-tight">
@@ -36,7 +36,7 @@ export default function Hero() {
             </h1>
 
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 0.9 }} className="max-w-xl text-white/75 text-base md:text-lg leading-relaxed mt-7">
-              BilbyMobile is the cinematic global travel eSIM — <span className="font-serifx italic text-[#FFB43A] text-xl">instant activation</span> in 190+ countries from $4.99, guided by Bilby, the outback-hopping signal buddy from bilbymobile.com. Regional &amp; business plans dock next.
+              BilbyMobile is the cinematic global travel eSIM — <span className="font-serifx italic text-[#FFB43A] text-xl">instant activation</span> in 150+ countries from $4.99, guided by Bilby, the outback-hopping signal buddy. Regional &amp; business plans dock next.
             </motion.p>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.65 }} className="flex flex-wrap items-center gap-4 mt-7">
               <Link to="/app" className="group bg-[#FFB43A] text-black font-bold rounded-full pl-7 pr-2 py-2 flex items-center gap-4 hover:bg-[#ffd07a] transition-colors">
@@ -47,7 +47,7 @@ export default function Hero() {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.85, duration: 0.9 }} className="mt-10 grid grid-cols-2 md:grid-cols-4 border-t border-white/15 pt-6 gap-6">
-              {["190+ countries", "$4.99 entry pack", "< 3 min activation", "Regional + Biz soon"].map((s) => (
+              {["150+ countries", "$4.99 entry pack", "< 3 min activation", "Regional + Biz soon"].map((s) => (
                 <div key={s} className="font-monox text-[11px] md:text-xs tracking-[0.18em] text-white/60 uppercase flex items-center gap-2.5"><span className="w-1.5 h-1.5 bg-[#FFB43A] rotate-45 shrink-0" />{s}</div>
               ))}
             </motion.div>
@@ -63,7 +63,7 @@ export default function Hero() {
               <img src="/images/bilby-hero.png" alt="Bilby — the BilbyMobile mascot hopping over Australia beaming 5G signal" className="w-full aspect-[4/5] object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
               <div className="absolute top-4 left-4 font-monox text-[10px] tracking-[0.2em] bg-black/60 backdrop-blur border border-white/20 rounded-full px-3 py-1.5">● BILBY · SIGNAL BUDDY</div>
-              <div className="absolute top-4 right-4 font-monox text-[10px] tracking-wider bg-[#FFB43A] text-black font-bold rounded-full px-3 py-1.5">5G · 190+ COUNTRIES</div>
+              <div className="absolute top-4 right-4 font-monox text-[10px] tracking-wider bg-[#FFB43A] text-black font-bold rounded-full px-3 py-1.5">5G · 150+ COUNTRIES</div>
               <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
                 <div><div className="font-display text-3xl tracking-wide leading-none">BILBY SAYS HI</div><div className="font-monox text-[10px] tracking-[0.2em] text-white/60">FROM BILBYMOBILE.COM · NOW IN ORBIT</div></div>
                 <div className="font-monox text-[10px] text-[#6EE7FF] border border-[#6EE7FF]/40 bg-black/50 rounded-full px-3 py-1.5">≋ 5 BARS</div>

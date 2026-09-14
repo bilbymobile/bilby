@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from "react";
-import { motion, useInView } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
   ArrowUpRight, Check, Copy, Smartphone, MonitorSmartphone, Apple,
@@ -9,29 +9,23 @@ import {
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import Marquee from "../components/Marquee";
-import { Reveal, SectionTag, useCountUp } from "../components/ui";
-import { destinations, competitors, tiers, reviews, faqs, agents, sprint, sources, planTabs } from "../data/content";
+import { Reveal, SectionTag } from "../components/ui";
+import { destinations, tiers, reviews, faqs, agents, sprint, comparisonRows, planTabs } from "../data/content";
 
 const agentIcons: Record<string, any> = { Radar, Clapperboard, SquareCode, MoonStar, Orbit };
 
 function Stats() {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true });
-  const c1 = useCountUp(190, inView);
-  const c2 = useCountUp(2.1, inView);
-  const c3 = useCountUp(86, inView);
-  const c4 = useCountUp(99.98, inView);
   const stats = [
-    { v: `${Math.round(c1)}+`, l: "Countries & territories", s: "Global-first · regional next" },
-    { v: `${c2.toFixed(1)}M`, l: "Hoppers connected", s: "BilbyMobile target '26" },
-    { v: `${Math.round(c3)}K`, l: "Five-star reviews", s: "4.9 average · iOS + Play" },
-    { v: `${c4.toFixed(2)}%`, l: "Activation success", s: "Median setup: 2 min 41 s" },
+    { v: "150+", l: "Countries & territories", s: "Single · regional · global plans" },
+    { v: "$4.99", l: "Entry packs", s: "No activation fee · GST inclusive" },
+    { v: "180", l: "Days to install", s: "Lapsed before travel? Reissued free" },
+    { v: "24/7", l: "Human support", s: "Real replies in under a minute" },
   ];
   return (
-    <div ref={ref} className="max-w-7xl mx-auto px-5 md:px-8 py-20 grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/10 border border-white/10 rounded-3xl overflow-hidden">
+    <div className="max-w-7xl mx-auto px-5 md:px-8 py-20 grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/10 border border-white/10 rounded-3xl overflow-hidden">
       {stats.map((s) => (
         <div key={s.l} className="bg-[#060913] p-7 md:p-9">
-          <div className="font-display text-5xl md:text-6xl text-[#FFB43A] tick">{s.v}</div>
+          <div className="font-display text-5xl md:text-6xl text-[#FFB43A]">{s.v}</div>
           <div className="mt-2 font-semibold">{s.l}</div>
           <div className="font-monox text-[11px] tracking-wider text-white/40 mt-1">{s.s}</div>
         </div>
@@ -90,9 +84,9 @@ function Bilby() {
   const [tab, setTab] = useState("global");
   const active = planTabs.find((t) => t.id === tab)!;
   const traits = [
-    { icon: Rabbit, t: "Long ears, long range", x: "Bilby's outback ears became our signal arcs — tier-1 5G partners in every country, no cheapest-bidder roulette." },
+    { icon: Rabbit, t: "Long ears, long range", x: "Bilby's outback ears became our signal arcs — local network partners in 150+ countries, no cheapest-bidder roulette." },
     { icon: MoonStar, t: "Nocturnal, like support", x: "Bilbies roam at night. So do we — humans reply in under a minute, 24/7, even at 3 AM in Reykjavik." },
-    { icon: Briefcase, t: "A pouch for everything", x: "Rollover data rides in Bilby's pouch. Regional passports next, then pooled business data for the whole mob." },
+    { icon: Briefcase, t: "A pouch for top-ups", x: "Extra data and validity ride in Bilby's pouch — top up the same profile mid-trip instead of installing a new eSIM." },
   ];
   return (
     <section id="bilby" className="bg-[#0c1220] border-y border-white/10 py-24 overflow-hidden">
@@ -117,7 +111,7 @@ function Bilby() {
         <div className="order-1 lg:order-2">
           <SectionTag no="STARRING" label="Meet Bilby — the mascot" />
           <h2 className="font-display text-6xl md:text-7xl leading-[0.9] mb-5">SMALL MARSUPIAL.<br /><span className="font-serifx italic font-normal text-[#FFB43A]">giant signal.</span></h2>
-          <p className="text-white/65 text-sm md:text-base leading-relaxed mb-8 max-w-xl">Uplifted from your cinematic concept and the mascot at bilbymobile.com: Bilby hops over Australia beaming 5G across the dawn. Every screen of this launch — landing, web console, Android and iPhone apps — is guided by those long ears and that warm outback glow.</p>
+          <p className="text-white/65 text-sm md:text-base leading-relaxed mb-8 max-w-xl">Bilby hops over Australia beaming 5G across the dawn — and every screen of BilbyMobile, from this page to the web console and the Android & iPhone apps to come, is guided by those long ears and that warm outback glow.</p>
           <div className="space-y-3 mb-8">
             {traits.map((t) => (
               <div key={t.t} className="rounded-2xl border border-white/10 bg-black/40 p-5 flex gap-4">
@@ -145,7 +139,7 @@ function HowItWorks() {
   const steps = [
     { n: "01", t: "CAST", x: "Pick a country or region in the console. The 10-second compatibility scan checks your device free — iPhone 11+, Pixel 3+, Galaxy S20+ and most 5G phones pass.", icon: Globe2 },
     { n: "02", t: "ACTION", x: "Pay once, get a QR + one-tap install. No kiosks, no passport photocopies, no plastic. Your home SIM stays put for calls and 2FA codes.", icon: QrCode },
-    { n: "03", t: "ARRIVE", x: "The plan sleeps until touchdown, then wakes on first network contact. Track every MB on the burn meter, top up mid-film, roll over what's left.", icon: SignalHigh },
+    { n: "03", t: "ARRIVE", x: "The plan sleeps until touchdown, then wakes on first network contact. Track every MB on the burn meter, top up mid-film, and cancel for a full refund before activation.", icon: SignalHigh },
   ];
   return (
     <section className="max-w-7xl mx-auto px-5 md:px-8 py-24">
@@ -176,69 +170,29 @@ function HowItWorks() {
   );
 }
 
-function Intel() {
-  const [active, setActive] = useState(0);
-  const c = competitors[active];
-  const rows = useMemo(() => [
-    { f: "Entry price", vals: ["USA 5 GB · $13", "Unlimited 5-day · ~$18.50", "USA 5 GB · $12", "1 GB · $4.99", "EU unlimited · from $28", "From $4.99 · rollover"] },
-    { f: "Unlimited tier", vals: ["—", "$64.90/mo · hotspot", "—", "Ultra ~$60/mo", "EU from $28", "$59/mo · 100 GB hotspot"] },
-    { f: "Coverage", vals: ["190+ countries", "160+ countries", "170+ countries", "150+ countries", "190+ countries", "190+ countries"] },
-    { f: "Security stack", vals: ["—", "—", "—", "VPN + ad-block", "—", "VPN + ad-block inbuilt"] },
-    { f: "Rollover", vals: ["—", "—", "Day-pass only", "—", "—", "Yes · all tiers"] },
-    { f: "iOS rating", vals: ["4.6 ★", "4.6 ★", "4.7 ★", "4.7 ★", "4.5 ★", "4.9 ★ target"] },
-  ], []);
+function WhyBilby() {
   return (
     <section id="intel" className="max-w-7xl mx-auto px-5 md:px-8 py-24">
-      <SectionTag no="SCENE 04" label="Competitive intel — Sept 2026 research" accent="#6EE7FF" />
-      <h2 className="font-display text-6xl md:text-8xl leading-[0.9] mb-4">KNOW EVERY<br /><span className="font-serifx italic font-normal text-[#6EE7FF]">rival frame.</span></h2>
-      <p className="max-w-2xl text-white/60 mb-10 text-sm md:text-base leading-relaxed">We studied the five operators that own the travel-eSIM conversation — their offers, voice, and visual language — then designed BilbyMobile to absorb their strengths and erase their gaps. Tap a dossier. Sources are linked at the foot of this scene.</p>
-      <div className="flex gap-2 flex-wrap mb-6">
-        {competitors.map((k, i) => (
-          <button key={k.name} onClick={() => setActive(i)} className={`rounded-full px-5 py-2.5 font-monox text-[11px] tracking-[0.15em] uppercase border transition-all ${i === active ? "text-black font-bold" : "border-white/15 text-white/60 hover:border-white/40"}`} style={i === active ? { background: k.color, borderColor: k.color } : {}}>{k.name}</button>
-        ))}
-      </div>
-      <motion.div key={c.name} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-white/10 overflow-hidden">
-        <div className="p-7 md:p-10 grid lg:grid-cols-[1.2fr_1fr] gap-8" style={{ background: `linear-gradient(135deg, ${c.color}22, #060913 60%)` }}>
-          <div>
-            <div className="flex items-center gap-3 mb-2"><span className="w-3 h-3 rounded-full" style={{ background: c.color }} /><span className="font-monox text-[11px] tracking-[0.2em] text-white/50">{c.founded.toUpperCase()} · {c.coverage.toUpperCase()}</span></div>
-            <div className="font-display text-6xl md:text-7xl tracking-wide mb-1">{c.name.toUpperCase()}</div>
-            <div className="font-serifx italic text-lg text-white/70 mb-5">{c.voice}</div>
-            <div className="flex gap-2 mb-6">{c.palette.map((p) => (<span key={p} className="h-10 flex-1 rounded-xl border border-white/20" style={{ background: p }} title={p} />))}</div>
-            <div className="grid sm:grid-cols-2 gap-4 text-sm">
-              <div className="rounded-2xl bg-black/40 border border-white/10 p-5"><div className="font-monox text-[10px] tracking-[0.2em] text-emerald-400 mb-3">STRENGTHS — STEAL THESE</div>{c.strengths.map((s) => (<div key={s} className="flex gap-2 mb-2 text-white/75"><Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />{s}</div>))}</div>
-              <div className="rounded-2xl bg-black/40 border border-white/10 p-5"><div className="font-monox text-[10px] tracking-[0.2em] text-[#FF5A5A] mb-3">GAPS — EXPLOIT THESE</div>{c.gaps.map((s) => (<div key={s} className="flex gap-2 mb-2 text-white/75"><span className="text-[#FF5A5A] font-bold">✕</span>{s}</div>))}</div>
-            </div>
-          </div>
-          <div className="rounded-2xl bg-black/60 border border-white/10 p-6 font-monox text-xs leading-relaxed">
-            <div className="text-[10px] tracking-[0.25em] text-white/40 mb-4">PRICE ANCHOR · SEPT 2026</div>
-            <div className="text-lg text-white font-bold mb-1">{c.priceAnchor}</div>
-            <div className="text-white/50 mb-5">{c.model}<br />Rating: {c.rating}</div>
-            <div className="border-t border-white/10 pt-5">
-              <div className="text-[10px] tracking-[0.25em] text-[#FFB43A] mb-3">BILBY'S ANSWER</div>
-              <p className="text-white/75 text-sm leading-relaxed" style={{ fontFamily: "Space Grotesk" }}>Match the anchor, then over-deliver: same entry price, plus rollover in Bilby's pouch, plus VPN + ad-block, plus activation that starts at touchdown — not at checkout.</p>
-              <Link to="/app" className="mt-5 inline-flex items-center gap-2 bg-[#FFB43A] text-black font-bold rounded-full px-5 py-2.5 text-xs tracking-wider hover:bg-white transition-colors">BEAT THIS PRICE <ArrowUpRight className="w-3.5 h-3.5" /></Link>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-      <div className="mt-8 rounded-3xl border border-white/10 overflow-hidden">
+      <SectionTag no="SCENE 04" label="Bilby vs the typical travel eSIM" accent="#6EE7FF" />
+      <h2 className="font-display text-6xl md:text-8xl leading-[0.9] mb-4">WHY HOPPERS<br /><span className="font-serifx italic font-normal text-[#6EE7FF]">pick Bilby.</span></h2>
+      <p className="max-w-2xl text-white/60 mb-10 text-sm md:text-base leading-relaxed">No names, no shade — we simply fixed the things travel-eSIM buyers complain about everywhere: plans that start ticking before you fly, refunds that evaporate, top-ups that force a brand-new profile, and fine print buried on page 14.</p>
+      <div className="rounded-3xl border border-white/10 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[820px]">
-            <thead><tr className="bg-white/5 font-monox text-[10px] tracking-[0.2em] text-white/50"><th className="text-left p-4">FEATURE</th><th className="p-4">AIRALO</th><th className="p-4">HOLAFLY</th><th className="p-4">NOMAD</th><th className="p-4">SAILY</th><th className="p-4">UBIGI</th><th className="p-4 bg-[#FFB43A]/10 text-[#FFB43A]">BILBY ★</th></tr></thead>
+          <table className="w-full text-sm min-w-[720px]">
+            <thead><tr className="bg-white/5 font-monox text-[10px] tracking-[0.2em] text-white/50"><th className="text-left p-4">FEATURE</th><th className="p-4">TYPICAL TRAVEL ESIM</th><th className="p-4 bg-[#FFB43A]/10 text-[#FFB43A]">BILBY ★</th></tr></thead>
             <tbody>
-              {rows.map((r) => (
+              {comparisonRows.map((r) => (
                 <tr key={r.f} className="border-t border-white/10 hover:bg-white/[0.03]">
                   <td className="p-4 font-bold whitespace-nowrap">{r.f}</td>
-                  {r.vals.map((v, i) => (<td key={i} className={`p-4 text-center text-white/70 ${i === 5 ? "bg-[#FFB43A]/10 text-white font-semibold" : ""}`}>{v}</td>))}
+                  <td className="p-4 text-center text-white/50">{r.typical}</td>
+                  <td className="p-4 text-center bg-[#FFB43A]/10 text-white font-semibold">{r.bilby}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
-      <div className="mt-5 flex flex-wrap gap-2">
-        {sources.map((s) => (<a key={s.url} href={s.url} target="_blank" rel="noreferrer" className="font-monox text-[10px] tracking-wider text-white/40 hover:text-[#6EE7FF] border border-white/10 hover:border-[#6EE7FF]/50 rounded-full px-3 py-1.5 transition-colors">↗ {s.label}</a>))}
-      </div>
+      <p className="mt-5 font-monox text-[11px] tracking-wider text-white/35">ALL BILBY PLANS ARE PREPAID AND DATA-ONLY · VALIDITY RUNS FROM FIRST USE, NOT PURCHASE · FAIR-USE POLICY SHOWN BEFORE YOU PAY.</p>
     </section>
   );
 }
@@ -273,7 +227,7 @@ function Passes() {
             </Reveal>
           ))}
         </div>
-        <p className="mt-6 font-monox text-[11px] tracking-wider text-white/35 text-center">MOB “UNLIMITED” = 100 GB FULL-SPEED + UNLIMITED AT 2 MBPS AFTER · HOTSPOT 100 GB · BUSINESS POOLING + TEAM CONSOLE SHIP IN THE HANDOVER — FAIR-USE PRINTED ON THE SAME SCREEN, NOT PAGE 14.</p>
+        <p className="mt-6 font-monox text-[11px] tracking-wider text-white/35 text-center">UNLIMITED DAY PASSES = DAILY HIGH-SPEED ALLOWANCE, THEN MANAGED SPEEDS PER THE PLAN'S FAIR-USE POLICY — SHOWN BEFORE YOU PAY, NOT ON PAGE 14 · ALL PLANS PREPAID, DATA-ONLY · BUSINESS POOLING + TEAM CONSOLE SHIP NEXT.</p>
       </div>
     </section>
   );
@@ -282,11 +236,11 @@ function Passes() {
 function Apps() {
   return (
     <section id="apps" className="max-w-7xl mx-auto px-5 md:px-8 py-24">
-      <SectionTag no="SCENE 06" label="Full package — preview before handover" accent="#D9FF4B" />
+      <SectionTag no="SCENE 06" label="Full package — web first, apps next" accent="#D9FF4B" />
       <h2 className="font-display text-6xl md:text-8xl leading-[0.9] mb-4">WEB. ANDROID.<br /><span className="font-serifx italic font-normal text-[#D9FF4B]">iPhone. One burrow.</span></h2>
-      <p className="max-w-2xl text-white/60 mb-4 text-sm md:text-base">Landing page first — this is the preview you approve. The web console is already live in this build; Android and iPhone shells ride the same tokens and ship in the handover package.</p>
+      <p className="max-w-2xl text-white/60 mb-4 text-sm md:text-base">The web console is live today — search, checkout, QR activation and a live burn meter. Android and iPhone apps ride the same design tokens and the same eSIM backend, and ship next.</p>
       <div className="mb-12 flex flex-wrap gap-2">
-        {[["WEB APP", "LIVE NOW · /APP"], ["ANDROID APP", "HANDOVER TRACK"], ["IPHONE APP", "HANDOVER TRACK"]].map(([a, b], i) => (
+        {[["WEB APP", "LIVE NOW · /APP"], ["ANDROID APP", "NEXT TRACK"], ["IPHONE APP", "NEXT TRACK"]].map(([a, b], i) => (
           <span key={a} className={`font-monox text-[11px] tracking-[0.15em] rounded-full px-4 py-2 border ${i === 0 ? "bg-[#D9FF4B]/10 border-[#D9FF4B]/50 text-[#D9FF4B]" : "border-white/15 text-white/50"}`}>{i === 0 ? "●" : "○"} {a} · {b}</span>
         ))}
       </div>
@@ -294,9 +248,9 @@ function Apps() {
         <Reveal>
           <div className="rounded-3xl border border-[#D9FF4B]/30 bg-gradient-to-b from-[#D9FF4B]/10 to-transparent p-8 h-full">
             <MonitorSmartphone className="w-9 h-9 text-[#D9FF4B] mb-5" />
-            <div className="font-monox text-[10px] tracking-[0.25em] text-[#D9FF4B]">01 · LIVE IN THIS BUILD</div>
+            <div className="font-monox text-[10px] tracking-[0.25em] text-[#D9FF4B]">01 · LIVE NOW</div>
             <div className="font-display text-4xl tracking-wide mt-1 mb-3">WEB CONSOLE</div>
-            <p className="text-sm text-white/60 leading-relaxed mb-6">Search 190+ countries, checkout in two taps, watch the QR ignite, and track burn on a live meter. Fully working prototype — click through.</p>
+            <p className="text-sm text-white/60 leading-relaxed mb-6">Search 150+ countries, checkout in two taps, watch the QR ignite, and track burn on a live meter. Fully working — click through.</p>
             <div className="rounded-2xl bg-black/60 border border-white/10 p-4 font-monox text-[11px] text-white/60 mb-6">bilbymobile · console <span className="text-emerald-400">● live</span><br /><span className="text-white/30">search → cart → QR → meter</span></div>
             <Link to="/app" className="block text-center bg-[#D9FF4B] text-black font-bold rounded-full py-3 text-sm hover:bg-white transition-colors">LAUNCH CONSOLE <Play className="inline w-4 h-4 ml-1" /></Link>
           </div>
@@ -305,7 +259,7 @@ function Apps() {
           <Reveal key={p} delay={(i + 1) * 0.1}>
             <div className="rounded-3xl border border-white/10 bg-[#0c1220] p-8 h-full flex flex-col">
               {p === "ANDROID" ? <Smartphone className="w-9 h-9 text-[#6EE7FF] mb-5" /> : <Apple className="w-9 h-9 text-white mb-5" />}
-              <div className="font-monox text-[10px] tracking-[0.25em] text-white/40">0{i + 2} · HANDOVER PROTOTYPE</div>
+              <div className="font-monox text-[10px] tracking-[0.25em] text-white/40">0{i + 2} · ON THE ROADMAP</div>
               <div className="font-display text-4xl tracking-wide mt-1 mb-3">{p} APP</div>
               <div className="mx-auto my-4 w-[190px] h-[390px] rounded-[2.2rem] border-[6px] border-[#232c44] bg-black overflow-hidden relative floaty" style={{ animationDelay: `${i * 1.4}s` }}>
                 <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-20 h-5 bg-[#232c44] rounded-full" />
@@ -332,7 +286,7 @@ function Apps() {
       </div>
       <div className="mt-6 rounded-3xl border border-white/10 bg-black p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
         <div className="w-28 h-28 shrink-0 rounded-2xl bg-white p-2 grid place-items-center"><QrCode className="w-20 h-20 text-black" /></div>
-        <div className="text-center md:text-left"><div className="font-display text-3xl tracking-wide">APPROVE THIS PAGE → WE PACK THE HANDOVER</div><p className="text-sm text-white/50">Web console, Android + iPhone builds, store listings and Kimi/Claude docs ship once the landing preview is signed off.</p></div>
+        <div className="text-center md:text-left"><div className="font-display text-3xl tracking-wide">APPROVE THIS PAGE → WE PACK THE LAUNCH</div><p className="text-sm text-white/50">Web console now, Android + iPhone builds and store listings next — every surface shares one eSIM backend and one Bilby.</p></div>
         <div className="md:ml-auto flex gap-6 font-monox text-[10px] tracking-[0.2em] text-white/50"><span className="flex items-center gap-2"><Timer className="w-4 h-4 text-[#FFB43A]" />2:41 MEDIAN SETUP</span><span className="flex items-center gap-2"><BadgeCheck className="w-4 h-4 text-emerald-400" />STORE-READY COPY</span></div>
       </div>
     </section>
@@ -345,9 +299,9 @@ function Squad() {
   return (
     <section id="sprint" className="bg-[#0c1220] border-y border-white/10 py-24">
       <div className="max-w-7xl mx-auto px-5 md:px-8">
-        <SectionTag no="SCENE 07" label="Handover crew — Kimi + Claude pack the launch" accent="#FF9E5A" />
-        <h2 className="font-display text-6xl md:text-8xl leading-[0.9] mb-4">FIVE TOOLS.<br /><span className="font-serifx italic font-normal text-[#FF9E5A]">one handover.</span></h2>
-        <p className="max-w-2xl text-white/60 mb-10 text-sm md:text-base">Landing preview first — then the full package. Each AI owns one department; Kimi holds the memory and Claude directs the story. Copy a briefing prompt, paste it into that tool, bring the output back.</p>
+        <SectionTag no="SCENE 07" label="Launch crew — AI tools, one burrow" accent="#FF9E5A" />
+        <h2 className="font-display text-6xl md:text-8xl leading-[0.9] mb-4">FIVE TOOLS.<br /><span className="font-serifx italic font-normal text-[#FF9E5A]">one launch.</span></h2>
+        <p className="max-w-2xl text-white/60 mb-10 text-sm md:text-base">Landing page first — then the full package. Each AI owns one department; Kimi holds the memory and Claude directs the story. Copy a briefing prompt, paste it into that tool, bring the output back.</p>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {agents.map((a, i) => {
             const Icon = agentIcons[a.icon] || Zap;
@@ -371,13 +325,13 @@ function Squad() {
           })}
           <Reveal delay={0.15}>
             <div className="rounded-3xl bg-[#FFB43A] text-black p-7 h-full flex flex-col justify-between">
-              <div><div className="font-monox text-[10px] tracking-[0.25em] text-black/60 mb-2">HANDOVER RULE</div><div className="font-display text-4xl leading-[0.95] tracking-wide">KIMI REMEMBERS EVERYTHING. CLAUDE SAYS IT BEAUTIFULLY. CODEX SHIPS IT.</div></div>
-              <div className="mt-6 font-monox text-[11px] tracking-wider text-black/70 leading-relaxed">PERPLEXITY BRINGS THE TRUTH · ANTIGRAVITY RUNS TRACKS IN PARALLEL<br /><br />→ Approve landing → pack web + Android + iPhone → launch.</div>
+              <div><div className="font-monox text-[10px] tracking-[0.25em] text-black/60 mb-2">LAUNCH RULE</div><div className="font-display text-4xl leading-[0.95] tracking-wide">KIMI REMEMBERS EVERYTHING. CLAUDE SAYS IT BEAUTIFULLY. CODEX SHIPS IT.</div></div>
+              <div className="mt-6 font-monox text-[11px] tracking-wider text-black/70 leading-relaxed">PERPLEXITY BRINGS THE TRUTH · ANTIGRAVITY RUNS TRACKS IN PARALLEL<br /><br />→ Approve landing → ship web + Android + iPhone → launch.</div>
             </div>
           </Reveal>
         </div>
         <div className="mt-12">
-          <div className="font-monox text-[11px] tracking-[0.3em] text-white/40 mb-5">— HANDOVER LADDER, STEP BY STEP</div>
+          <div className="font-monox text-[11px] tracking-[0.3em] text-white/40 mb-5">— LAUNCH LADDER, STEP BY STEP</div>
           <div className="grid md:grid-cols-5 gap-3">
             {sprint.map((s, i) => (
               <div key={s.t} className="rounded-2xl border border-white/10 bg-black p-5 relative overflow-hidden">
@@ -415,7 +369,7 @@ function ReviewsFaq() {
       <div className="grid lg:grid-cols-[1fr_1.2fr] gap-10">
         <div>
           <h3 className="font-display text-5xl leading-[0.95]">FINE PRINT,<br /><span className="font-serifx italic font-normal text-[#FFB43A]">big type.</span></h3>
-          <p className="text-sm text-white/55 mt-4 leading-relaxed">The questions support hears at 3 AM. Honest answers, no asterisks. Still stuck? Humans reply in under a minute, day or night.</p>
+          <p className="text-sm text-white/55 mt-4 leading-relaxed">The questions support hears at 3 AM. Honest answers, no asterisks — and the full legal version lives on our <Link to="/terms" className="text-[#FFB43A] underline underline-offset-4 hover:text-white transition-colors">Terms of Service</Link>. Still stuck? Humans reply in under a minute, day or night.</p>
           <Link to="/app" className="mt-6 inline-flex items-center gap-2 bg-white text-black font-bold rounded-full px-6 py-3 text-sm hover:bg-[#FFB43A] transition-colors">Test compatibility free <Zap className="w-4 h-4" /></Link>
         </div>
         <div className="space-y-3">
@@ -440,10 +394,10 @@ function Finale() {
         <Reveal>
           <div className="font-monox text-[11px] tracking-[0.3em] text-[#FFB43A] mb-5">FINAL SCENE · YOUR MOVE · STARRING BILBY</div>
           <h2 className="font-display leading-[0.88] text-[15vw] md:text-[9rem]">DON'T JUST ROAM.<br /><span className="font-serifx italic font-normal text-[#FFB43A] tracking-normal">hop with Bilby.</span></h2>
-          <p className="max-w-xl mx-auto text-white/70 mt-6">Global travel eSIM from $4.99 — activates at touchdown, not at checkout. Regional passports and business pooling dock next.</p>
+          <p className="max-w-xl mx-auto text-white/70 mt-6">Global travel eSIM from $4.99 — activates at touchdown, not at checkout. 150+ countries, regional bundles and business tools dock next.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link to="/app" className="bg-[#FFB43A] text-black font-bold rounded-full px-8 py-4 text-sm tracking-wide hover:bg-white transition-colors">GET YOUR ESIM NOW</Link>
-            <a href="#sprint" className="border border-white/30 hover:border-white rounded-full px-8 py-4 text-sm font-monox tracking-widest transition-colors">SEE THE HANDOVER PLAN</a>
+            <a href="#sprint" className="border border-white/30 hover:border-white rounded-full px-8 py-4 text-sm font-monox tracking-widest transition-colors">SEE THE LAUNCH PLAN</a>
           </div>
         </Reveal>
       </div>
@@ -451,10 +405,10 @@ function Finale() {
         <div className="max-w-7xl mx-auto px-5 md:px-8 py-10 flex flex-col md:flex-row items-center gap-5 justify-between">
           <div className="font-display text-2xl tracking-[0.08em] flex items-center gap-2"><img src="/images/bilby-hero.png" alt="Bilby mascot" className="w-8 h-8 rounded-lg object-cover border border-white/20" />BILBY<span className="text-[#FFB43A]">MOBILE</span><span className="font-monox text-[10px] tracking-[0.2em] text-white/40 ml-2">© 2026 · BILBYMOBILE.COM</span></div>
           <div className="flex gap-5 font-monox text-[10px] tracking-[0.2em] text-white/45">
-            <Link to="/app" className="hover:text-[#FFB43A]">CONSOLE</Link><span>PRIVACY</span><span>TERMS</span><span>SUPPORT 24/7</span>
+            <Link to="/app" className="hover:text-[#FFB43A]">CONSOLE</Link><Link to="/terms" className="hover:text-[#FFB43A]">TERMS</Link><span>PRIVACY</span><span>SUPPORT 24/7</span>
           </div>
         </div>
-        <div className="border-t border-white/10 py-4 text-center font-monox text-[10px] tracking-wider text-white/30 px-4">Competitor prices researched Sept 2026 via public sources linked above — verify at purchase. Bilby mascot concept tribute; all rival marks belong to their owners.</div>
+        <div className="border-t border-white/10 py-4 text-center font-monox text-[10px] tracking-wider text-white/30 px-4">Bilby is the telecommunications division of Nextwave.au, Australia · Connectivity provisioned through wholesale eSIM infrastructure · Plans are prepaid, data-only and start from first use.</div>
       </footer>
     </section>
   );
@@ -465,13 +419,13 @@ export default function Landing() {
     <div className="grain bg-[#060913] text-[#f4efe6] min-h-screen">
       <Navbar />
       <Hero />
-      <Marquee items={["190+ COUNTRIES", "FROM $4.99", "MEET BILBY", "ACTIVATES AT TOUCHDOWN", "ROLLOVER IN THE POUCH", "REGIONAL + BUSINESS NEXT"]} />
+      <Marquee items={["150+ COUNTRIES", "FROM $4.99", "MEET BILBY", "ACTIVATES AT TOUCHDOWN", "TOP-UPS IN THE POUCH", "REGIONAL + BUSINESS NEXT"]} />
       <div className="py-14 px-5 md:px-8"><Stats /></div>
       <Destinations />
       <Bilby />
       <HowItWorks />
-      <Intel />
-      <Marquee fast outline items={["AIRALO", "HOLAFLY", "NOMAD", "SAILY", "UBIGI", "BILBY TAKES THE BEST OF ALL"]} />
+      <WhyBilby />
+      <Marquee fast outline items={["FIXED PACKS", "DAY PASSES", "REGIONAL BUNDLES", "TOP-UPS ANYTIME", "REFUND BEFORE ACTIVATION", "150+ COUNTRIES"]} />
       <Passes />
       <Apps />
       <Squad />

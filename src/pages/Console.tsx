@@ -111,7 +111,7 @@ export default function Console() {
 
           {/* search */}
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
-            <div className="relative flex-1"><Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search 190+ countries…" className="w-full bg-white/5 border border-white/15 rounded-full pl-12 pr-5 py-3.5 text-sm outline-none focus:border-[#FFB43A] placeholder:text-white/30" /></div>
+            <div className="relative flex-1"><Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search 150+ countries…" className="w-full bg-white/5 border border-white/15 rounded-full pl-12 pr-5 py-3.5 text-sm outline-none focus:border-[#FFB43A] placeholder:text-white/30" /></div>
           </div>
           <div className="flex gap-2 flex-wrap mb-6">
             {regions.map((r) => (<button key={r} onClick={() => setRegion(r)} className={`font-monox text-[11px] tracking-[0.12em] uppercase rounded-full px-4 py-2 border transition-all ${region === r ? "bg-[#FFB43A] text-black border-[#FFB43A] font-bold" : "border-white/15 text-white/60 hover:border-white/40"}`}>{r}</button>))}
@@ -149,7 +149,7 @@ export default function Console() {
                 </div>
               ))}
             </div>
-            <div className="mt-5 flex flex-wrap gap-4 font-monox text-[11px] text-white/50"><span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-[#FFB43A]" /> TikTok ≈ 1.2 GB/hr</span><span className="flex items-center gap-1.5"><SignalHigh className="w-3.5 h-3.5 text-[#6EE7FF]" /> Maps ≈ 60 MB/hr</span><span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> VPN overhead ≈ 4%</span></div>
+            <div className="mt-5 flex flex-wrap gap-4 font-monox text-[11px] text-white/50"><span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-[#FFB43A]" /> TikTok ≈ 1.2 GB/hr</span><span className="flex items-center gap-1.5"><SignalHigh className="w-3.5 h-3.5 text-[#6EE7FF]" /> Maps ≈ 60 MB/hr</span><span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Video call ≈ 0.9 GB/hr</span></div>
           </div>
         </div>
 
@@ -246,7 +246,7 @@ export default function Console() {
               <button onClick={pay} disabled={paying} className="w-full bg-[#FFB43A] text-black font-bold rounded-full py-4 text-sm hover:bg-white transition-colors disabled:opacity-60">
                 {paying ? "PROCESSING… CONTACTING CARRIER" : `PAY $${total.toFixed(2)} · GET QR INSTANTLY`}
               </button>
-              <div className="mt-4 flex items-center justify-center gap-4 font-monox text-[10px] text-white/35"><span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5" /> VPN INCLUDED</span><span className="flex items-center gap-1"><Wifi className="w-3.5 h-3.5" /> INSTANT QR</span></div>
+              <div className="mt-4 flex items-center justify-center gap-4 font-monox text-[10px] text-white/35"><span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5" /> SECURE CHECKOUT</span><span className="flex items-center gap-1"><Wifi className="w-3.5 h-3.5" /> INSTANT QR</span></div>
             </motion.div>
           </motion.div>
         )}
