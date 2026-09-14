@@ -10,239 +10,248 @@
 # Bilby can sell is whatever is active in catalog_prices, which is a much
 # shorter list and is the only thing the site is allowed to quote a price for.
 #
-kind,name
-country,"Afghanistan"
-country,"Aland Islands"
-country,"Albania"
-country,"Algeria"
-country,"Andorra"
-country,"Angola"
-country,"Anguilla"
-country,"Antigua and Barbuda"
-country,"Argentina"
-country,"Armenia"
-country,"Aruba"
-country,"Australia"
-country,"Austria"
-country,"Azerbaijan"
-country,"Bahamas"
-country,"Bahrain"
-country,"Bangladesh"
-country,"Barbados"
-country,"Belarus"
-country,"Belgium"
-country,"Belize"
-country,"Benin"
-country,"Bermuda"
-country,"Bhutan"
-country,"Bolivia"
-country,"Bonaire"
-country,"Bosnia and Herzegovina"
-country,"Botswana"
-country,"Brazil"
-country,"Brunei Darussalam"
-country,"Bulgaria"
-country,"Burkina Faso"
-country,"Cambodia"
-country,"Cameroon"
-country,"Canada"
-country,"Cape Verde"
-country,"Cayman Islands"
-country,"Central African Republic"
-country,"Chad"
-country,"Chile"
-country,"China mainland"
-country,"Colombia"
-country,"Costa Rica"
-country,"Cote d'Ivoire"
-country,"Croatia"
-country,"Curacao"
-country,"Cyprus"
-country,"Czech Republic"
-country,"Democratic Republic of the Congo"
-country,"Denmark"
-country,"Dominica"
-country,"Dominican Republic"
-country,"Ecuador"
-country,"Egypt"
-country,"El Salvador"
-country,"Estonia"
-country,"Eswatini"
-country,"Ethiopia"
-country,"Faroe Islands"
-country,"Fiji"
-country,"Finland"
-country,"France"
-country,"French Guiana"
-country,"French Polynesia"
-country,"Gabon"
-country,"Gambia"
-country,"Georgia"
-country,"Germany"
-country,"Ghana"
-country,"Gibraltar"
-country,"Greece"
-country,"Greenland"
-country,"Grenada"
-country,"Guadeloupe"
-country,"Guam"
-country,"Guatemala"
-country,"Guernsey"
-country,"Guinea"
-country,"Guinea-Bissau"
-country,"Guyana"
-country,"Haiti"
-country,"Honduras"
-country,"Hong Kong (China)"
-country,"Hungary"
-country,"Iceland"
-country,"India"
-country,"Indonesia"
-country,"Iraq"
-country,"Ireland"
-country,"Isle of Man"
-country,"Israel"
-country,"Italy"
-country,"Jamaica"
-country,"Japan"
-country,"Jersey"
-country,"Jordan"
-country,"Kazakhstan"
-country,"Kenya"
-country,"Kosovo"
-country,"Kuwait"
-country,"Kyrgyzstan"
-country,"Laos"
-country,"Latvia"
-country,"Liberia"
-country,"Libya"
-country,"Liechtenstein"
-country,"Lithuania"
-country,"Luxembourg"
-country,"Macao (China)"
-country,"Madagascar"
-country,"Malawi"
-country,"Malaysia"
-country,"Maldives"
-country,"Mali"
-country,"Malta"
-country,"Martinique"
-country,"Mauritania"
-country,"Mauritius"
-country,"Mayotte"
-country,"Mexico"
-country,"Moldova"
-country,"Monaco"
-country,"Mongolia"
-country,"Montenegro"
-country,"Montserrat"
-country,"Morocco"
-country,"Mozambique"
-country,"Nauru"
-country,"Nepal"
-country,"Netherlands"
-country,"Netherlands Antilles"
-country,"New Zealand"
-country,"Nicaragua"
-country,"Niger"
-country,"Nigeria"
-country,"North Macedonia"
-country,"Norway"
-country,"Oman"
-country,"Pakistan"
-country,"Panama"
-country,"Papua New Guinea"
-country,"Paraguay"
-country,"Peru"
-country,"Philippines"
-country,"Poland"
-country,"Portugal"
-country,"Puerto Rico"
-country,"Qatar"
-country,"Republic of the Congo"
-country,"Reunion"
-country,"Romania"
-country,"Russia"
-country,"Rwanda"
-country,"Saint Barthelemy"
-country,"Saint Kitts and Nevis"
-country,"Saint Lucia"
-country,"Saint Martin"
-country,"Saint Vincent and the Grenadines"
-country,"Samoa"
-country,"San Marino"
-country,"Saudi Arabia"
-country,"Senegal"
-country,"Serbia"
-country,"Seychelles"
-country,"Sierra Leone"
-country,"Singapore"
-country,"Slovakia"
-country,"Slovenia"
-country,"South Africa"
-country,"South Korea"
-country,"Spain"
-country,"Sri Lanka"
-country,"Sudan"
-country,"Suriname"
-country,"Sweden"
-country,"Switzerland"
-country,"Taiwan (China)"
-country,"Tajikistan"
-country,"Tanzania"
-country,"Thailand"
-country,"Tonga"
-country,"Trinidad and Tobago"
-country,"Tunisia"
-country,"Turkey"
-country,"Turks and Caicos Islands"
-country,"Uganda"
-country,"Ukraine"
-country,"United Arab Emirates"
-country,"United Kingdom"
-country,"United States"
-country,"Uruguay"
-country,"Uzbekistan"
-country,"Vanuatu"
-country,"Vatican City"
-country,"Venezuela"
-country,"Vietnam"
-country,"Virgin Islands- British"
-country,"Zambia"
-country,"Zimbabwe"
-group,"Africa (25+ areas)"
-group,"Asia (12 areas)"
-group,"Asia (20 areas)"
-group,"Asia (20+ areas)"
-group,"Asia (7 areas)"
-group,"AUKUS (3 countries)"
-group,"Australia & New Zealand"
-group,"Balkans (5+ areas)"
-group,"Caribbean (20+ areas)"
-group,"Central Asia"
-group,"Central Asia (4 areas)"
-group,"China (mainland & HK)"
-group,"China (mainland HK Macao)"
-group,"China mainland & Japan & South Korea"
-group,"Europe (30+ areas)"
-group,"Europe (31 areas)"
-group,"Europe (33 areas)"
-group,"Europe (35 areas)"
-group,"Europe (40+ areas)"
-group,"Europe (40+ areas) & Morocco"
-group,"GCC (6 areas)"
-group,"Global (120+ areas)"
-group,"Global (130+ areas)"
-group,"Gulf Region"
-group,"Ireland & Slovenia"
-group,"Ireland & UK"
-group,"Japan & South Korea"
-group,"Middle East"
-group,"Middle East & North Africa"
-group,"North America (3 areas)"
-group,"Singapore & Malaysia"
-group,"Singapore & Malaysia & Thailand"
-group,"Singapore & Malaysia & Vietnam & Thailand & Indonesia"
-group,"South America (15+ areas)"
-group,"South America (6 areas)"
-group,"USA & Canada"
+#
+# The region column is ours, not the supplier's. It exists so the destinations
+# grid can be filtered four ways without a second list to keep in step, and it
+# follows the four buckets the reference design uses rather than the United
+# Nations geoscheme. Three calls are judgement rather than geography and are
+# written down here so nobody has to guess later: Greenland sits in Europe with
+# Denmark, Turkey and Russia sit in Europe, and the Caucasus three sit with the
+# Middle East. Central Asia sits with Asia Pacific.
+#
+kind,name,region
+country,"Afghanistan",apac
+country,"Aland Islands",europe
+country,"Albania",europe
+country,"Algeria",mea
+country,"Andorra",europe
+country,"Angola",mea
+country,"Anguilla",americas
+country,"Antigua and Barbuda",americas
+country,"Argentina",americas
+country,"Armenia",mea
+country,"Aruba",americas
+country,"Australia",apac
+country,"Austria",europe
+country,"Azerbaijan",mea
+country,"Bahamas",americas
+country,"Bahrain",mea
+country,"Bangladesh",apac
+country,"Barbados",americas
+country,"Belarus",europe
+country,"Belgium",europe
+country,"Belize",americas
+country,"Benin",mea
+country,"Bermuda",americas
+country,"Bhutan",apac
+country,"Bolivia",americas
+country,"Bonaire",americas
+country,"Bosnia and Herzegovina",europe
+country,"Botswana",mea
+country,"Brazil",americas
+country,"Brunei Darussalam",apac
+country,"Bulgaria",europe
+country,"Burkina Faso",mea
+country,"Cambodia",apac
+country,"Cameroon",mea
+country,"Canada",americas
+country,"Cape Verde",mea
+country,"Cayman Islands",americas
+country,"Central African Republic",mea
+country,"Chad",mea
+country,"Chile",americas
+country,"China mainland",apac
+country,"Colombia",americas
+country,"Costa Rica",americas
+country,"Cote d'Ivoire",mea
+country,"Croatia",europe
+country,"Curacao",americas
+country,"Cyprus",europe
+country,"Czech Republic",europe
+country,"Democratic Republic of the Congo",mea
+country,"Denmark",europe
+country,"Dominica",americas
+country,"Dominican Republic",americas
+country,"Ecuador",americas
+country,"Egypt",mea
+country,"El Salvador",americas
+country,"Estonia",europe
+country,"Eswatini",mea
+country,"Ethiopia",mea
+country,"Faroe Islands",europe
+country,"Fiji",apac
+country,"Finland",europe
+country,"France",europe
+country,"French Guiana",americas
+country,"French Polynesia",apac
+country,"Gabon",mea
+country,"Gambia",mea
+country,"Georgia",mea
+country,"Germany",europe
+country,"Ghana",mea
+country,"Gibraltar",europe
+country,"Greece",europe
+country,"Greenland",europe
+country,"Grenada",americas
+country,"Guadeloupe",americas
+country,"Guam",apac
+country,"Guatemala",americas
+country,"Guernsey",europe
+country,"Guinea",mea
+country,"Guinea-Bissau",mea
+country,"Guyana",americas
+country,"Haiti",americas
+country,"Honduras",americas
+country,"Hong Kong (China)",apac
+country,"Hungary",europe
+country,"Iceland",europe
+country,"India",apac
+country,"Indonesia",apac
+country,"Iraq",mea
+country,"Ireland",europe
+country,"Isle of Man",europe
+country,"Israel",mea
+country,"Italy",europe
+country,"Jamaica",americas
+country,"Japan",apac
+country,"Jersey",europe
+country,"Jordan",mea
+country,"Kazakhstan",apac
+country,"Kenya",mea
+country,"Kosovo",europe
+country,"Kuwait",mea
+country,"Kyrgyzstan",apac
+country,"Laos",apac
+country,"Latvia",europe
+country,"Liberia",mea
+country,"Libya",mea
+country,"Liechtenstein",europe
+country,"Lithuania",europe
+country,"Luxembourg",europe
+country,"Macao (China)",apac
+country,"Madagascar",mea
+country,"Malawi",mea
+country,"Malaysia",apac
+country,"Maldives",apac
+country,"Mali",mea
+country,"Malta",europe
+country,"Martinique",americas
+country,"Mauritania",mea
+country,"Mauritius",mea
+country,"Mayotte",mea
+country,"Mexico",americas
+country,"Moldova",europe
+country,"Monaco",europe
+country,"Mongolia",apac
+country,"Montenegro",europe
+country,"Montserrat",americas
+country,"Morocco",mea
+country,"Mozambique",mea
+country,"Nauru",apac
+country,"Nepal",apac
+country,"Netherlands",europe
+country,"Netherlands Antilles",americas
+country,"New Zealand",apac
+country,"Nicaragua",americas
+country,"Niger",mea
+country,"Nigeria",mea
+country,"North Macedonia",europe
+country,"Norway",europe
+country,"Oman",mea
+country,"Pakistan",apac
+country,"Panama",americas
+country,"Papua New Guinea",apac
+country,"Paraguay",americas
+country,"Peru",americas
+country,"Philippines",apac
+country,"Poland",europe
+country,"Portugal",europe
+country,"Puerto Rico",americas
+country,"Qatar",mea
+country,"Republic of the Congo",mea
+country,"Reunion",mea
+country,"Romania",europe
+country,"Russia",europe
+country,"Rwanda",mea
+country,"Saint Barthelemy",americas
+country,"Saint Kitts and Nevis",americas
+country,"Saint Lucia",americas
+country,"Saint Martin",americas
+country,"Saint Vincent and the Grenadines",americas
+country,"Samoa",apac
+country,"San Marino",europe
+country,"Saudi Arabia",mea
+country,"Senegal",mea
+country,"Serbia",europe
+country,"Seychelles",mea
+country,"Sierra Leone",mea
+country,"Singapore",apac
+country,"Slovakia",europe
+country,"Slovenia",europe
+country,"South Africa",mea
+country,"South Korea",apac
+country,"Spain",europe
+country,"Sri Lanka",apac
+country,"Sudan",mea
+country,"Suriname",americas
+country,"Sweden",europe
+country,"Switzerland",europe
+country,"Taiwan (China)",apac
+country,"Tajikistan",apac
+country,"Tanzania",mea
+country,"Thailand",apac
+country,"Tonga",apac
+country,"Trinidad and Tobago",americas
+country,"Tunisia",mea
+country,"Turkey",europe
+country,"Turks and Caicos Islands",americas
+country,"Uganda",mea
+country,"Ukraine",europe
+country,"United Arab Emirates",mea
+country,"United Kingdom",europe
+country,"United States",americas
+country,"Uruguay",americas
+country,"Uzbekistan",apac
+country,"Vanuatu",apac
+country,"Vatican City",europe
+country,"Venezuela",americas
+country,"Vietnam",apac
+country,"Virgin Islands- British",americas
+country,"Zambia",mea
+country,"Zimbabwe",mea
+group,"Africa (25+ areas)",
+group,"Asia (12 areas)",
+group,"Asia (20 areas)",
+group,"Asia (20+ areas)",
+group,"Asia (7 areas)",
+group,"AUKUS (3 countries)",
+group,"Australia & New Zealand",
+group,"Balkans (5+ areas)",
+group,"Caribbean (20+ areas)",
+group,"Central Asia",
+group,"Central Asia (4 areas)",
+group,"China (mainland & HK)",
+group,"China (mainland HK Macao)",
+group,"China mainland & Japan & South Korea",
+group,"Europe (30+ areas)",
+group,"Europe (31 areas)",
+group,"Europe (33 areas)",
+group,"Europe (35 areas)",
+group,"Europe (40+ areas)",
+group,"Europe (40+ areas) & Morocco",
+group,"GCC (6 areas)",
+group,"Global (120+ areas)",
+group,"Global (130+ areas)",
+group,"Gulf Region",
+group,"Ireland & Slovenia",
+group,"Ireland & UK",
+group,"Japan & South Korea",
+group,"Middle East",
+group,"Middle East & North Africa",
+group,"North America (3 areas)",
+group,"Singapore & Malaysia",
+group,"Singapore & Malaysia & Thailand",
+group,"Singapore & Malaysia & Vietnam & Thailand & Indonesia",
+group,"South America (15+ areas)",
+group,"South America (6 areas)",
+group,"USA & Canada",

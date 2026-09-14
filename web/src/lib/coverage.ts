@@ -1,5 +1,4 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { COUNTRIES, GROUPS, READ_ON, SOURCE } from "./coverage-data";
 
 /**
  * What our supply can reach, read from a file rather than typed into a page.
@@ -14,10 +13,15 @@ import { join } from "node:path";
  * truth part company silently.
  *
  * So the count is derived from a dated file in `suppliers/`, captured from the
- * partner console on a stated day. Moving the number means capturing a newer
- * file, which means the provenance moves with it. `promises.test.ts` fails the
- * build if the landing page prints a country count that this file does not
- * support.
+ * partner console on a stated day, compiled into `coverage-data.ts` by
+ * `scripts/build-coverage.ts`. Moving the number means capturing a newer file,
+ * which means the provenance moves with it. `promises.test.ts` fails the build
+ * if the landing page prints a country count the file does not support, and
+ * fails again if the generated module and the CSV have drifted apart.
+ *
+ * Generated rather than read at runtime because the CSV lives one directory
+ * above `web/` and nothing in the deployment traces it. Reading it on Vercel
+ * would have found nothing and rendered a page with no count at all.
  *
  * ## Coverage is not stock
  *
@@ -31,6 +35,21 @@ import { join } from "node:path";
  * and the landing page revalidates daily, so this costs one read per cold
  * start.
  */
+/** The four buckets the destinations grid filters by. */
+export type Region = "apac" | "europe" | "mea" | "americas";
+
+export const REGIONS: Array<{ key: Region; label: string }> = [
+  { key: "apac", label: "Asia Pacific" },
+  { key: "europe", label: "Europe" },
+  { key: "mea", label: "Middle East and Africa" },
+  { key: "americas", label: "Americas" },
+];
+
+export interface CoveredCountry {
+  name: string;
+  region: Region;
+}
+
 export interface Coverage {
   /** Single country or territory entries the supplier lists. */
   countries: number;
@@ -38,54 +57,28 @@ export interface Coverage {
   groups: number;
   /** Every country name, in the supplier's own spelling, alphabetical. */
   names: string[];
+  /** The same list with its region, for the grid's filter. */
+  list: CoveredCountry[];
   /** The day the list was read, for the footnote under any figure drawn from it. */
   readOn: string;
   /** The file this came from, so a reader can go and check. */
   source: string;
 }
 
-const FILE = "esimaccess-coverage-2026-09-14.csv";
-const READ_ON = "14 September 2026";
-
 function load(): Coverage {
-  // Two candidates because the working directory differs between `next build`
-  // at the repository root and the compiled server running inside `web/`.
-  const candidates = [
-    join(process.cwd(), "..", "suppliers", FILE),
-    join(process.cwd(), "suppliers", FILE),
-  ];
+  const list: CoveredCountry[] = COUNTRIES.map(([name, region]) => ({
+    name,
+    region: region as Region,
+  }));
 
-  for (const path of candidates) {
-    let raw: string;
-    try {
-      raw = readFileSync(path, "utf8");
-    } catch {
-      continue;
-    }
-    const names: string[] = [];
-    let groups = 0;
-    for (const line of raw.split("\n")) {
-      const t = line.trim();
-      if (!t || t.startsWith("#") || t.startsWith("kind,")) continue;
-      const [kind, ...rest] = t.split(",");
-      const name = rest.join(",").replace(/^"|"$/g, "");
-      if (kind === "country") names.push(name);
-      else if (kind === "group") groups++;
-    }
-    if (names.length > 0) {
-      return { countries: names.length, groups, names, readOn: READ_ON, source: FILE };
-    }
-  }
-
-  /*
-   * Nothing rather than a guess.
-   *
-   * A missing file is a deployment fault, and the honest response to one is a
-   * page that says less, not a page that says "190+" because the number had to
-   * be something. Every caller treats a zero count as "we have nothing to say
-   * about reach" and renders the section without it.
-   */
-  return { countries: 0, groups: 0, names: [], readOn: READ_ON, source: FILE };
+  return {
+    countries: list.length,
+    groups: GROUPS,
+    names: list.map((c) => c.name),
+    list,
+    readOn: READ_ON,
+    source: SOURCE,
+  };
 }
 
 let cached: Coverage | undefined;

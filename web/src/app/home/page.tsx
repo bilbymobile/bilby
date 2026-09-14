@@ -3,11 +3,14 @@ import Link from "next/link";
 
 import { liveDestinations, liveShopfront, heroClaim, money } from "@/lib/live-destinations";
 import { coverage } from "@/lib/coverage";
+import { FEATURED, art, photo } from "@/lib/destination-art";
+import { DESTINATIONS } from "@/lib/destinations";
 import { url } from "@/lib/hosts";
 import styles from "./home.module.css";
 import { FieldNotes } from "./notes";
 import { Hero } from "./hero";
 import { Counters } from "./counters";
+import { Destinations } from "./destinations";
 import { Ticker } from "./ticker";
 import { SectionHead } from "./section-head";
 import { HeroParallax, Reveal } from "./motion";
@@ -165,6 +168,39 @@ export default async function HomePage() {
   const from = shop?.fromAmount ?? null;
   const reach = coverage();
 
+  /*
+   * The six photographic cards.
+   *
+   * Built from the intersection of three lists: the places we have curated and
+   * can provision, the places a photograph exists for, and whatever the
+   * catalogue says is on sale today. The third one supplies a price or supplies
+   * nothing, and a card with no price says "not on sale yet" rather than
+   * disappearing, because a destination vanishing from the page as stock
+   * changes is how a shop looks broken.
+   */
+  const priced = new Map(dests.map((d) => [d.iso.toUpperCase(), d.fromAmount]));
+  const cards = FEATURED.flatMap((iso) => {
+    const d = DESTINATIONS.find((x) => x.iso.toUpperCase() === iso);
+    const a = art(iso);
+    if (!d || !a) return [];
+    const row = reach.list.find(
+      (c) => c.name === d.name || c.name.startsWith(d.name),
+    );
+    const amount = priced.get(iso);
+    return [
+      {
+        iso,
+        country: d.name,
+        city: a.city,
+        cut: a.cut,
+        region: row?.region ?? ("apac" as const),
+        photo: photo(iso),
+        price: amount === undefined ? null : money(amount, shop?.currency),
+        blurb: d.blurb ?? null,
+      },
+    ];
+  });
+
   const counters = [
     ...(reach.countries > 0
       ? [
@@ -283,9 +319,9 @@ export default async function HomePage() {
             accent="next hop."
             hue="amber"
           >
-            A short list on purpose. Every destination here is on sale right now, not a
-            country we hope to cover, and every price is the one the shop charges, read from
-            the same catalogue at the same moment.
+            Six places to start, and under them the whole list our supply reaches. A card
+            carries a price only when that plan is genuinely on sale, and the price is the one
+            the shop charges, read from the same catalogue at the same moment.
           </SectionHead></Reveal>
           {/* Material, and a customer should meet it here rather than at the
               payment step. It is derived, so it disappears by itself the day a
@@ -306,34 +342,19 @@ export default async function HomePage() {
           ) : null}
 
           {/*
-            Only what is actually on sale. Listing a destination here that the
-            shop cannot fill sends somebody to an empty shelf, which reads as
-            broken rather than as "not yet", and is the specific failure this
-            whole page was rewritten to stop making.
+            Two lists, kept apart on purpose.
+
+            The cards are what Bilby can sell. The list under them is where the
+            supply reaches, which today is two orders of magnitude larger. A
+            page showing only the second is claiming a shop it does not have; a
+            page showing only the first hides the reason to come back. Both are
+            here, both are labelled, and a card for a country with nothing
+            activated says so on its face rather than quoting a price nobody can
+            pay.
           */}
-          {dests.length > 0 ? (
-            <Reveal delay={80}><div className={`${styles.dests} ${styles.cascade}`}>
-              {dests.map((d) => (
-                <div className={styles.dest} key={d.iso}>
-                  <div className={styles.swatch}>{d.iso}</div>
-                  <h3>{d.name}</h3>
-                  {/* No fallback claiming "local networks". Every plan on sale
-                      today leaves the destination country to reach the internet,
-                      which is the opposite of local, and the curated blurb is
-                      the only text here anybody has actually checked. */}
-                  {d.blurb ? <p>{d.blurb}</p> : null}
-                  <span className={styles.destPrice}>
-                    {money(d.fromAmount, shop?.currency)} <small>and up</small>
-                  </span>
-                </div>
-              ))}
-            </div></Reveal>
-          ) : (
-            <Reveal delay={80}><p className={styles.lede}>
-              Nothing is on sale yet. Every plan is tested on a real handset before it goes on
-              this page, so this fills up as that happens rather than all at once.
-            </p></Reveal>
-          )}
+          <Reveal delay={80}>
+            <Destinations cards={cards} rows={reach.list} readOn={reach.readOn} />
+          </Reveal>
         </div>
       </section>
 

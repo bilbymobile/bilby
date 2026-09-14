@@ -339,6 +339,38 @@ async function main() {
     `${reach.names[0]} ... ${reach.names.at(-1)}`,
   );
 
+  /*
+   * And the generated module still says what the CSV says.
+   *
+   * The page imports a TypeScript file compiled from the CSV, because the CSV
+   * itself lives above `web/` and would not ship. That is the right call and it
+   * introduces the one failure a copy always introduces: the original moves and
+   * the copy does not. Editing the CSV without re running build-coverage.ts is
+   * a drift nobody would see, on the one number this page is allowed to state.
+   */
+  {
+    const csvPath = resolve(import.meta.dirname, "..", "..", "suppliers", reach.source);
+    let csv = "";
+    try {
+      csv = readFileSync(csvPath, "utf8");
+    } catch {
+      /* reported by the check below */
+    }
+    const fromCsv: string[] = [];
+    for (const line of csv.split("\n")) {
+      const m = /^country,"([^"]*)",(\w*)$/.exec(line.trim());
+      if (m) fromCsv.push(`${m[1]}|${m[2]}`);
+    }
+    const fromModule = reach.list.map((c) => `${c.name}|${c.region}`);
+    check(
+      `the generated coverage module matches the CSV it came from (${fromCsv.length} rows)`,
+      fromCsv.length > 0 && fromCsv.join("\n") === fromModule.join("\n"),
+      fromCsv.length === 0
+        ? `could not read ${csvPath}`
+        : `${fromCsv.length} in the file, ${fromModule.length} in the module`,
+    );
+  }
+
   check(
     "the coverage figure was read on a day that has already happened",
     new Date(`${reach.readOn} UTC`).getTime() <= Date.now(),

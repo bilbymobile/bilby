@@ -1166,6 +1166,147 @@
 .tickerSep { color: var(--chrome); }
 
 
+/* ── Scene 02, destinations ──────────────────────────────────────────────────
+ *
+ * A filter row, a grid of photographic plates, and the whole of the supply
+ * underneath as a name list. The plate carries everything: the picture, the
+ * scrim, the badge, the price tag and the name. Nothing sits outside it except
+ * one optional line, which keeps the cards the same height whatever the copy
+ * does.
+ * ─────────────────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: 26px 0 24px;
+}
+.tab {
+  appearance: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 15px; border-radius: 999px;
+  border: 1px solid var(--line2);
+  background: var(--glass);
+  color: var(--ink2);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .68rem; letter-spacing: .14em; text-transform: uppercase;
+  transition: color .2s ease, border-color .2s ease, background .2s ease;
+}
+.tab:hover { color: var(--ink); border-color: var(--hue-amber); }
+.tabOn {
+  color: var(--void, #04060F);
+  background: var(--hue-amber);
+  border-color: var(--hue-amber);
+}
+.tabN {
+  font-variant-numeric: tabular-nums;
+  opacity: .62;
+}
+.tabOn .tabN { opacity: .74; }
+
+.cards {
+  display: grid; gap: 18px; align-items: start;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 980px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) { .cards { grid-template-columns: 1fr; } }
+
+.card { display: flex; flex-direction: column; gap: 10px; }
+.plate {
+  position: relative; overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--line2);
+  aspect-ratio: 16 / 10;
+  /* The floor under the photograph, and the whole card when there is none. A
+     card with a failed image is still a card. */
+  background:
+    radial-gradient(120% 120% at 20% 0%, rgba(255, 180, 58, .22), transparent 60%),
+    linear-gradient(155deg, #1A2044, #0A0E22);
+}
+.plateImg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform .6s var(--ease, cubic-bezier(.22, 1, .36, 1));
+}
+.card:hover .plateImg { transform: scale(1.045); }
+.plateScrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(4, 6, 15, .92) 4%, rgba(4, 6, 15, .34) 46%, rgba(4, 6, 15, .12) 100%);
+}
+.cut, .tagLive, .tagSoon {
+  position: absolute; top: 12px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .62rem; letter-spacing: .16em; text-transform: uppercase;
+  padding: 6px 10px; border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+.cut {
+  left: 12px;
+  color: var(--ink);
+  background: rgba(4, 6, 15, .5);
+  border: 1px solid rgba(255, 255, 255, .16);
+}
+.tagLive {
+  right: 12px;
+  color: #04060F; background: var(--hue-amber); border: 1px solid var(--hue-amber);
+  font-weight: 500;
+}
+.tagSoon {
+  right: 12px;
+  color: var(--ink2);
+  background: rgba(4, 6, 15, .58);
+  border: 1px solid rgba(255, 255, 255, .14);
+}
+.plateName {
+  position: absolute; left: 16px; right: 16px; bottom: 14px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.plateName b {
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
+  font-weight: 400; font-size: 1.9rem; line-height: .98; letter-spacing: .012em;
+  color: var(--ink);
+}
+.plateName i {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-style: normal; font-size: .64rem; letter-spacing: .17em; text-transform: uppercase;
+  color: var(--ink2);
+}
+.cardNote { font-size: .88rem; line-height: 1.6; color: var(--ink3); margin: 0; }
+
+/* The supply, in full. A name list rather than more cards: at two hundred
+   entries a card is a scroll and a name is a glance. */
+.reach { margin-top: 34px; border-top: 1px solid var(--line); padding-top: 24px; }
+.reachHead { margin: 0 0 16px; color: var(--ink2); font-size: .95rem; display: block; }
+.reachN {
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
+  font-size: 2.1rem; line-height: 1; color: var(--ink);
+  margin-right: 10px; vertical-align: -2px;
+  font-variant-numeric: tabular-nums;
+}
+.reachNote { display: block; margin-top: 8px; font-size: .84rem; line-height: 1.6; color: var(--ink3); max-width: 68ch; }
+.reachList {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: 4px 18px;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  font-size: .84rem; color: var(--ink3);
+}
+.reachList li { padding: 3px 0; }
+/* Collapsed by default. Two hundred names is the whole supply and it should be
+   readable, but it should not be the tallest thing on the page before anybody
+   has asked for it. */
+.reachList {
+  max-height: 168px; overflow: hidden;
+  mask-image: linear-gradient(#000 62%, transparent);
+  -webkit-mask-image: linear-gradient(#000 62%, transparent);
+}
+.reachOpen { max-height: none; mask-image: none; -webkit-mask-image: none; }
+.reachMore {
+  appearance: none; cursor: pointer; margin-top: 16px;
+  padding: 9px 16px; border-radius: 999px;
+  border: 1px solid var(--line2); background: var(--glass); color: var(--ink2);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: .66rem; letter-spacing: .16em; text-transform: uppercase;
+  transition: color .2s ease, border-color .2s ease;
+}
+.reachMore:hover { color: var(--ink); border-color: var(--hue-amber); }
+
 /* ── The numbers strip ───────────────────────────────────────────────────────
  *
  * Four measured figures, directly under the ticker, in the reference's own
