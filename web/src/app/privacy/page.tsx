@@ -28,7 +28,11 @@ export default function PrivacyPage() {
   return (
     <div className="prose">
       <section className="hero">
-        <h1>Privacy Policy</h1>
+        <p className="kicker">Legal</p>
+        <h1>
+          Privacy
+          <span className="fig">policy</span>
+        </h1>
         <p>
           Effective {LEGAL_ENTITY.effective.privacy}. This covers the {brand.name}{" "}
           app and {brand.domain}.
@@ -68,14 +72,14 @@ export default function PrivacyPage() {
             </h3>
             <p className="sub" style={{ marginBottom: 8 }}>{d.description}</p>
             <p className="sub" style={{ marginBottom: 8 }}>
-              <strong style={{ color: "var(--text)" }}>Why: </strong>
+              <strong>Why: </strong>
               {d.purpose}
             </p>
             <p className="sub" style={{ margin: 0, fontSize: 13 }}>
-              <strong style={{ color: "var(--text)" }}>Shared with: </strong>
+              <strong>Shared with: </strong>
               {d.shared ? d.sharedWith : "Nobody"}
               {" · "}
-              <strong style={{ color: "var(--text)" }}>Kept: </strong>
+              <strong>Kept: </strong>
               {d.retention}
             </p>
           </div>
@@ -88,7 +92,7 @@ export default function PrivacyPage() {
           Worth stating explicitly, because a privacy policy that only lists what
           it takes tells you nothing about what it leaves alone.
         </p>
-        <ul style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.7, paddingLeft: 20 }}>
+        <ul>
           {NOT_COLLECTED.map((item) => (
             <li key={item}>{item}</li>
           ))}

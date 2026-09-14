@@ -132,10 +132,23 @@ if (aclSection && liability) {
     deferred.includes(aclSection.n),
     `defers to ${deferred.join(",") || "nothing"}, ACL is ${aclSection.n}`,
   );
+  /*
+   * And the cap is measured against what the customer actually paid, with no
+   * figure of our own in it. An earlier draft set a floor of AUD $100, which
+   * reads as generosity and is a standing promise to pay at least that on any
+   * claim, including one worth a single plan. The ACL carve out above is what
+   * protects a customer with a real loss; a hardcoded floor only protects one
+   * with a trivial one, at our expense and forever.
+   */
   check(
-    "and the cap is stated as the greater of two amounts, not the lesser",
-    /greater of/i.test(clause),
-    clause.slice(0, 140),
+    "the cap is measured against what the customer paid",
+    /amount you paid us/i.test(clause),
+    clause.slice(0, 160),
+  );
+  check(
+    "and the liability clause names no dollar figure of its own",
+    !/(AUD|A\$|US\$|\$)\s?\d/i.test(clause),
+    clause.match(/(AUD|A\$|US\$|\$)\s?\d[\d,.]*/i)?.[0],
   );
 }
 
@@ -234,8 +247,8 @@ check(
   /validity runs from\s*first use/i.test(termsText.replace(/\s+/g, " ")),
 );
 check(
-  "the terms still promise a lapsed profile is reissued at no charge",
-  /reissue it at no charge/i.test(termsText),
+  "the terms still tell a customer with a lapsed profile to contact us",
+  /if yours lapses before you travel, contact us/i.test(termsText),
 );
 check(
   "the terms still promise notice of a material change reaches email, not only the app",
@@ -245,6 +258,65 @@ check(
   "the terms still say there is no emergency calling",
   /no emergency calling/i.test(termsText),
 );
+
+/* ---- Promises we deliberately do not make ------------------------------ */
+
+/*
+ * The inverse of the block above, and the harder half to keep.
+ *
+ * A promise is easy to add in a sentence and expensive to withdraw once a
+ * customer has read it, so the three that were withdrawn in this revision are
+ * pinned here by their absence. Each was written in good faith and each
+ * committed the business to a number nobody had measured: a free reissue, a fee
+ * capped at the price of a plan, and a liability floor. Wanting any of them back
+ * is a reasonable position. Reaching them by accident, through a paste from an
+ * older draft, is not.
+ */
+const RETIRED = [
+  [/at no charge/i, "a free reissue"],
+  [/free of charge/i, "a free reissue"],
+  [/never more than the price of the plan/i, "a fee capped at the plan price"],
+  [/\bAUD \$?\d/i, "a dollar figure in the document"],
+] as const;
+
+for (const page of PAGES) {
+  const body = text(source(page));
+  const hit = RETIRED.find(([re]) => re.test(body));
+  check(
+    `${page} makes none of the money promises this revision withdrew`,
+    hit === undefined,
+    hit && `${hit[1]}: ${body.match(hit[0])?.[0]}`,
+  );
+}
+
+/*
+ * And it does not narrate the supply chain.
+ *
+ * Explaining that we buy wholesale and resell tells a customer nothing they can
+ * act on, invites the question of what we pay, and was being used in section 6
+ * to excuse a rule we can simply state. Expiry is a term of the plan. It does
+ * not need a reason drawn from our contracts to be enforceable, and giving one
+ * hands a competitor the shape of our cost base for free.
+ */
+const SUPPLY_CHAIN = [
+  /\bwholesale\b/i,
+  /\bresell(?:s|er|ing)?\b/i,
+  /\bour supplier\b/i,
+  /\bbilled us\b/i,
+  /\bwe are billed\b/i,
+  /\bmargin\b/i,
+];
+
+for (const page of PAGES) {
+  const body = text(source(page));
+  const hit = SUPPLY_CHAIN.find((re) => re.test(body));
+  check(
+    `${page} does not narrate how the data is bought`,
+    hit === undefined,
+    hit && body.match(hit)?.[0],
+  );
+}
+
 
 console.log(`\n${passed} passed, ${failed} failed\n`);
 process.exit(failed === 0 ? 0 : 1);

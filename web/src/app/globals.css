@@ -132,6 +132,11 @@
   --border: #2A3162;
   --text: #F4F6FF;
   --muted: #B4BBD9;
+  /* A legal page is read, not scanned. Its body sits one step below the
+     full ink so a wall of it does not glare, and well above the muted
+     grey that suits a caption under a number and punishes a reader on
+     paragraph nine of a terms document. */
+  --prose-ink: #E2E7FA;
 
   /* On a dark ground the action colour is the brightest thing on the screen,
      which is the exact inverse of the rule a light theme follows and the reason
@@ -331,26 +336,79 @@ footer.foot { margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--b
 }
 
 [data-surface="marketing"] .prose { padding: clamp(40px, 6vw, 76px) 0 clamp(30px, 4vw, 50px); }
-[data-surface="marketing"] .prose .hero h1 {
-  font-size: clamp(32px, 4.4vw, 52px); font-weight: 600; letter-spacing: -.035em;
-  color: var(--text); margin-bottom: 14px;
+
+/*
+ * The masthead of a legal page, in the same two faces as every heading on the
+ * landing page: a line of condensed capitals, then the subject in italic serif.
+ *
+ * It used to be one line of Bebas Neue asked for at weight 600. Bebas ships one
+ * weight, so the browser synthesised the other five hundred by smearing the
+ * glyphs sideways, and a condensed face smeared bold is the single least
+ * readable thing a page can do to a capital letter. Weight 400 is not a style
+ * choice here, it is the only weight that exists.
+ */
+[data-surface="marketing"] .prose .hero .kicker {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 16px;
 }
-[data-surface="marketing"] .prose .hero p { font-size: 1.06rem; color: var(--muted); }
-[data-surface="marketing"] .card { padding: clamp(24px, 3vw, 34px); }
-[data-surface="marketing"] .card + .card { margin-top: 20px; }
+[data-surface="marketing"] .prose .hero h1 {
+  font-size: clamp(42px, 6vw, 66px); font-weight: 400; letter-spacing: .014em;
+  line-height: .94; color: var(--text); margin: 0 0 16px;
+}
+[data-surface="marketing"] .prose .hero h1 .fig {
+  display: block;
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+  font-style: italic; font-weight: 400; text-transform: none;
+  font-size: .84em; line-height: .92; letter-spacing: -.012em;
+  color: var(--accent);
+}
+[data-surface="marketing"] .prose .hero p {
+  font-size: 1.02rem; line-height: 1.65; color: var(--muted); max-width: 58ch;
+}
+
+[data-surface="marketing"] .card { padding: clamp(26px, 3.2vw, 38px); }
+[data-surface="marketing"] .card + .card { margin-top: 18px; }
+
+/*
+ * Section headings come off the display face and onto the grotesk.
+ *
+ * Bebas has no lowercase, so "1. What Bilby is" was rendering as a line of
+ * condensed capitals with a number in front of it, at seventeen pixels, faux
+ * bolded. Capitals are slower to read than lowercase at any size and the
+ * penalty compounds across nine of them. The display face keeps the masthead,
+ * where it is doing the work it was picked for, and gives up the section
+ * headings, where it was only making them look like the landing page.
+ */
 [data-surface="marketing"] .card h2 {
-  font-size: 1.22rem; font-weight: 600; margin-bottom: 12px; letter-spacing: -.02em;
+  font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.16rem; font-weight: 700; line-height: 1.3;
+  letter-spacing: -.004em; color: var(--text);
+  margin: 0 0 16px;
 }
 [data-surface="marketing"] .card p,
-[data-surface="marketing"] .card li { font-size: 1rem; line-height: 1.7; }
-[data-surface="marketing"] .card ul { padding-left: 22px; }
-[data-surface="marketing"] .card li { margin-bottom: 8px; }
+[data-surface="marketing"] .card li {
+  font-size: 1.03rem; line-height: 1.78; color: var(--prose-ink);
+}
+[data-surface="marketing"] .card p { margin: 0 0 18px; max-width: 68ch; }
+[data-surface="marketing"] .card p:last-child { margin-bottom: 0; }
+[data-surface="marketing"] .card ul { padding-left: 24px; margin: 0 0 18px; max-width: 68ch; }
+[data-surface="marketing"] .card ul:last-child { margin-bottom: 0; }
+[data-surface="marketing"] .card li { margin-bottom: 10px; padding-left: 4px; }
+[data-surface="marketing"] .card li:last-child { margin-bottom: 0; }
+[data-surface="marketing"] .card li::marker { color: var(--accent); }
+/* A bolded phrase inside muted body text used to be bold and still muted, which
+   is emphasis you have to look for. It takes the full ink instead. */
+[data-surface="marketing"] .card strong { color: var(--text); font-weight: 700; }
+[data-surface="marketing"] .card .note {
+  font-size: 1rem; line-height: 1.7; padding: 16px 18px; margin-top: 22px;
+}
 /* Scoped to prose deliberately. An unscoped `a` rule here is 0,1,1 and ties
    with the shell's own link rules, so the nav and the wordmark were taking the
    link colour. Body links inside a legal document are the only ones that want a
    colour of their own. */
 [data-surface="marketing"] .prose a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
-[data-surface="marketing"] .prose { max-width: 78ch; margin: 0 auto; padding-inline: 24px; }
+[data-surface="marketing"] .prose { max-width: 74ch; margin: 0 auto; padding-inline: 24px; }
 
 /* The staff console. Same colours, denser, and it never sees a customer. */
 [data-surface="console"] {

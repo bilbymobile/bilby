@@ -29,7 +29,11 @@ export default function RefundsPage() {
   return (
     <div className="prose">
       <section className="hero">
-        <h1>Refund Policy</h1>
+        <p className="kicker">Legal</p>
+        <h1>
+          Refund
+          <span className="fig">policy</span>
+        </h1>
         <p>
           Effective {LEGAL_ENTITY.effective.refunds}. Part of our{" "}
           <a href="/terms">Terms of Service</a>.
@@ -47,28 +51,28 @@ export default function RefundsPage() {
 
       <div className="card">
         <h2>We refund in full</h2>
-        <ul style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.8, paddingLeft: 20 }}>
+        <ul>
           <li>
-            <strong style={{ color: "var(--text)" }}>The eSIM never installed.</strong>{" "}
+            <strong>The eSIM never installed.</strong>{" "}
             You bought a plan and the profile could not be installed on your
             device, and we could not fix it.
           </li>
           <li>
-            <strong style={{ color: "var(--text)" }}>No usable service.</strong>{" "}
+            <strong>No usable service.</strong>{" "}
             The eSIM installed but never connected in your destination, and you
             used less than 100 MB.
           </li>
           <li>
-            <strong style={{ color: "var(--text)" }}>Bought and unused.</strong>{" "}
+            <strong>Bought and unused.</strong>{" "}
             You bought within the last 30 days, the plan was never activated, and
             no data was used.
           </li>
           <li>
-            <strong style={{ color: "var(--text)" }}>We charged you twice.</strong>{" "}
+            <strong>We charged you twice.</strong>{" "}
             Obviously, and we will find these ourselves where we can.
           </li>
           <li>
-            <strong style={{ color: "var(--text)" }}>We described it wrong.</strong>{" "}
+            <strong>We described it wrong.</strong>{" "}
             The coverage, speed or allowance materially differed from what we
             told you before you bought.
           </li>
@@ -79,7 +83,7 @@ export default function RefundsPage() {
         <h2>We refund in part</h2>
         <p className="sub" style={{ marginBottom: 12 }}>
           Where service worked for some of your trip and then failed for reasons
-          on our side, we refund pro-rata for the unusable days.
+          on our side, we refund the unusable days in proportion.
         </p>
         <p className="sub" style={{ margin: 0 }}>
           Where you used a meaningful amount of data and then hit a problem, we
@@ -89,18 +93,19 @@ export default function RefundsPage() {
 
       <div className="card">
         <h2>We generally cannot refund</h2>
-        <ul style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.8, paddingLeft: 20 }}>
+        <ul>
           <li>
-            Data you used. Once it is consumed, our supplier has billed us for it.
+            Data you have already used. Once it is consumed it cannot be
+            returned.
           </li>
           <li>
-            Plans that expired unused after activation. Validity periods are
-            shown before purchase and we are billed on the same basis.
+            Plans that expired unused after activation. The validity period is
+            shown before you buy and it runs whether or not you use the data.
           </li>
           <li>
-            Problems caused by a locked or non-eSIM phone, or by data roaming
-            being switched off. We flag both of these before you buy and again
-            during install.
+            Problems caused by a locked phone, a phone without eSIM support, or
+            data roaming being switched off. We flag all three before you buy and
+            again during install.
           </li>
           <li>
             A change of travel plans. We will usually offer a credit instead,

@@ -252,7 +252,7 @@ export const LEGAL_ENTITY = {
    * move it, section 9 of the terms obliges you to have told people first.
    */
   effective: {
-    terms: "13 September 2026",
+    terms: "14 September 2026",
     privacy: "16 August 2026",
     refunds: "16 August 2026",
   },

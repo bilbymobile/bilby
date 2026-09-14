@@ -125,6 +125,7 @@ const ok = token("ok");
 const link = token("link");
 const warn = token("warn");
 const danger = token("danger");
+const proseInk = token("prose-ink");
 const noteInk = token("note-ink");
 const noteOkInk = token("note-ok-ink");
 const noteBadInk = token("note-bad-ink");
@@ -135,6 +136,10 @@ const AA_UI = 3.0;
 const pairs: Array<[string, string, string, number]> = [
   ["body text on the page", text, bg, AA_TEXT],
   ["body text on a card", text, surface, AA_TEXT],
+  // The legal pages set their body in this rather than in the full ink, so it
+  // is the figure a reader of the terms actually gets.
+  ["legal body text on a card", proseInk, surface, AA_TEXT],
+  ["legal body text on the page", proseInk, bg, AA_TEXT],
   ["secondary text on the page", muted, bg, AA_TEXT],
   ["secondary text on a card", muted, surface, AA_TEXT],
   ["secondary text on a raised chip", muted, surface2, AA_TEXT],
